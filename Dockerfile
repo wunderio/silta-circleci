@@ -13,3 +13,6 @@ RUN phpcs --config-set installed_paths ~/.composer/vendor/drupal/coder/coder_sni
 # Add the kontena CLI.
 RUN wget -O /tmp/kontena.deb https://gh-releases.kontena.io/kontena/kontena/deb/latest
 RUN sudo dpkg -i /tmp/kontena.deb
+
+# Add custom php config. Increase memory to 256M
+COPY conf/php/memory.ini /usr/local/etc/php/conf.d/memory.ini
