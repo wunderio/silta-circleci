@@ -8,3 +8,6 @@ RUN composer global require drush/drush-launcher hirak/prestissimo drupal/coder 
 
 # Add the kontena CLI.
 RUN wget -O /tmp/kontena.deb https://github.com/kontena/kontena/releases/download/v1.5.0/kontena-cli_1.5.0_amd64.deb && sudo dpkg -i /tmp/kontena.deb && rm /tmp/kontena.deb
+
+# Add custom php config. Increase memory to 256M
+COPY conf/php/memory.ini /usr/local/etc/php/conf.d/memory.ini
