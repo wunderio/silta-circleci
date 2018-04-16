@@ -11,3 +11,6 @@ RUN wget -O /tmp/kontena.deb https://github.com/kontena/kontena/releases/downloa
 
 # Add custom php config. Increase memory to 256M
 COPY conf/php/memory.ini /usr/local/etc/php/conf.d/memory.ini
+
+# Add helper command to define environment variables.
+COPY generate-kontena-config /usr/bin

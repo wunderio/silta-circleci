@@ -1,0 +1,28 @@
+
+# Replace non-alphanumeric in the branch name with a dash.
+BRANCH_SLUG=${CIRCLE_BRANCH//[^[:alnum:]]/-}
+
+# Strip common branch prefixes
+STACK_SLUG=${BRANCH_SLUG#feature-}
+STACK_SLUG=${STACK_SLUG#bug-}
+STACK_SLUG=${STACK_SLUG#hotfix-}
+
+# Strip common repository name prefixes
+PROJECT_SLUG=${CIRCLE_PROJECT_REPONAME//internal-/}
+PROJECT_SLUG=${PROJECT_SLUG//client-de/}
+PROJECT_SLUG=${PROJECT_SLUG//client-ee/}
+PROJECT_SLUG=${PROJECT_SLUG//client-fi/}
+PROJECT_SLUG=${PROJECT_SLUG//client-lv/}
+PROJECT_SLUG=${PROJECT_SLUG//client-uk/}
+
+# Build the stack name based on the shortened project and branch names.
+STACK_NAME="${PROJECT_SLUG:0:14}-${STACK_SLUG:0:14}"
+
+# Output variable definitions, outputting this to $BASH_ENV will persist between circleCI steps.
+echo "export BRANCH_SLUG=$BRANCH_SLUG"
+echo "export STACK_NAME=$STACK_NAME"
+echo "export VIRTUALHOST=${BRANCH_SLUG}.${CIRCLE_PROJECT_REPONAME}.dev.wdr.io"
+echo "export DOCKER_IMAGE_PREFIX=$CIRCLE_PROJECT_REPONAME"
+echo "export DOCKER_IMAGE_VERSION=$CIRCLE_SHA1"
+echo "export LOADBALANCER=loadbalancer/dev_lb"
+echo "export BASICAUTH=wunder:wunder"
