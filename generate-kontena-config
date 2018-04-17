@@ -25,4 +25,4 @@ echo "export VIRTUALHOST=${BRANCH_SLUG,,}.${CIRCLE_PROJECT_REPONAME,,}.dev.wdr.i
 echo "export DOCKER_IMAGE_PREFIX=${CIRCLE_PROJECT_REPONAME,,}"
 echo "export DOCKER_IMAGE_VERSION=$CIRCLE_SHA1"
 echo "export LOADBALANCER=loadbalancer/dev_lb"
-echo "export BASICAUTH=wunder:wunder"
+echo "export BASICAUTH='user wunder insecure-password wunder'"
