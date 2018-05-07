@@ -9,7 +9,7 @@ jobs:
           docker_layer_caching: true
       - run: |
           # Make composer packages executable.
-          ENV PATH="/home/circleci/.composer/vendor/bin:${PATH}"
+          export PATH="/home/circleci/.composer/vendor/bin:${PATH}"
           # Install drush, prestissimo and coder.
           composer global require drush/drush-launcher hirak/prestissimo drupal/coder && phpcs --config-set installed_paths ~/.composer/vendor/drupal/coder/coder_sniffer && composer clearcache
           # Add the kontena CLI.
