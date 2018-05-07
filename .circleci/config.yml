@@ -1,0 +1,28 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/php:7.1-node-browsers
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run: |
+          # Make composer packages executable.
+          ENV PATH="/home/circleci/.composer/vendor/bin:${PATH}"
+          # Install drush, prestissimo and coder.
+          composer global require drush/drush-launcher hirak/prestissimo drupal/coder && phpcs --config-set installed_paths ~/.composer/vendor/drupal/coder/coder_sniffer && composer clearcache
+          # Add the kontena CLI.
+          wget -O /tmp/kontena.deb https://github.com/kontena/kontena/releases/download/v1.5.0/kontena-cli_1.5.0_amd64.deb && sudo dpkg -i /tmp/kontena.deb && rm /tmp/kontena.deb
+          # Add custom php config. Increase memory to 256M
+          cp conf/php/memory.ini /usr/local/etc/php/conf.d/memory.ini
+          # Add helper command to define environment variables.
+          cp generate-kontena-config /usr/bin
+      # build and push Docker image
+      - run: |
+          TAG=0.1.$CIRCLE_BUILD_NUM
+          docker build -t   CircleCI-Public/circleci-demo-docker:$TAG .      # (4)
+          docker login -u $DOCKER_USER -p $DOCKER_PASS         # (5)
+          docker push CircleCI-Public/circleci-demo-docker:$TAG
+
+
