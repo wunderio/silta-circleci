@@ -19,7 +19,7 @@ jobs:
           ls -la /usr/local/etc/php
           # cp conf/php/memory.ini /usr/local/etc/php/conf.d/memory.ini
           # Add helper command to define environment variables.
-          cp generate-kontena-config /usr/bin
+          # cp generate-kontena-config /usr/bin
       # build and push Docker image
       - run: |
           TAG=0.1.$CIRCLE_BUILD_NUM
