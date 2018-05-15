@@ -9,11 +9,11 @@ STACK_SLUG=${STACK_SLUG#hotfix-}
 
 # Strip common repository name prefixes
 PROJECT_SLUG=${CIRCLE_PROJECT_REPONAME//internal-/}
-PROJECT_SLUG=${PROJECT_SLUG//client-de/}
-PROJECT_SLUG=${PROJECT_SLUG//client-ee/}
-PROJECT_SLUG=${PROJECT_SLUG//client-fi/}
-PROJECT_SLUG=${PROJECT_SLUG//client-lv/}
-PROJECT_SLUG=${PROJECT_SLUG//client-uk/}
+PROJECT_SLUG=${PROJECT_SLUG//client-de-/}
+PROJECT_SLUG=${PROJECT_SLUG//client-ee-/}
+PROJECT_SLUG=${PROJECT_SLUG//client-fi-/}
+PROJECT_SLUG=${PROJECT_SLUG//client-lv-/}
+PROJECT_SLUG=${PROJECT_SLUG//client-uk-/}
 
 # Build the stack name based on the shortened project and branch names.
 STACK_NAME="${PROJECT_SLUG:0:14}-${STACK_SLUG:0:14}"
