@@ -1,5 +1,8 @@
 FROM circleci/php:7.2-cli-node
 
+# Install libpng-dev required by some frontend libs
+RUN apt-get update && apt-get install -y libpng-dev
+
 # Make composer packages executable.
 ENV PATH="/home/circleci/.composer/vendor/bin:${PATH}"
 
