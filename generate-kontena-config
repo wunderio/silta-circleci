@@ -5,7 +5,10 @@ BRANCH_SLUG=${CIRCLE_BRANCH//[^[:alnum:]]/-}
 # Strip common branch prefixes
 STACK_SLUG=${BRANCH_SLUG#feature-}
 STACK_SLUG=${STACK_SLUG#bug-}
+STACK_SLUG=${STACK_SLUG#bugfix-}
 STACK_SLUG=${STACK_SLUG#hotfix-}
+STACK_SLUG=${STACK_SLUG#dependabot-composer-}
+STACK_SLUG=${STACK_SLUG#dependabot-yarn-}
 
 # Strip common repository name prefixes
 PROJECT_SLUG=${CIRCLE_PROJECT_REPONAME//internal-/}
