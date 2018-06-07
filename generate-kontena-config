@@ -10,6 +10,10 @@ STACK_SLUG=${STACK_SLUG#hotfix-}
 STACK_SLUG=${STACK_SLUG#dependabot-composer-}
 STACK_SLUG=${STACK_SLUG#dependabot-yarn-}
 
+# Shorten and trim trainling dashes
+STACK_SLUG=${STACK_SLUG:0:14}
+STACK_SLUG=${STACK_SLUG%%-}
+
 # Strip common repository name prefixes
 PROJECT_SLUG=${CIRCLE_PROJECT_REPONAME//internal-/}
 PROJECT_SLUG=${PROJECT_SLUG//client-de-/}
@@ -19,7 +23,7 @@ PROJECT_SLUG=${PROJECT_SLUG//client-lv-/}
 PROJECT_SLUG=${PROJECT_SLUG//client-uk-/}
 
 # Build the stack name based on the shortened project and branch names.
-STACK_NAME="${PROJECT_SLUG:0:14}-${STACK_SLUG:0:14}"
+STACK_NAME="${PROJECT_SLUG:0:14}-${STACK_SLUG}"
 
 # Output variable definitions, outputting this to $BASH_ENV will persist between circleCI steps.
 echo "export BRANCH_SLUG=$BRANCH_SLUG"
