@@ -11,6 +11,7 @@ RUN wget -O /tmp/kontena.deb https://github.com/kontena/kontena/releases/downloa
 
 # Add gcloud CLI
 RUN curl -sSL https://sdk.cloud.google.com | bash
+ENV PATH $PATH:/usr/local/gcloud/google-cloud-sdk/bin
 
 # Add kubectl
 RUN gcloud components install kubectl
