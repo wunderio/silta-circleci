@@ -12,6 +12,9 @@ RUN wget -O /tmp/kontena.deb https://github.com/kontena/kontena/releases/downloa
 # Add gcloud CLI
 RUN curl -sSL https://sdk.cloud.google.com | bash
 
+# Add kubectl
+RUN gcloud components install kubectl
+
 # Add custom php config. Increase memory to 256M
 COPY conf/php/memory.ini /usr/local/etc/php/conf.d/memory.ini
 
