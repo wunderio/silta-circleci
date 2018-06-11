@@ -23,3 +23,11 @@ jobs:
           docker push eu.gcr.io/silta-204108/circleci-builder:latest
 
 
+workflows:
+  version: 2
+  commit:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only: master
