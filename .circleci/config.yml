@@ -15,13 +15,6 @@ jobs:
           docker login -u $DOCKER_USER -p $DOCKER_PASS   
           docker push wunderio/circleci-builder:$TAG
           docker push wunderio/circleci-builder:latest
-          #echo $DOCKER_PASSWORD | docker login -u $DOCKER_USER --password-stdin $DOCKER_REPO_HOST
-          echo $GCLOUD_KEY_JSON | docker login -u _json_key --password-stdin https://eu.gcr.io
-          docker tag wunderio/circleci-builder:$TAG eu.gcr.io/silta-204108/circleci-builder:$TAG
-          docker tag wunderio/circleci-builder:$TAG eu.gcr.io/silta-204108/circleci-builder:latest
-          docker push eu.gcr.io/silta-204108/circleci-builder:$TAG
-          docker push eu.gcr.io/silta-204108/circleci-builder:latest
-
 
 workflows:
   version: 2
