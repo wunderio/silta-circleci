@@ -23,4 +23,6 @@ workflows:
       - build:
           filters:
             branches:
-              only: master
+              only: 
+                - master
+                - /feature-k8s/
