@@ -25,4 +25,4 @@ workflows:
             branches:
               only: 
                 - master
-                - /feature-k8s/
+                - feature/k8s
