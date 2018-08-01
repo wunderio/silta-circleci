@@ -9,6 +9,9 @@ ENV PATH="/home/circleci/.composer/vendor/bin:${PATH}"
 # Install drush, prestissimo and coder.
 RUN composer global require drush/drush-launcher hirak/prestissimo drupal/coder && phpcs --config-set installed_paths ~/.composer/vendor/drupal/coder/coder_sniffer && composer clearcache
 
+# Install vim based on popular demand.
+RUN sudo apt-get install vim
+
 # Add gcloud CLI
 RUN curl -sSL https://sdk.cloud.google.com | bash
 ENV PATH $PATH:/home/circleci/google-cloud-sdk/bin/
@@ -40,3 +43,4 @@ COPY conf/php/memory.ini /usr/local/etc/php/conf.d/memory.ini
 
 # Add helper command to define environment variables.
 COPY generate-kontena-config /usr/bin
+
