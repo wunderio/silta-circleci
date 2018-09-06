@@ -5,24 +5,24 @@ jobs:
       - image: circleci/php:7.1-node-browsers
     steps:
       - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
-      # build and push Docker image
+      - setup_remote_docker
       - run: |
-          TAG=1.$CIRCLE_BUILD_NUM
-          docker build -t   wunderio/circleci-builder:$TAG . 
-          docker tag wunderio/circleci-builder:$TAG wunderio/circleci-builder:latest
-          docker login -u $DOCKER_USER -p $DOCKER_PASS   
-          docker push wunderio/circleci-builder:$TAG
-          docker push wunderio/circleci-builder:latest
+          if [ $CIRCLE_TAG ]
+          then
+            # We have a tag, build and push the docker image
+            docker build -t wunderio/circleci-builder:$CIRCLE_TAG .
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            docker push wunderio/circleci-builder:$CIRCLE_TAG
+          else
+            # No tag is present, we only test that the build works.
+            docker build .
+          fi
 
 workflows:
   version: 2
-  commit:
+  build:
     jobs:
       - build:
           filters:
-            branches:
-              only: 
-                - master
-                - feature/k8s
+            tags:
+              only: /^v.*/
