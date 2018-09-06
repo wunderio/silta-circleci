@@ -25,6 +25,7 @@ ENV HELM_URL https://storage.googleapis.com/kubernetes-helm/${FILENAME}
 
 RUN curl -o /tmp/$FILENAME ${HELM_URL} \
   && tar -zxvf /tmp/${FILENAME} -C /tmp \
+  && rm /tmp/${FILENAME} \
   && sudo mv /tmp/linux-amd64/helm /bin/helm 
 
 # Add custom php config. Increase memory to 256M
