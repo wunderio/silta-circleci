@@ -24,17 +24,6 @@ RUN curl -o /tmp/$FILENAME ${HELM_URL} \
   && tar -zxvf /tmp/${FILENAME} -C /tmp \
   && sudo mv /tmp/linux-amd64/helm /bin/helm 
 
-# Helm plugins require git
-# helm-diff requires bash, curl
-# RUN sudo apt-get install git bash
-
-# Install Helm plugins
-#RUN helm init --client-only
-# Plugin is downloaded to /tmp, which must exist
-#RUN helm plugin install https://github.com/viglesiasce/helm-gcs.git
-#RUN helm plugin install https://github.com/databus23/helm-diff
-#RUN sudo rm -rf /tmp
-
 # Add custom php config. Increase memory to 256M
 COPY conf/php/memory.ini /usr/local/etc/php/conf.d/memory.ini
 
