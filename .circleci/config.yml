@@ -6,10 +6,23 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-
-      # build and push Docker image
       - run: |
-          docker build -t   wunderio/circleci-builder:k8s . 
-          docker login -u $DOCKER_USER -p $DOCKER_PASS   
-          docker push wunderio/circleci-builder:k8s
+          if [ $CIRCLE_TAG ]
+          then
+            # We have a tag, build and push the docker image
+            docker build -t wunderio/circleci-builder:$CIRCLE_TAG .
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            docker push wunderio/circleci-builder:$CIRCLE_TAG
+          else
+            # No tag is present, we only test that the build works.
+            docker build .
+          fi
 
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /^v.*/
