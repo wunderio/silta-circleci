@@ -4,7 +4,9 @@ FROM circleci/php:7.1-cli-node
 ENV PATH="/home/circleci/.composer/vendor/bin:${PATH}"
 
 # Install drush, prestissimo and coder.
-RUN composer global require drush/drush-launcher hirak/prestissimo drupal/coder && phpcs --config-set installed_paths ~/.composer/vendor/drupal/coder/coder_sniffer && composer clearcache
+RUN composer global require drush/drush-launcher hirak/prestissimo drupal/coder \
+  && phpcs --config-set installed_paths ~/.composer/vendor/drupal/coder/coder_sniffer \
+  && composer clearcache
 
 # Install vim based on popular demand.
 RUN sudo apt-get install vim
