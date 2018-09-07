@@ -1,4 +1,4 @@
-# circleci-builder
+# silta-circleci
 A docker image used circleCI, based on `circleci/php:7.1-node-browser` with the following additions:
 
 - Composer configured correctly
