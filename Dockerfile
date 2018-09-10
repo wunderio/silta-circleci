@@ -12,7 +12,8 @@ RUN composer global require drush/drush-launcher hirak/prestissimo drupal/coder 
 RUN sudo apt-get install vim
 
 # Add gcloud CLI
-RUN curl -sSL https://sdk.cloud.google.com | bash
+RUN curl -sSL https://sdk.cloud.google.com | bash \
+  && rm -r /home/circleci/google-cloud-sdk/.install/.backup/
 ENV PATH $PATH:/home/circleci/google-cloud-sdk/bin/
 
 # Add kubectl
