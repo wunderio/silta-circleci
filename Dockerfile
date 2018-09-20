@@ -28,7 +28,8 @@ RUN curl -o /tmp/$FILENAME ${HELM_URL} \
   && tar -zxvf /tmp/${FILENAME} -C /tmp \
   && rm /tmp/${FILENAME} \
   && sudo mv /tmp/linux-amd64/helm /bin/helm \
-  && helm init --client-only
+  && helm init --client-only \
+  && helm repo remove local
 
 # Add custom php config. Increase memory to 256M
 COPY conf/php/memory.ini /usr/local/etc/php/conf.d/memory.ini
