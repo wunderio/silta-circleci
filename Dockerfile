@@ -29,6 +29,7 @@ RUN curl -o /tmp/$FILENAME ${HELM_URL} \
   && rm /tmp/${FILENAME} \
   && sudo mv /tmp/linux-amd64/helm /bin/helm \
   && helm init --client-only \
+  && helm plugin install https://github.com/lrills/helm-unittest \
   && helm repo remove local
 
 # Add custom php config. Increase memory to 256M
