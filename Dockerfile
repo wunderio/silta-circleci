@@ -35,3 +35,7 @@ RUN curl -o /tmp/$FILENAME ${HELM_URL} \
 # Add custom php config. Increase memory to 256M
 COPY conf/php/memory.ini /usr/local/etc/php/conf.d/memory.ini
 
+# Add custom scripts for use during build
+COPY utils /home/circleci/utils
+RUN sudo chmod -R 755 /home/circleci/utils
+
