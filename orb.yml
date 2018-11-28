@@ -125,7 +125,7 @@ commands:
           name: Deployment log
           when: always
           command: |
-            kubectl logs job/${RELEASE_NAME}-post-release -n ${CIRCLE_PROJECT_REPONAME,,} -f --pod-running-timeout=5m
+            kubectl logs job/${RELEASE_NAME}-post-release -n ${CIRCLE_PROJECT_REPONAME,,} -f
 
       - run:
           name: Release information
