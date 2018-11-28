@@ -130,3 +130,10 @@ commands:
       - run:
           name: Release information
           command: helm status $RELEASE_NAME
+
+jobs:
+  drupal-validate:
+    executor: silta
+    steps:
+      - checkout
+      - phpcs
