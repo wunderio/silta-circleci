@@ -96,3 +96,37 @@ commands:
             gcloud config set project silta-204108
             gcloud config set compute/zone europe-west2-a
             gcloud container clusters get-credentials silta-1 --zone europe-west2-a --project silta-204108
+
+  drupal-helm-deploy:
+    steps:
+      - run:
+          name: Deploy helm release
+          command: |
+            if [[ "$( helm list --failed | grep $RELEASE_NAME  | cut -f2 )" -eq 1 ]]; then
+              echo "Removing failed first release"
+              helm delete --purge $RELEASE_NAME
+              sleep 30
+            fi
+
+            helm upgrade --install $RELEASE_NAME drupal \
+              --repo https://wunderio.github.io/charts/ \
+              --set environmentName=$CIRCLE_BRANCH \
+              --set php.image=$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}-php:$CIRCLE_SHA1 \
+              --set nginx.image=$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}-nginx:$CIRCLE_SHA1 \
+              --set shell.image=$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}-shell:$CIRCLE_SHA1 \
+              --set mariadb.rootUser.password=$DB_ROOT_PASS \
+              --set mariadb.db.password=$DB_USER_PASS \
+              --set shell.gitAuth.repositoryUrl="${CIRCLE_REPOSITORY_URL}" \
+              --set shell.gitAuth.apiToken="${GITAUTH_API_TOKEN}" \
+              --namespace=${CIRCLE_PROJECT_REPONAME,,} \
+              --values silta.yml
+
+      - run:
+          name: Deployment log
+          when: always
+          command: |
+            kubectl logs job/${RELEASE_NAME}-post-release -n ${CIRCLE_PROJECT_REPONAME,,} -f --pod-running-timeout=5m
+
+      - run:
+          name: Release information
+          command: helm status $RELEASE_NAME
