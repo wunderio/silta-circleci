@@ -1,2 +1,7 @@
 version: 2.1
 description: "A collection of CircleCI tools used by the Silta hosting infrastructure."
+
+executors:
+  silta:
+    docker:
+      - image: wunderio/silta-circleci:v0.1
