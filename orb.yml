@@ -137,3 +137,11 @@ jobs:
     steps:
       - checkout
       - phpcs
+
+  drupal-build:
+    executor: silta
+    steps:
+      - checkout
+      - drupal-composer-install
+      - yarn-install
+      - drupal-docker-build
