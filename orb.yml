@@ -1,11 +1,62 @@
 version: 2.1
 description: "A collection of CircleCI tools used by the Silta hosting infrastructure."
 
+# CircleCI executors
 executors:
   silta:
     docker:
       - image: wunderio/silta-circleci:v0.1
 
+# CircleCI Jobs
+jobs:
+  drupal-validate:
+    executor: silta
+    parameters:
+      additional-validators:
+        type: steps
+        default: []
+    steps:
+      - checkout
+      - phpcs
+      - steps: <<parameters.additional-validators>>
+
+  drupal-build:
+    executor: silta
+    parameters:
+      post-codebase-build:
+        type: steps
+        default: []
+    steps:
+      - checkout
+      - drupal-composer-install
+      - yarn-install
+      - steps: <<parameters.post-codebase-build>>
+      - drupal-docker-build
+
+  drupal-deploy:
+    executor: silta
+    parameters:
+      pre-release:
+        description: Steps to be executed before the Helm release is created.
+        type: steps
+        default: []
+      chart_name:
+        type: string
+        default: drupal
+      chart_repository:
+        type: string
+        default: https://wunderio.github.io/charts/
+
+    steps:
+      - checkout
+      - set-release-name
+      - gcloud-login
+      - steps: <<parameters.pre-release>>
+      - drupal-helm-deploy:
+          chart_name: <<parameters.chart_name>>
+          chart_repository: <<parameters.chart_repository>>
+
+# CircleCI commands
 commands:
   phpcs:
     steps:
@@ -98,6 +149,13 @@ commands:
             gcloud container clusters get-credentials silta-1 --zone europe-west2-a --project silta-204108
 
   drupal-helm-deploy:
+    parameters:
+      chart_name:
+        type: string
+        default: drupal
+      chart_repository:
+        type: string
+        default: https://wunderio.github.io/charts/
     steps:
       - run:
           name: Deploy helm release
@@ -108,8 +166,8 @@ commands:
               sleep 30
             fi
 
-            helm upgrade --install $RELEASE_NAME drupal \
-              --repo https://wunderio.github.io/charts/ \
+            helm upgrade --install $RELEASE_NAME <<parameters.chart_name>> \
+              --repo "<<parameters.chart_repository>>" \
               --set environmentName=$CIRCLE_BRANCH \
               --set php.image=$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}-php:$CIRCLE_SHA1 \
               --set nginx.image=$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}-nginx:$CIRCLE_SHA1 \
@@ -130,18 +188,3 @@ commands:
       - run:
           name: Release information
           command: helm status $RELEASE_NAME
-
-jobs:
-  drupal-validate:
-    executor: silta
-    steps:
-      - checkout
-      - phpcs
-
-  drupal-build:
-    executor: silta
-    steps:
-      - checkout
-      - drupal-composer-install
-      - yarn-install
-      - drupal-docker-build
