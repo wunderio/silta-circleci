@@ -44,6 +44,9 @@ jobs:
       chart_repository:
         type: string
         default: https://wunderio.github.io/charts/
+      silta_config:
+        type: string
+        default: "silta/silta.yml"
 
     steps:
       - checkout
@@ -53,6 +56,7 @@ jobs:
       - drupal-helm-deploy:
           chart_name: <<parameters.chart_name>>
           chart_repository: <<parameters.chart_repository>>
+          silta_config: <<parameters.silta_config>>
 
 # CircleCI commands
 commands:
@@ -154,10 +158,10 @@ commands:
     parameters:
       chart_name:
         type: string
-        default: drupal
       chart_repository:
         type: string
-        default: https://wunderio.github.io/charts/
+      silta_config:
+        type: string
     steps:
       - run:
           name: Deploy helm release
@@ -179,7 +183,7 @@ commands:
               --set shell.gitAuth.repositoryUrl="${CIRCLE_REPOSITORY_URL}" \
               --set shell.gitAuth.apiToken="${GITAUTH_API_TOKEN}" \
               --namespace=${CIRCLE_PROJECT_REPONAME,,} \
-              --values silta.yml
+              --values <<parameters.silta_config>>
 
       - run:
           name: Deployment log
