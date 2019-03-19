@@ -170,7 +170,7 @@ commands:
 
       - run:
           name: composer install
-          command: composer install -n --prefer-dist --ignore-platform-reqs --no-dev
+          command: composer install -n --prefer-dist --ignore-platform-reqs --no-dev --optimize-autoloader
 
       - save_cache:
           paths:
