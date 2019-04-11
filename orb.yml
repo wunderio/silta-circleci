@@ -211,15 +211,15 @@ commands:
     steps:
       - restore_cache:
           keys:
-            - v1-yarn-{{ checksum "yarn.lock" }}
-            - v1-yarn-
+            - v1-yarn-{{ .Environment.NODE_VERSION }}-{{ checksum "yarn.lock" }}
+            - v1-yarn-{{ .Environment.NODE_VERSION }}
 
       - run: yarn install
 
       - save_cache:
           paths:
             - node_modules
-          key: v1-yarn-{{ checksum "yarn.lock" }}
+          key: v1-yarn-{{ .Environment.NODE_VERSION }}-{{ checksum "yarn.lock" }}
 
   build-docker-image:
     parameters:
@@ -267,8 +267,8 @@ commands:
     steps:
       - restore_cache:
           keys:
-            - v1-npm-{{ checksum "<<parameters.path>>/package-lock.json" }}
-            - v1-npm-
+            - v1-npm-{{ .Environment.NODE_VERSION }}-{{ checksum "<<parameters.path>>/package-lock.json" }}
+            - v1-npm-{{ .Environment.NODE_VERSION }}
 
       - run:
           name: Install frontend dependencies
@@ -285,7 +285,7 @@ commands:
       - save_cache:
           paths:
             - <<parameters.path>>/node_modules
-          key: v1-npm-{{ checksum "<<parameters.path>>/package-lock.json" }}
+          key: v1-npm-{{ .Environment.NODE_VERSION }}-{{ checksum "<<parameters.path>>/package-lock.json" }}
 
   drupal-docker-build:
     steps:
