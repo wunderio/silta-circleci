@@ -22,6 +22,8 @@ jobs:
     steps:
       - checkout:
           path: ~/project
+      - drupal-composer-install:
+          install-dev-dependencies: true
       - phpcs
       - run:
           name: Silta basic checks
@@ -192,17 +194,39 @@ commands:
     steps:
       - run:
           name: phpcs validation
-          command: phpcs --standard=phpcs.xml -s
+          command: |
+            if [ -f vendor/bin/phpcs ]
+            then
+              vendor/bin/phpcs --config-set installed_paths vendor/drupal/coder/coder_sniffer
+              vendor/bin/phpcs --standard=phpcs.xml -s --colors
+            else
+              phpcs --standard=phpcs.xml -s --colors
+            fi
 
   drupal-composer-install:
+    parameters:
+      install-dev-dependencies:
+        type: boolean
+        default: false
     steps:
       - restore_cache:
           keys:
+            - v1-dependencies-{{ checksum "composer.lock" }}-<<parameters.install-dev-dependencies>>
             - v1-dependencies-{{ checksum "composer.lock" }}
 
-      - run:
-          name: composer install
-          command: composer install -n --prefer-dist --ignore-platform-reqs --no-dev --optimize-autoloader
+      - when:
+          condition: <<parameters.install-dev-dependencies>>
+          steps:
+            - run:
+                name: composer install
+                command: composer install -n --prefer-dist --ignore-platform-reqs --optimize-autoloader
+
+      - unless:
+          condition: <<parameters.install-dev-dependencies>>
+          steps:
+            - run:
+                name: composer install
+                command: composer install -n --prefer-dist --ignore-platform-reqs --no-dev --optimize-autoloader
 
       - save_cache:
           paths:
@@ -212,7 +236,7 @@ commands:
             - ./web/themes/contrib
             - ./web/profiles/contrib
             - ./web/libraries
-          key: v1-dependencies-{{ checksum "composer.lock" }}
+          key: v1-dependencies-{{ checksum "composer.lock" }}-<<parameters.install-dev-dependencies>>
 
   yarn-install:
     parameters:
