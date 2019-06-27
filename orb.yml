@@ -70,7 +70,7 @@ jobs:
         default: drupal
       chart_repository:
         type: string
-        default: https://wunderio.github.io/charts/
+        default: https://storage.googleapis.com/charts.wdr.io
       silta_config:
         type: string
         default: "silta/silta.yml"
@@ -145,7 +145,7 @@ jobs:
         default: drupal
       chart_repository:
         type: string
-        default: https://wunderio.github.io/charts/
+        default: https://storage.googleapis.com/charts.wdr.io
       silta_config:
         type: string
         default: "silta/silta.yml"
