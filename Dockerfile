@@ -13,7 +13,8 @@ RUN sudo apt-get install vim
 
 # Add gcloud CLI
 RUN curl -sSL https://sdk.cloud.google.com | bash \
-  && rm -r /home/circleci/google-cloud-sdk/.install/.backup/
+  && rm -r /home/circleci/google-cloud-sdk/.install/.backup/ \
+  && sed -i -e 's/line.split(/line.rsplit(None, 9/g' /home/circleci/google-cloud-sdk/platform/gsutil/gslib/commands/rsync.py # patch broken rsync command
 ENV PATH $PATH:/home/circleci/google-cloud-sdk/bin/
 
 # Add kubectl
