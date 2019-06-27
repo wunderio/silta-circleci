@@ -10,8 +10,12 @@ executors:
 # CircleCI Jobs
 jobs:
   drupal-validate:
-    executor: silta
+    executor: <<parameters.executor>>
     parameters:
+      executor:
+        description: The name of custom executor to use
+        type: executor
+        default: silta
       drupal-root:
         type: string
         default: "."
@@ -53,8 +57,12 @@ jobs:
       - steps: <<parameters.post-validation>>
 
   drupal-build-deploy:
-    executor: silta
+    executor: <<parameters.executor>>
     parameters:
+      executor:
+        description: The name of custom executor to use
+        type: executor
+        default: silta
       drupal-root:
         type: string
         default: "."
@@ -96,8 +104,12 @@ jobs:
 
   # Deprecated in favor of drupal-build-deploy.
   drupal-build:
-    executor: silta
+    executor: <<parameters.executor>>
     parameters:
+      executor:
+        description: The name of custom executor to use
+        type: executor
+        default: silta
       drupal-root:
         type: string
         default: "."
