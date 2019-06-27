@@ -379,6 +379,8 @@ commands:
             if [ ${#REPONAME} -ge 20 ]; then REPONAME=$REPONAME_TRUNCATED-$REPONAME_HASH; fi;
             echo "export RELEASE_NAME='$REPONAME--$BRANCHNAME'" >> $BASH_ENV
 
+            echo "The release name for this branch is $REPONAME--$BRANCHNAME"
+
   gcloud-login:
     steps:
       - run:
