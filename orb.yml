@@ -276,6 +276,10 @@ commands:
         type: string
       identifier:
         type: string
+      code-from:
+        description: The identifier of a docker image from which to take the code.
+        type: string
+        default: ""
     steps:
       - run:
           name: Build <<parameters.identifier>> docker image
@@ -284,18 +288,31 @@ commands:
 
             # Take a hash of all files in the folder except those ignored by docker.
             # Also make sure modification time or order play no role.
+            DOCKERFILE_FOLDER=`dirname <<parameters.dockerfile>>`
             IMAGE_TAG=`tar \
               --sort=name \
               --exclude-from=<<parameters.path>>/.dockerignore \
               --mtime='2000-01-01 00:00Z' \
               --clamp-mtime \
-              -cf - <<parameters.path>> <<parameters.dockerfile>> | sha1sum | cut -c 1-40`
+              -cf - <<parameters.path>> $DOCKERFILE_FOLDER | sha1sum | cut -c 1-40`
+
+            if [[ "<<parameters.code-from>>" ]]
+            then
+              BUILD_ARG="--build-arg CODE_FROM=$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}-<<parameters.code-from>>:$IMAGE_TAG"
+
+              # Create an empty folder to serve as an empty build path.
+              mkdir /tmp/empty
+              BUILD_PATH=/tmp/empty
+            else
+              BUILD_ARG=''
+              BUILD_PATH=<<parameters.path>>
+            fi
 
             if gcloud container images list-tags $IMAGE_URL | grep -q $IMAGE_TAG;
             then
               echo "This <<parameters.identifier>> image has already been built, the existing image from the Docker repository will be used."
             else
-              docker build -t $IMAGE_URL:$IMAGE_TAG -f <<parameters.dockerfile>> <<parameters.path>>
+              docker build $BUILD_ARG -t $IMAGE_URL:$IMAGE_TAG -f <<parameters.dockerfile>> $BUILD_PATH
               docker push $IMAGE_URL:$IMAGE_TAG
             fi
 
@@ -359,6 +376,7 @@ commands:
           dockerfile: silta/shell.Dockerfile
           path: "."
           identifier: shell
+          code-from: php
 
   set-release-name:
     steps:
