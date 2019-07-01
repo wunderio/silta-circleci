@@ -289,7 +289,7 @@ commands:
               --exclude-from=<<parameters.path>>/.dockerignore \
               --mtime='2000-01-01 00:00Z' \
               --clamp-mtime \
-              -cf - <<parameters.path>> | sha1sum | cut -c 1-40`
+              -cf - <<parameters.path>> <<parameters.dockerfile>> | sha1sum | cut -c 1-40`
 
             if gcloud container images list-tags $IMAGE_URL | grep -q $IMAGE_TAG;
             then
