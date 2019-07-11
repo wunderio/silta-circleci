@@ -409,6 +409,10 @@ commands:
             if [[ "$( helm list --failed | grep $RELEASE_NAME  | cut -f2 )" -eq 1 ]]; then
               echo "Removing failed first release"
               helm delete --purge $RELEASE_NAME
+
+              # Also remove any existing post-release hook, since it's technically not part of the release.
+              kubectl delete job -n ${CIRCLE_PROJECT_REPONAME,,} $RELEASE_NAME-post-release 2> /dev/null || true
+
               sleep 30
             fi
 
