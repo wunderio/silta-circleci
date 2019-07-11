@@ -412,6 +412,12 @@ commands:
               sleep 30
             fi
 
+            # Disable reference data if the required volume is not present.
+            if ! kubectl get pv | grep $CIRCLE_PROJECT_REPONAME | grep -q '-reference-data' ; then
+              echo "No reference data volume is found."
+              REFERENCE_DATA_OVERRIDE="--set referenceData.enabled=false"
+            fi
+
             helm upgrade --install $RELEASE_NAME <<parameters.chart_name>> \
               --repo "<<parameters.chart_repository>>" \
               --set environmentName=$CIRCLE_BRANCH \
@@ -423,6 +429,7 @@ commands:
               --set shell.gitAuth.repositoryUrl="${CIRCLE_REPOSITORY_URL}" \
               --set shell.gitAuth.apiToken="${GITAUTH_API_TOKEN}" \
               --set clusterDomain=$CLUSTER_DOMAIN \
+              $REFERENCE_DATA_OVERRIDE \
               --namespace=${CIRCLE_PROJECT_REPONAME,,} \
               --values <<parameters.silta_config>>
 
