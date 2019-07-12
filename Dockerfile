@@ -1,4 +1,4 @@
-FROM circleci/php:7.3.6-cli-node
+FROM circleci/php:7.3.7-cli-node
 
 # Make composer packages executable.
 ENV PATH="/home/circleci/.composer/vendor/bin:${PATH}"
@@ -9,7 +9,7 @@ RUN composer global require drush/drush-launcher hirak/prestissimo drupal/coder 
   && composer clearcache
 
 # Install vim based on popular demand.
-RUN sudo apt-get install vim
+RUN sudo apt-get update && sudo apt-get install vim
 
 # Add gcloud CLI
 RUN curl -sSL https://sdk.cloud.google.com | bash \
