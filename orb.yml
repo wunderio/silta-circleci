@@ -231,14 +231,14 @@ commands:
           steps:
             - run:
                 name: composer install
-                command: composer install -n --prefer-dist --ignore-platform-reqs --optimize-autoloader
+                command: composer install -n --prefer-dist --ignore-platform-reqs --optimize-autoloader --classmap-authoritative
 
       - unless:
           condition: <<parameters.install-dev-dependencies>>
           steps:
             - run:
                 name: composer install
-                command: composer install -n --prefer-dist --ignore-platform-reqs --no-dev --optimize-autoloader
+                command: composer install -n --prefer-dist --ignore-platform-reqs --no-dev --optimize-autoloader --classmap-authoritative
 
       - save_cache:
           paths:
