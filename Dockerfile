@@ -9,7 +9,7 @@ RUN composer global require drush/drush-launcher hirak/prestissimo drupal/coder 
   && composer clearcache
 
 # Install vim based on popular demand.
-RUN sudo apt-get install vim
+RUN sudo apt-get update && sudo apt-get install vim
 
 # Add gcloud CLI
 RUN curl -sSL https://sdk.cloud.google.com | bash \
