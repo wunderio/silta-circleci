@@ -287,6 +287,8 @@ commands:
             IMAGE_TAG=`tar \
               --sort=name \
               --exclude-from=<<parameters.path>>/.dockerignore \
+              --exclude=vendor/composer \
+              --exclude=vendor/autoload.php \
               --mtime='2000-01-01 00:00Z' \
               --clamp-mtime \
               -cf - <<parameters.path>> <<parameters.dockerfile>> | sha1sum | cut -c 1-40`
