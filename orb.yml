@@ -445,4 +445,6 @@ commands:
 
       - run:
           name: Release information
-          command: helm status $RELEASE_NAME
+          command: |
+            # Display only the part following NOTES from the helm status.
+            helm status $RELEASE_NAME | sed -e '1,/NOTES/d'
