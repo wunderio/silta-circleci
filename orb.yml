@@ -419,7 +419,7 @@ commands:
             # Disable reference data if the required volume is not present.
             if ! kubectl get pv | grep $CIRCLE_PROJECT_REPONAME | grep -q '-reference-data' ; then
               echo "No reference data volume is found."
-              REFERENCE_DATA_OVERRIDE="--set referenceData.enabled=false"
+              REFERENCE_DATA_OVERRIDE="--set referenceData.skipMount=true"
             fi
 
             helm upgrade --install $RELEASE_NAME <<parameters.chart_name>> \
