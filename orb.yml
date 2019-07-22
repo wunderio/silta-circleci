@@ -27,9 +27,9 @@ jobs:
         default: []
     working_directory: ~/project/<<parameters.drupal-root>>
     steps:
-      - steps: <<parameters.pre-validation>>
       - checkout:
           path: ~/project
+      - steps: <<parameters.pre-validation>>
       - drupal-composer-install:
           install-dev-dependencies: true
       - phpcs
