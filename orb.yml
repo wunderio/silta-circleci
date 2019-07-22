@@ -19,11 +19,15 @@ jobs:
       drupal-root:
         type: string
         default: "."
+      pre-validation:
+        type: steps
+        default: []
       post-validation:
         type: steps
         default: []
     working_directory: ~/project/<<parameters.drupal-root>>
     steps:
+      - steps: <<parameters.pre-validation>>
       - checkout:
           path: ~/project
       - drupal-composer-install:
