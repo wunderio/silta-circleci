@@ -4,7 +4,7 @@ FROM circleci/php:7.3.7-cli-node
 ENV PATH="/home/circleci/.composer/vendor/bin:${PATH}"
 
 # Install drush, prestissimo and coder.
-RUN composer global require drush/drush-launcher hirak/prestissimo drupal/coder \
+RUN composer global require drush/drush-launcher hirak/prestissimo drupal/coder:^8.3.5 \
   && phpcs --config-set installed_paths ~/.composer/vendor/drupal/coder/coder_sniffer \
   && composer clearcache
 
