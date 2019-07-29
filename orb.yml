@@ -423,7 +423,8 @@ commands:
             fi
 
             # Disable reference data if the required volume is not present.
-            if ! kubectl get pv | grep $CIRCLE_PROJECT_REPONAME | grep -q '-reference-data' ; then
+            REFERENCE_VOLUME=`kubectl get pv | grep "${CIRCLE_PROJECT_REPONAME,,}\/.*-reference-data"`
+            if [[ -z $REFERENCE_VOLUME ]] ; then
               REFERENCE_DATA_OVERRIDE="--set referenceData.skipMount=true"
             fi
 
