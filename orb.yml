@@ -42,7 +42,6 @@ jobs:
               silta/nginx.Dockerfile
               silta/php.Dockerfile
               silta/shell.Dockerfile
-              web/sites/default/settings.silta.php
             )
 
             for file in ${files[@]}; do
