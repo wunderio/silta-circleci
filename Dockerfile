@@ -21,7 +21,7 @@ ENV PATH $PATH:/home/circleci/google-cloud-sdk/bin/
 RUN yes | gcloud components install kubectl
 
 # Install Helm
-ENV HELM_VERSION v2.14.0
+ENV HELM_VERSION v2.14.3
 ENV FILENAME helm-${HELM_VERSION}-linux-amd64.tar.gz
 ENV HELM_URL https://storage.googleapis.com/kubernetes-helm/${FILENAME}
 
