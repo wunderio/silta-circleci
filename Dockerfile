@@ -15,6 +15,7 @@ RUN sudo apt-get update && sudo apt-get install vim
 ENV PATH $PATH:/home/circleci/google-cloud-sdk/bin/
 RUN curl -sSL https://sdk.cloud.google.com | bash \
   && gcloud components install kubectl --quiet \
+  && gcloud components remove bq --quiet \
   && gcloud components update --version 256.0.0 --quiet \
   && rm -r /home/circleci/google-cloud-sdk/.install/.backup/
 
