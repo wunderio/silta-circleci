@@ -243,6 +243,10 @@ commands:
                 name: composer install
                 command: composer install -n --prefer-dist --ignore-platform-reqs --no-dev --optimize-autoloader
 
+      - run:
+          name: Clean up vendor tests
+          command: find {vendor,web/core,web/*/contrib}  \( -name .git -o -name test -o -name tests -o -name Tests \) | xargs rm -rf
+
       - save_cache:
           paths:
             - ./vendor
