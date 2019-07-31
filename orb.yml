@@ -426,7 +426,7 @@ commands:
             fi
 
             # Disable reference data if the required volume is not present.
-            REFERENCE_VOLUME=`kubectl get pv | grep "${CIRCLE_PROJECT_REPONAME,,}\/.*-reference-data"`
+            REFERENCE_VOLUME=`kubectl get pv | grep "${CIRCLE_PROJECT_REPONAME,,}\/.*-reference-data"` || true
             if [[ -z $REFERENCE_VOLUME ]] ; then
               REFERENCE_DATA_OVERRIDE="--set referenceData.skipMount=true"
             fi
