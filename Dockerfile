@@ -1,4 +1,4 @@
-FROM circleci/php:7.3.7-cli-node
+FROM circleci/php:7.3.8-cli-node
 
 # Make composer packages executable.
 ENV PATH="/home/circleci/.composer/vendor/bin:${PATH}"
