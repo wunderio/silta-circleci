@@ -259,6 +259,7 @@ commands:
             - ./web/libraries
           key: v1-dependencies-{{ checksum "composer.lock" }}-<<parameters.install-dev-dependencies>>
 
+  # Deprecated in favor of the yarn-install-build command, or even better switch to npm and use npm-install-build.
   yarn-install:
     parameters:
       cache-version:
@@ -324,7 +325,6 @@ commands:
       cache-version:
         type: string
         default: "v1"
-
     steps:
       - restore_cache:
           keys:
@@ -348,13 +348,51 @@ commands:
             - <<parameters.path>>/node_modules
           key: <<parameters.cache-version>>-npm-{{ checksum "<<parameters.path>>/package-lock.json" }}
 
+  yarn-install-build:
+    parameters:
+      path:
+        type: string
+        default: "."
+      build-command:
+        type: string
+        default: "yarn build"
+      cache-version:
+        type: string
+        default: "v1"
+    steps:
+      - restore_cache:
+          keys:
+            - <<parameters.cache-version>>-yarn-{{ checksum "<<parameters.path>>/yarn.lock" }}
+            - <<parameters.cache-version>>-yarn-
+
+      - run:
+          name: Install frontend dependencies
+          command: |
+            cd <<parameters.path>>
+            yarn install
+
+      - run:
+          name: Build frontend
+          command: |
+            cd <<parameters.path>>
+            <<parameters.build-command>>
+
+      - save_cache:
+          paths:
+            - <<parameters.path>>/node_modules
+          key: <<parameters.cache-version>>-yarn-{{ checksum "<<parameters.path>>/yarn.lock" }}
+
+  docker-login:
+    steps:
+      - run:
+          name: Login to the docker registry
+          command: echo $GCLOUD_KEY_JSON | docker login -u _json_key --password-stdin https://$DOCKER_REPO_HOST
+
   drupal-docker-build:
     steps:
       - setup_remote_docker
 
-      - run:
-          name: Login to the docker registry
-          command: echo $GCLOUD_KEY_JSON | docker login -u _json_key --password-stdin https://$DOCKER_REPO_HOST
+      - docker-login
 
       - build-docker-image:
           dockerfile: silta/nginx.Dockerfile
@@ -418,11 +456,11 @@ commands:
           name: Deploy helm release
           command: |
             if [[ "$( helm list --failed | grep $RELEASE_NAME  | cut -f2 )" -eq 1 ]]; then
+              # Remove any existing post-release hook, since it's technically not part of the release.
+              kubectl delete job -n ${CIRCLE_PROJECT_REPONAME,,} $RELEASE_NAME-post-release 2> /dev/null || true
+
               echo "Removing failed first release"
               helm delete --purge $RELEASE_NAME
-
-              # Also remove any existing post-release hook, since it's technically not part of the release.
-              kubectl delete job -n ${CIRCLE_PROJECT_REPONAME,,} $RELEASE_NAME-post-release 2> /dev/null || true
 
               sleep 30
             fi
@@ -432,6 +470,19 @@ commands:
             if [[ -z $REFERENCE_VOLUME ]] ; then
               REFERENCE_DATA_OVERRIDE="--set referenceData.skipMount=true"
             fi
+
+            # Structure IP whitelist
+            #export WHITELIST_IP_oldVpn="1.1.1.1"
+            #export WHITELIST_IP_newVpn="2.2.2.2"
+
+            #WHITELISTED_IPS=""
+            #for var in `env | grep WHITELIST_IP_`; do
+            #  NAME=`echo $var | cut -f 1 -d "="| sed "s/WHITELIST_IP_//"`
+            #  IP=`echo $var | cut -f 2 -d "="`
+            #  WHITELISTED_IPS="$WHITELISTED_IPS --set nginx.basicauth.noauthips.$NAME='$IP'"
+            #done
+
+            # echo $WHITELISTED_IPS
 
             helm upgrade --install $RELEASE_NAME <<parameters.chart_name>> \
               --repo "<<parameters.chart_repository>>" \
