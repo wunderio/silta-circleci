@@ -292,11 +292,17 @@ commands:
           command: |
             IMAGE_URL=$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}-<<parameters.identifier>>
 
+            # Only exclude files
+            if [ -f <<parameters.path>>/.dockerignore ]
+            then
+              EXCLUDE_DOCKERIGNORE="--exclude-from=<<parameters.path>>/.dockerignore"
+            fi
+
             # Take a hash of all files in the folder except those ignored by docker.
             # Also make sure modification time or order play no role.
             IMAGE_TAG=`tar \
               --sort=name \
-              --exclude-from=<<parameters.path>>/.dockerignore \
+              $EXCLUDE_DOCKERIGNORE \
               --exclude=vendor/composer \
               --exclude=vendor/autoload.php \
               --mtime='2000-01-01 00:00Z' \
