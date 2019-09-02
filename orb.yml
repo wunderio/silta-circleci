@@ -247,7 +247,14 @@ commands:
 
       - run:
           name: Clean up vendor tests
-          command: find {vendor,web/core,web/*/contrib}  \( -name .git -o -name test -o -name tests -o -name Tests \) | xargs rm -rf
+          command: |
+            for directory in vendor web/core web/*/contrib
+            do
+              if [ -d $directory ]
+              then
+                find $directory \( -name .git -o -name test -o -name tests -o -name Tests \) | xargs rm -rf
+              fi
+            done
 
       - save_cache:
           paths:
