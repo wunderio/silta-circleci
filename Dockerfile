@@ -32,6 +32,6 @@ RUN curl -o /tmp/$FILENAME ${HELM_URL} \
   && helm plugin install https://github.com/lrills/helm-unittest \
   && helm repo remove local
 
-# Add custom php config. Increase memory to 256M
+# Add custom php config and lift memory limit.
 COPY conf/php/memory.ini /usr/local/etc/php/conf.d/memory.ini
 
