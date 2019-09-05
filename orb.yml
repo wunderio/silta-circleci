@@ -497,14 +497,22 @@ commands:
 
             # echo $WHITELISTED_IPS
 
+            # Override Database credentials if specified
+            if [[ ! -z "$DB_ROOT_PASS" ]] ; then
+              DB_ROOT_PASS_OVERRIDE="--set mariadb.rootUser.password=$DB_ROOT_PASS"
+            fi
+            if [[ ! -z "$DB_USER_PASS" ]] ; then
+              DB_USER_PASS_OVERRIDE="--set mariadb.db.password=$DB_USER_PASS"
+            fi
+
             helm upgrade --install $RELEASE_NAME <<parameters.chart_name>> \
               --repo "<<parameters.chart_repository>>" \
               --set environmentName=$CIRCLE_BRANCH \
               --set php.image=$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}-php:$php_HASH \
               --set nginx.image=$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}-nginx:$nginx_HASH \
               --set shell.image=$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}-shell:$shell_HASH \
-              --set mariadb.rootUser.password=$DB_ROOT_PASS \
-              --set mariadb.db.password=$DB_USER_PASS \
+              $DB_ROOT_PASS_OVERRIDE \
+              $DB_USER_PASS_OVERRIDE \
               --set shell.gitAuth.repositoryUrl="${CIRCLE_REPOSITORY_URL}" \
               --set shell.gitAuth.apiToken="${GITAUTH_API_TOKEN}" \
               --set clusterDomain=$CLUSTER_DOMAIN \
