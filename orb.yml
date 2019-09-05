@@ -497,6 +497,9 @@ commands:
 
             # echo $WHITELISTED_IPS
 
+            # Add codecentric repo for mailhog. https://github.com/helm/helm/issues/6005
+            helm repo add codecentric https://codecentric.github.io/helm-charts
+
             helm upgrade --install $RELEASE_NAME <<parameters.chart_name>> \
               --repo "<<parameters.chart_repository>>" \
               --set environmentName=$CIRCLE_BRANCH \
