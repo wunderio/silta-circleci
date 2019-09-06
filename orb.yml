@@ -84,6 +84,9 @@ jobs:
       chart_repository:
         type: string
         default: https://storage.googleapis.com/charts.wdr.io
+      decrypt_files:
+        type: string
+        default: ""
       silta_config:
         type: string
         default: "silta/silta.yml"
@@ -105,6 +108,7 @@ jobs:
             - drupal-helm-deploy:
                 chart_name: <<parameters.chart_name>>
                 chart_repository: <<parameters.chart_repository>>
+                decrypt_files: <<parameters.decrypt_files>>
                 silta_config: <<parameters.silta_config>>
 
   # Deprecated in favor of drupal-build-deploy.
@@ -462,12 +466,26 @@ commands:
         type: string
       chart_repository:
         type: string
+      decrypt_files:
+        type: string
       silta_config:
         type: string
     steps:
       - run:
           name: Deploy helm release
           command: |
+
+            # Secret management
+            if [[ ! -z "<<parameters.decrypt_files>>" ]]; then
+              echo "Decrypting secrets"
+              secrets="<<parameters.decrypt_files>>" 
+              for i in ${secrets//,/}; do 
+                echo $i;
+                openssl enc -d -aes-256-cbc -pbkdf2 -in $i -out $i.tmp -pass pass:${SECRET_KEY};
+                mv $i.tmp $i;
+              done
+            fi
+
             if [[ "$( helm list --failed | grep $RELEASE_NAME  | cut -f2 )" -eq 1 ]]; then
               # Remove any existing post-release hook, since it's technically not part of the release.
               kubectl delete job -n ${CIRCLE_PROJECT_REPONAME,,} $RELEASE_NAME-post-release 2> /dev/null || true
