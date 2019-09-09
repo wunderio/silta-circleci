@@ -460,6 +460,21 @@ commands:
             # Updates a kubeconfig file with appropriate credentials and endpoint information.
             gcloud container clusters get-credentials $GCLOUD_CLUSTER_NAME --zone $GCLOUD_COMPUTE_ZONE --project $GCLOUD_PROJECT_NAME
 
+  helm-cleanup:
+    steps:
+      - run:
+          name: Clean up failed Helm releases
+          command: |
+            if [[ "$( helm list --failed | grep $RELEASE_NAME  | cut -f2 )" -eq 1 ]]; then
+              # Remove any existing post-release hook, since it's technically not part of the release.
+              kubectl delete job -n ${CIRCLE_PROJECT_REPONAME,,} $RELEASE_NAME-post-release 2> /dev/null || true
+
+              echo "Removing failed first release"
+              helm delete --purge $RELEASE_NAME
+
+              sleep 30
+            fi
+
   drupal-helm-deploy:
     parameters:
       chart_name:
@@ -471,6 +486,7 @@ commands:
       silta_config:
         type: string
     steps:
+      - helm-cleanup
       - run:
           name: Deploy helm release
           command: |
