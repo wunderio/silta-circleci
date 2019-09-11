@@ -36,7 +36,6 @@ jobs:
       - run:
           name: Silta basic checks
           command: |
-            export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
             set -euo pipefail
 
             files=(
@@ -138,7 +137,6 @@ jobs:
       - run:
           name: Build docker images
           command: |
-            export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
             set -xeuo pipefail
 
             # Login to the docker registry.
@@ -190,7 +188,6 @@ jobs:
       - run:
           name: Deploy helm release
           command: |
-            export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
             set -xeuo pipefail
 
             if [[ $( helm list --failed | grep "$RELEASE_NAME" | cut -f2 ) -eq 1 ]]; then
@@ -217,13 +214,11 @@ jobs:
           name: Deployment log
           when: always
           command: |
-            export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
             set -xeuo pipefail
             kubectl logs "job/$RELEASE_NAME-post-release" -n "${CIRCLE_PROJECT_REPONAME,,}" -f --timestamps=true
       - run:
           name: Release information
           command: |
-            export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
             set -xeuo pipefail
             helm status "$RELEASE_NAME"
 
@@ -234,7 +229,6 @@ commands:
       - run:
           name: phpcs validation
           command: |
-            export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
             set -xeuo pipefail
 
             if [ -f vendor/bin/phpcs ]; then
@@ -261,7 +255,6 @@ commands:
             - run:
                 name: composer install
                 command: |
-                  export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
                   set -xeuo pipefail
 
                   composer install -n --prefer-dist --ignore-platform-reqs --optimize-autoloader
@@ -272,7 +265,6 @@ commands:
             - run:
                 name: composer install
                 command: |
-                  export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
                   set -xeuo pipefail
 
                   composer install -n --prefer-dist --ignore-platform-reqs --no-dev --optimize-autoloader
@@ -280,7 +272,6 @@ commands:
       - run:
           name: Clean up vendor tests
           command: |
-            export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
             set -xeuo pipefail
 
             for directory in vendor web/core web/*/contrib
@@ -332,7 +323,6 @@ commands:
       - run:
           name: Build <<parameters.identifier>> docker image
           command: |
-            export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
             set -xeuo pipefail
 
             image_url="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}"-'<<parameters.identifier>>'
@@ -385,7 +375,6 @@ commands:
       - run:
           name: Install frontend dependencies
           command: |
-            export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
             set -xeuo pipefail
 
             cd '<<parameters.path>>'
@@ -394,7 +383,6 @@ commands:
       - run:
           name: Build frontend
           command: |
-            export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
             set -xeuo pipefail
 
             cd '<<parameters.path>>'
@@ -425,7 +413,6 @@ commands:
       - run:
           name: Install frontend dependencies
           command: |
-            export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
             set -xeuo pipefail
 
             cd '<<parameters.path>>'
@@ -434,7 +421,6 @@ commands:
       - run:
           name: Build frontend
           command: |
-            export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
             set -xeuo pipefail
 
             cd '<<parameters.path>>'
@@ -450,7 +436,6 @@ commands:
       - run:
           name: Login to the docker registry
           command: |
-            export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
             set -xeuo pipefail
 
             printenv GCLOUD_KEY_JSON | docker login -u _json_key --password-stdin "https://$DOCKER_REPO_HOST"
@@ -481,7 +466,6 @@ commands:
       - run:
           name: Set release name
           command: |
-            export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
             set -xeuo pipefail
 
             # Release name length is 37 chars long, which leaves max 16 chars for kubernetes resource name.
@@ -506,7 +490,6 @@ commands:
       - run:
           name: Google Cloud login
           command: |
-            export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
             set -xeuo pipefail
 
             # Save key, authenticate and set compute zone.
@@ -522,7 +505,6 @@ commands:
       - run:
           name: Clean up failed Helm releases
           command: |
-            export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
             set -xeuo pipefail
 
             if [[ $( helm list --failed | grep "$RELEASE_NAME"  | cut -f2 ) -eq 1 ]]; then
@@ -550,7 +532,6 @@ commands:
       - run:
           name: Deploy helm release
           command: |
-            export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
             set -xeuo pipefail
 
             # Secret management
@@ -618,7 +599,6 @@ commands:
           name: Deployment log
           when: always
           command: |
-            export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
             set -xeuo pipefail
 
             kubectl logs "job/$RELEASE_NAME-post-release" -n "${CIRCLE_PROJECT_REPONAME,,}" -f --timestamps=true
@@ -626,7 +606,6 @@ commands:
       - run:
           name: Release information
           command: |
-            export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
             set -xeuo pipefail
 
             # Display only the part following NOTES from the helm status.
