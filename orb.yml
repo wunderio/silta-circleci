@@ -196,7 +196,6 @@ jobs:
               sleep 30
             fi
 
-            set +x # need to hide db password
             helm upgrade --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
               --repo '<<parameters.chart_repository>>' \
               --set environmentName="$CIRCLE_BRANCH" \
@@ -579,7 +578,6 @@ commands:
 
             # echo $WHITELISTED_IPS
 
-            set +x # need to hide db password
             helm upgrade --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
               --repo '<<parameters.chart_repository>>' \
               --set environmentName="$CIRCLE_BRANCH" \
