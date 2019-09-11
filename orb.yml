@@ -167,6 +167,8 @@ jobs:
                     --namespace=${CIRCLE_PROJECT_REPONAME,,} \
                     --values <<parameters.silta_config>>
 
+            - helm-release-information
+
 # CircleCI commands
 commands:
   phpcs:
@@ -433,6 +435,14 @@ commands:
               sleep 30
             fi
 
+  helm-release-information:
+    steps:
+      - run:
+          name: Release information
+          command: |
+            # Display only the part following NOTES from the helm status.
+            helm status $RELEASE_NAME | sed -e '1,/NOTES/d'
+
   drupal-helm-deploy:
     parameters:
       chart_name:
@@ -510,8 +520,4 @@ commands:
           command: |
             kubectl logs job/${RELEASE_NAME}-post-release -n ${CIRCLE_PROJECT_REPONAME,,} -f --timestamps=true
 
-      - run:
-          name: Release information
-          command: |
-            # Display only the part following NOTES from the helm status.
-            helm status $RELEASE_NAME | sed -e '1,/NOTES/d'
+      - helm-release-information
