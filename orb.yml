@@ -137,7 +137,7 @@ jobs:
       - run:
           name: Build docker images
           command: |
-            set -xeuo pipefail
+            set -euo pipefail
 
             # Login to the docker registry.
             printenv GCLOUD_KEY_JSON | docker login -u _json_key --password-stdin https://eu.gcr.io
@@ -188,7 +188,7 @@ jobs:
       - run:
           name: Deploy helm release
           command: |
-            set -xeuo pipefail
+            set -euo pipefail
 
             if [[ $( helm list --failed | grep "$RELEASE_NAME" | cut -f2 ) -eq 1 ]]; then
               echo "Removing failed first release"
@@ -214,12 +214,12 @@ jobs:
           name: Deployment log
           when: always
           command: |
-            set -xeuo pipefail
+            set -euo pipefail
             kubectl logs "job/$RELEASE_NAME-post-release" -n "${CIRCLE_PROJECT_REPONAME,,}" -f --timestamps=true
       - run:
           name: Release information
           command: |
-            set -xeuo pipefail
+            set -euo pipefail
             helm status "$RELEASE_NAME"
 
 # CircleCI commands
@@ -229,7 +229,7 @@ commands:
       - run:
           name: phpcs validation
           command: |
-            set -xeuo pipefail
+            set -euo pipefail
 
             if [ -f vendor/bin/phpcs ]; then
               vendor/bin/phpcs --config-set installed_paths vendor/drupal/coder/coder_sniffer
@@ -255,7 +255,7 @@ commands:
             - run:
                 name: composer install
                 command: |
-                  set -xeuo pipefail
+                  set -euo pipefail
 
                   composer install -n --prefer-dist --ignore-platform-reqs --optimize-autoloader
 
@@ -265,14 +265,14 @@ commands:
             - run:
                 name: composer install
                 command: |
-                  set -xeuo pipefail
+                  set -euo pipefail
 
                   composer install -n --prefer-dist --ignore-platform-reqs --no-dev --optimize-autoloader
 
       - run:
           name: Clean up vendor tests
           command: |
-            set -xeuo pipefail
+            set -euo pipefail
 
             for directory in vendor web/core web/*/contrib
             do
@@ -323,7 +323,7 @@ commands:
       - run:
           name: Build <<parameters.identifier>> docker image
           command: |
-            set -xeuo pipefail
+            set -euo pipefail
 
             image_url="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}"-'<<parameters.identifier>>'
 
@@ -375,7 +375,7 @@ commands:
       - run:
           name: Install frontend dependencies
           command: |
-            set -xeuo pipefail
+            set -euo pipefail
 
             cd '<<parameters.path>>'
             npm install
@@ -383,7 +383,7 @@ commands:
       - run:
           name: Build frontend
           command: |
-            set -xeuo pipefail
+            set -euo pipefail
 
             cd '<<parameters.path>>'
             <<parameters.build-command>>
@@ -413,7 +413,7 @@ commands:
       - run:
           name: Install frontend dependencies
           command: |
-            set -xeuo pipefail
+            set -euo pipefail
 
             cd '<<parameters.path>>'
             yarn install
@@ -421,7 +421,7 @@ commands:
       - run:
           name: Build frontend
           command: |
-            set -xeuo pipefail
+            set -euo pipefail
 
             cd '<<parameters.path>>'
             <<parameters.build-command>>
@@ -436,7 +436,7 @@ commands:
       - run:
           name: Login to the docker registry
           command: |
-            set -xeuo pipefail
+            set -euo pipefail
 
             printenv GCLOUD_KEY_JSON | docker login -u _json_key --password-stdin "https://$DOCKER_REPO_HOST"
 
@@ -466,7 +466,7 @@ commands:
       - run:
           name: Set release name
           command: |
-            set -xeuo pipefail
+            set -euo pipefail
 
             # Release name length is 37 chars long, which leaves max 16 chars for kubernetes resource name.
             # Release name is prefixed with w because  it _HAS_ to start with alphabetic character. w 4 wunder.
@@ -490,7 +490,7 @@ commands:
       - run:
           name: Google Cloud login
           command: |
-            set -xeuo pipefail
+            set -euo pipefail
 
             # Save key, authenticate and set compute zone.
             printenv GCLOUD_KEY_JSON > "$HOME/gcloud-service-key.json"
@@ -505,7 +505,7 @@ commands:
       - run:
           name: Clean up failed Helm releases
           command: |
-            set -xeuo pipefail
+            set -euo pipefail
 
             if [[ $( helm list --failed | grep "$RELEASE_NAME"  | cut -f2 ) -eq 1 ]]; then
               # Remove any existing post-release hook, since it's technically not part of the release.
@@ -532,7 +532,7 @@ commands:
       - run:
           name: Deploy helm release
           command: |
-            set -xeuo pipefail
+            set -euo pipefail
 
             # Secret management
             secrets='<<parameters.decrypt_files>>'
@@ -599,14 +599,14 @@ commands:
           name: Deployment log
           when: always
           command: |
-            set -xeuo pipefail
+            set -euo pipefail
 
             kubectl logs "job/$RELEASE_NAME-post-release" -n "${CIRCLE_PROJECT_REPONAME,,}" -f --timestamps=true
 
       - run:
           name: Release information
           command: |
-            set -xeuo pipefail
+            set -euo pipefail
 
             # Display only the part following NOTES from the helm status.
             helm status "$RELEASE_NAME" | sed -e '1,/NOTES/d'
