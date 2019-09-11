@@ -30,6 +30,8 @@ RUN curl -o /tmp/$FILENAME ${HELM_URL} \
   && sudo mv /tmp/linux-amd64/helm /bin/helm \
   && helm init --client-only \
   && helm plugin install https://github.com/lrills/helm-unittest \
+  && helm repo add codecentric https://codecentric.github.io/helm-charts \
+  && helm repo add wunderio https://storage.googleapis.com/charts.wdr.io \
   && helm repo remove local
 
 # Add custom php config and lift memory limit.
