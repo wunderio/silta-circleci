@@ -9,15 +9,14 @@ RUN composer global require drush/drush-launcher hirak/prestissimo drupal/coder:
   && composer clearcache
 
 # Install vim based on popular demand.
-RUN sudo apt-get update && sudo apt-get install vim
+RUN sudo apt-get update && sudo apt-get install vim && sudo apt-get clean
 
 # Add gcloud CLI and kubectl
-ENV PATH $PATH:/home/circleci/google-cloud-sdk/bin/
-RUN curl -sSL https://sdk.cloud.google.com | bash \
-  && gcloud components install kubectl --quiet \
-  && gcloud components remove bq --quiet \
-  && gcloud components update --version 256.0.0 --quiet \
-  && rm -r /home/circleci/google-cloud-sdk/.install/.backup/
+RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
+  && sudo apt-get install apt-transport-https ca-certificates \
+  && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - \
+  && sudo apt-get update && sudo apt-get install google-cloud-sdk kubectl \
+  && sudo apt-get clean
 
 # Install Helm
 ENV HELM_VERSION v2.14.3
