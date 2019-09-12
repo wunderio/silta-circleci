@@ -432,7 +432,11 @@ commands:
               echo "Removing failed first release"
               helm delete --purge $RELEASE_NAME
 
-              sleep 30
+              until [[ -z `kubectl get pv | grep "$RELEASE_NAME-public-files"` ]]
+              do
+                echo "Waiting for volumes to be deleted."
+                sleep 5
+              done
             fi
 
   helm-release-information:
