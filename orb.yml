@@ -209,16 +209,16 @@ commands:
                 name: composer install
                 command: composer install -n --prefer-dist --ignore-platform-reqs --no-dev --optimize-autoloader
 
-      - run:
-          name: Clean up vendor tests
-          command: |
-            for directory in vendor web/core web/*/contrib
-            do
-              if [ -d $directory ]
-              then
-                find $directory \( -name .git -o -name test -o -name tests -o -name Tests \) | xargs rm -rf
-              fi
-            done
+            - run:
+                name: Clean up vendor tests
+                command: |
+                  for directory in vendor web/core web/*/contrib
+                  do
+                    if [ -d $directory ]
+                    then
+                      find $directory \( -name .git -o -name test -o -name tests -o -name Tests \) | xargs rm -rf
+                    fi
+                  done
 
       - save_cache:
           paths:
