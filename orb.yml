@@ -163,8 +163,8 @@ jobs:
                 command: |
                   set -euo pipefail
                   reponame="${CIRCLE_PROJECT_REPONAME,,}"
-                  helm upgrade --install $RELEASE_NAME <<parameters.chart_name>> \
-                    --repo "<<parameters.chart_repository>>" \
+                  helm upgrade --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
+                    --repo '<<parameters.chart_repository>>' \
                     --set environmentName="$CIRCLE_BRANCH" \
                     --set frontend.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-node:$node_HASH" \
                     --set clusterDomain=$CLUSTER_DOMAIN \
@@ -536,10 +536,10 @@ commands:
 
             # Override Database credentials if specified
             if [[ ! -z "$DB_ROOT_PASS" ]] ; then
-              DB_ROOT_PASS_OVERRIDE="--set mariadb.rootUser.password=$DB_ROOT_PASS"
+              db_root_pass_override="--set mariadb.rootUser.password=$DB_ROOT_PASS"
             fi
             if [[ ! -z "$DB_USER_PASS" ]] ; then
-              DB_USER_PASS_OVERRIDE="--set mariadb.db.password=$DB_USER_PASS"
+              db_user_pass_override="--set mariadb.db.password=$DB_USER_PASS"
             fi
 
             helm upgrade --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
@@ -548,12 +548,12 @@ commands:
               --set php.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-php:$php_HASH" \
               --set nginx.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-nginx:$nginx_HASH" \
               --set shell.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-shell:$shell_HASH" \
-              $DB_ROOT_PASS_OVERRIDE \
-              $DB_USER_PASS_OVERRIDE \
+              $db_root_pass_override \
+              $db_user_pass_override \
               --set shell.gitAuth.repositoryUrl="$CIRCLE_REPOSITORY_URL" \
               --set shell.gitAuth.apiToken="$GITAUTH_API_TOKEN" \
               --set clusterDomain="$CLUSTER_DOMAIN" \
-              "$reference_data_override" \
+              $reference_data_override \
               --namespace="$reponame" \
               --values '<<parameters.silta_config>>'
 
