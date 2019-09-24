@@ -113,113 +113,63 @@ jobs:
                 decrypt_files: <<parameters.decrypt_files>>
                 silta_config: <<parameters.silta_config>>
 
-  # Deprecated in favor of drupal-build-deploy.
-  drupal-build:
+  frontend-build-deploy:
     executor: <<parameters.executor>>
     parameters:
       executor:
         description: The name of custom executor to use
         type: executor
         default: silta
-      drupal-root:
-        type: string
-        default: "."
       codebase-build:
-        type: steps
-        default: []
-    working_directory: ~/project/<<parameters.drupal-root>>
-    steps:
-      - run: echo "Deprecated, update to drupal-build-deploy in your CircleCI configuration."
-      - checkout:
-          path: ~/project
-      - steps: <<parameters.codebase-build>>
-      - setup_remote_docker
-      - run:
-          name: Build docker images
-          command: |
-            set -euo pipefail
-
-            # Login to the docker registry.
-            printenv GCLOUD_KEY_JSON | docker login -u _json_key --password-stdin https://eu.gcr.io
-
-            # Build the Nginx image and push it to the repository.
-            image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}-nginx:$CIRCLE_SHA1"
-            docker build -t "$image" -f silta/nginx.Dockerfile web
-            docker push "$image"
-
-            # Build the Drupal image and push it to the repository.
-            image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}-php:$CIRCLE_SHA1"
-            docker build -t "$image" -f silta/php.Dockerfile .
-            docker push "$image"
-
-            # Build the Shell image and push it to the repository.
-            image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}-shell:$CIRCLE_SHA1"
-            docker build -t "$image" -f silta/shell.Dockerfile .
-            docker push "$image"
-
-  # Deprecated in favor of drupal-build-deploy.
-  drupal-deploy:
-    executor: silta
-    parameters:
-      drupal-root:
-        type: string
-        default: "."
-      pre-release:
-        description: Steps to be executed before the Helm release is created.
         type: steps
         default: []
       chart_name:
         type: string
-        default: drupal
+        default: frontend
       chart_repository:
         type: string
         default: https://storage.googleapis.com/charts.wdr.io
       silta_config:
         type: string
         default: "silta/silta.yml"
-    working_directory: ~/project/<<parameters.drupal-root>>
+      skip-deployment:
+        type: boolean
+        default: false
     steps:
-      - run: echo "Deprecated, update to drupal-build-deploy in your CircleCI configuration."
-      - checkout:
-          path: ~/project
-      - set-release-name
+      - checkout
+
+      - steps: <<parameters.codebase-build>>
+
+      - setup_remote_docker
+
       - gcloud-login
-      - steps: <<parameters.pre-release>>
-      - run:
-          name: Deploy helm release
-          command: |
-            set -euo pipefail
 
-            if [[ $( helm list --failed | grep "$RELEASE_NAME" | cut -f2 ) -eq 1 ]]; then
-              echo "Removing failed first release"
-              helm delete --purge "$RELEASE_NAME"
-              sleep 30
-            fi
+      - docker-login
 
-            helm upgrade --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
-              --repo '<<parameters.chart_repository>>' \
-              --set environmentName="$CIRCLE_BRANCH" \
-              --set php.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}-php:$CIRCLE_SHA1" \
-              --set nginx.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}-nginx:$CIRCLE_SHA1" \
-              --set shell.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}-shell:$CIRCLE_SHA1" \
-              --set mariadb.rootUser.password="$DB_ROOT_PASS" \
-              --set mariadb.db.password="$DB_USER_PASS" \
-              --set shell.gitAuth.repositoryUrl="$CIRCLE_REPOSITORY_URL" \
-              --set shell.gitAuth.apiToken="$GITAUTH_API_TOKEN" \
-              --set clusterDomain="$CLUSTER_DOMAIN" \
-              --namespace="${CIRCLE_PROJECT_REPONAME,,}" \
-              --values '<<parameters.silta_config>>'
-      - run:
-          name: Deployment log
-          when: always
-          command: |
-            set -euo pipefail
-            kubectl logs "job/$RELEASE_NAME-post-release" -n "${CIRCLE_PROJECT_REPONAME,,}" -f --timestamps=true
-      - run:
-          name: Release information
-          command: |
-            set -euo pipefail
-            helm status "$RELEASE_NAME"
+      - build-docker-image:
+          dockerfile: silta/node.Dockerfile
+          path: .
+          identifier: node
+
+      - unless:
+          condition: <<parameters.skip-deployment>>
+          steps:
+            - set-release-name
+
+            - helm-cleanup
+
+            - run:
+                name: Deploy helm release
+                command: |
+                  helm upgrade --install $RELEASE_NAME <<parameters.chart_name>> \
+                    --repo "<<parameters.chart_repository>>" \
+                    --set environmentName=$CIRCLE_BRANCH \
+                    --set frontend.image=$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}-node:$node_HASH \
+                    --set clusterDomain=$CLUSTER_DOMAIN \
+                    --namespace=${CIRCLE_PROJECT_REPONAME,,} \
+                    --values <<parameters.silta_config>>
+
+            - helm-release-information
 
 # CircleCI commands
 commands:
@@ -513,8 +463,21 @@ commands:
               echo "Removing failed first release"
               helm delete --purge "$RELEASE_NAME"
 
-              sleep 30
+              echo -n "Waiting for volumes to be deleted."
+              until [[ -z `kubectl get pv | grep "$RELEASE_NAME-public-files"` ]]
+              do
+                echo -n "."
+                sleep 5
+              done
             fi
+
+  helm-release-information:
+    steps:
+      - run:
+          name: Release information
+          command: |
+            # Display only the part following NOTES from the helm status.
+            helm status $RELEASE_NAME | sed -e '1,/NOTES/d'
 
   drupal-helm-deploy:
     parameters:
@@ -548,16 +511,6 @@ commands:
 
             reponame="${CIRCLE_PROJECT_REPONAME,,}"
 
-            if [[ $( helm list --failed | grep "$RELEASE_NAME" | cut -f2 ) -eq 1 ]]; then
-              # Remove any existing post-release hook, since it's technically not part of the release.
-              kubectl delete job -n "$reponame" "$RELEASE_NAME-post-release" 2> /dev/null || true
-
-              echo "Removing failed first release"
-              helm delete --purge "$RELEASE_NAME"
-
-              sleep 30
-            fi
-
             # Disable reference data if the required volume is not present.
             reference_volume=$(kubectl get pv | grep --extended-regexp "$reponame/.*-reference-data") || true
             reference_data_override=''
@@ -578,14 +531,22 @@ commands:
 
             # echo $WHITELISTED_IPS
 
+            # Override Database credentials if specified
+            if [[ ! -z "$DB_ROOT_PASS" ]] ; then
+              DB_ROOT_PASS_OVERRIDE="--set mariadb.rootUser.password=$DB_ROOT_PASS"
+            fi
+            if [[ ! -z "$DB_USER_PASS" ]] ; then
+              DB_USER_PASS_OVERRIDE="--set mariadb.db.password=$DB_USER_PASS"
+            fi
+
             helm upgrade --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
               --repo '<<parameters.chart_repository>>' \
               --set environmentName="$CIRCLE_BRANCH" \
               --set php.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-php:$php_HASH" \
               --set nginx.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-nginx:$nginx_HASH" \
               --set shell.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-shell:$shell_HASH" \
-              --set mariadb.rootUser.password="$DB_ROOT_PASS" \
-              --set mariadb.db.password="$DB_USER_PASS" \
+              $DB_ROOT_PASS_OVERRIDE \
+              $DB_USER_PASS_OVERRIDE \
               --set shell.gitAuth.repositoryUrl="$CIRCLE_REPOSITORY_URL" \
               --set shell.gitAuth.apiToken="$GITAUTH_API_TOKEN" \
               --set clusterDomain="$CLUSTER_DOMAIN" \
@@ -602,9 +563,14 @@ commands:
             kubectl logs "job/$RELEASE_NAME-post-release" -n "${CIRCLE_PROJECT_REPONAME,,}" -f --timestamps=true
 
       - run:
-          name: Release information
+          name: Wait for resources to be ready
           command: |
             set -euo pipefail
 
+            # Get all deployments in the release and check the status of each one.
+            kubectl get deployment -n ${CIRCLE_PROJECT_REPONAME,,} -l release=${RELEASE_NAME} -o name | xargs -n 1 kubectl rollout status -n ${CIRCLE_PROJECT_REPONAME,,}
+            
             # Display only the part following NOTES from the helm status.
             helm status "$RELEASE_NAME" | sed -e '1,/NOTES/d'
+
+      - helm-release-information
