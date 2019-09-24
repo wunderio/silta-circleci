@@ -161,13 +161,15 @@ jobs:
             - run:
                 name: Deploy helm release
                 command: |
+                  set -euo pipefail
+                  reponame="${CIRCLE_PROJECT_REPONAME,,}"
                   helm upgrade --install $RELEASE_NAME <<parameters.chart_name>> \
                     --repo "<<parameters.chart_repository>>" \
-                    --set environmentName=$CIRCLE_BRANCH \
-                    --set frontend.image=$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}-node:$node_HASH \
+                    --set environmentName="$CIRCLE_BRANCH" \
+                    --set frontend.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-node:$node_HASH" \
                     --set clusterDomain=$CLUSTER_DOMAIN \
-                    --namespace=${CIRCLE_PROJECT_REPONAME,,} \
-                    --values <<parameters.silta_config>>
+                    --namespace="$reponame" \
+                    --values '<<parameters.silta_config>>'
 
             - helm-release-information
 
@@ -455,10 +457,11 @@ commands:
           name: Clean up failed Helm releases
           command: |
             set -euo pipefail
+            reponame="${CIRCLE_PROJECT_REPONAME,,}"
 
             if [[ $( helm list --failed | grep "$RELEASE_NAME"  | cut -f2 ) -eq 1 ]]; then
               # Remove any existing post-release hook, since it's technically not part of the release.
-              kubectl delete job -n "${CIRCLE_PROJECT_REPONAME,,}" "$RELEASE_NAME-post-release" 2> /dev/null || true
+              kubectl delete job -n "$reponame" "$RELEASE_NAME-post-release" 2> /dev/null || true
 
               echo "Removing failed first release"
               helm delete --purge "$RELEASE_NAME"
@@ -559,16 +562,16 @@ commands:
           when: always
           command: |
             set -euo pipefail
-
-            kubectl logs "job/$RELEASE_NAME-post-release" -n "${CIRCLE_PROJECT_REPONAME,,}" -f --timestamps=true
+            reponame="${CIRCLE_PROJECT_REPONAME,,}"
+            kubectl logs "job/$RELEASE_NAME-post-release" -n "$reponame" -f --timestamps=true
 
       - run:
           name: Wait for resources to be ready
           command: |
             set -euo pipefail
-
+            reponame="${CIRCLE_PROJECT_REPONAME,,}"
             # Get all deployments in the release and check the status of each one.
-            kubectl get deployment -n ${CIRCLE_PROJECT_REPONAME,,} -l release=${RELEASE_NAME} -o name | xargs -n 1 kubectl rollout status -n ${CIRCLE_PROJECT_REPONAME,,}
+            kubectl get deployment -n "$reponame" -l "release=${RELEASE_NAME}" -o name | xargs -n 1 kubectl rollout status -n "$reponame"
             
             # Display only the part following NOTES from the helm status.
             helm status "$RELEASE_NAME" | sed -e '1,/NOTES/d'
