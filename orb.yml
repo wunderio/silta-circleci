@@ -480,7 +480,7 @@ commands:
           name: Release information
           command: |
             # Display only the part following NOTES from the helm status.
-            helm status $RELEASE_NAME | sed -e '1,/NOTES/d'
+            helm status "$RELEASE_NAME" | sed -e '1,/NOTES/d'
 
   drupal-helm-deploy:
     parameters:
@@ -573,7 +573,4 @@ commands:
             # Get all deployments in the release and check the status of each one.
             kubectl get deployment -n "$reponame" -l "release=${RELEASE_NAME}" -o name | xargs -n 1 kubectl rollout status -n "$reponame"
             
-            # Display only the part following NOTES from the helm status.
-            helm status "$RELEASE_NAME" | sed -e '1,/NOTES/d'
-
       - helm-release-information
