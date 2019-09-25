@@ -36,6 +36,8 @@ jobs:
       - run:
           name: Silta basic checks
           command: |
+            set -euo pipefail
+
             files=(
               silta/silta.yml
               silta/silta-prod.yml
@@ -46,8 +48,8 @@ jobs:
               web/.dockerignore
             )
 
-            for file in ${files[@]}; do
-              if [ -f $file ]; then
+            for file in "${files[@]}"; do
+              if [ -f "$file" ]; then
                 echo "✅ $file is present"
               else
                 echo "❌ $file is missing from the repository."
@@ -159,13 +161,15 @@ jobs:
             - run:
                 name: Deploy helm release
                 command: |
-                  helm upgrade --install $RELEASE_NAME <<parameters.chart_name>> \
-                    --repo "<<parameters.chart_repository>>" \
-                    --set environmentName=$CIRCLE_BRANCH \
-                    --set frontend.image=$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}-node:$node_HASH \
+                  set -euo pipefail
+                  reponame="${CIRCLE_PROJECT_REPONAME,,}"
+                  helm upgrade --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
+                    --repo '<<parameters.chart_repository>>' \
+                    --set environmentName="$CIRCLE_BRANCH" \
+                    --set frontend.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-node:$node_HASH" \
                     --set clusterDomain=$CLUSTER_DOMAIN \
-                    --namespace=${CIRCLE_PROJECT_REPONAME,,} \
-                    --values <<parameters.silta_config>>
+                    --namespace="$reponame" \
+                    --values '<<parameters.silta_config>>'
 
             - helm-release-information
 
@@ -176,8 +180,9 @@ commands:
       - run:
           name: phpcs validation
           command: |
-            if [ -f vendor/bin/phpcs ]
-            then
+            set -euo pipefail
+
+            if [ -f vendor/bin/phpcs ]; then
               vendor/bin/phpcs --config-set installed_paths vendor/drupal/coder/coder_sniffer
               vendor/bin/phpcs --standard=phpcs.xml -s --colors
             else
@@ -200,25 +205,33 @@ commands:
           steps:
             - run:
                 name: composer install
-                command: composer install -n --prefer-dist --ignore-platform-reqs --optimize-autoloader
+                command: |
+                  set -euo pipefail
+
+                  composer install -n --prefer-dist --ignore-platform-reqs --optimize-autoloader
 
       - unless:
           condition: <<parameters.install-dev-dependencies>>
           steps:
             - run:
                 name: composer install
-                command: composer install -n --prefer-dist --ignore-platform-reqs --no-dev --optimize-autoloader
-
-            - run:
-                name: Clean up vendor tests
                 command: |
-                  for directory in vendor web/core web/*/contrib
-                  do
-                    if [ -d $directory ]
-                    then
-                      find $directory \( -name .git -o -name test -o -name tests -o -name Tests \) | xargs rm -rf
-                    fi
-                  done
+                  set -euo pipefail
+
+                  composer install -n --prefer-dist --ignore-platform-reqs --no-dev --optimize-autoloader
+
+      - run:
+          name: Clean up vendor tests
+          command: |
+            set -euo pipefail
+
+            for directory in vendor web/core web/*/contrib
+            do
+              if [ -d "$directory" ]
+              then
+                find "$directory" \( -name .git -o -name test -o -name tests -o -name Tests \) -print0 | xargs -0 rm -rf
+              fi
+            done
 
       - save_cache:
           paths:
@@ -261,35 +274,37 @@ commands:
       - run:
           name: Build <<parameters.identifier>> docker image
           command: |
-            IMAGE_URL=$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}-<<parameters.identifier>>
+            set -euo pipefail
+
+            image_url="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}"-'<<parameters.identifier>>'
 
             # Only exclude files
-            if [ -f <<parameters.path>>/.dockerignore ]
+            exclude_dockerignore=''
+            if [ -f '<<parameters.path>>/.dockerignore' ]
             then
-              EXCLUDE_DOCKERIGNORE="--exclude-from=<<parameters.path>>/.dockerignore"
+              exclude_dockerignore=--exclude-from='<<parameters.path>>'/.dockerignore
             fi
 
             # Take a hash of all files in the folder except those ignored by docker.
             # Also make sure modification time or order play no role.
-            IMAGE_TAG=`tar \
+            image_tag=$(tar \
               --sort=name \
-              $EXCLUDE_DOCKERIGNORE \
+              "$exclude_dockerignore" \
               --exclude=vendor/composer \
               --exclude=vendor/autoload.php \
               --mtime='2000-01-01 00:00Z' \
               --clamp-mtime \
-              -cf - <<parameters.path>> <<parameters.dockerfile>> | sha1sum | cut -c 1-40`
+              -cf - '<<parameters.path>>' '<<parameters.dockerfile>>' | sha1sum | cut -c 1-40)
 
-            if gcloud container images list-tags $IMAGE_URL | grep -q $IMAGE_TAG;
-            then
+            if gcloud container images list-tags "$image_url" | grep -q "$image_tag"; then
               echo "This <<parameters.identifier>> image has already been built, the existing image from the Docker repository will be used."
             else
-              docker build -t $IMAGE_URL:$IMAGE_TAG -f <<parameters.dockerfile>> <<parameters.path>>
-              docker push $IMAGE_URL:$IMAGE_TAG
+              docker build -t "$image_url:$image_tag" -f '<<parameters.dockerfile>>' '<<parameters.path>>'
+              docker push "$image_url:$image_tag"
             fi
 
             # Persist the image tag so it is available during deployment.
-            echo "export <<parameters.identifier>>_HASH='$IMAGE_TAG'" >> $BASH_ENV
+            echo "export <<parameters.identifier>>_HASH='$image_tag'" >> "$BASH_ENV"
 
   npm-install-build:
     parameters:
@@ -311,13 +326,17 @@ commands:
       - run:
           name: Install frontend dependencies
           command: |
-            cd <<parameters.path>>
+            set -euo pipefail
+
+            cd '<<parameters.path>>'
             npm install
 
       - run:
           name: Build frontend
           command: |
-            cd <<parameters.path>>
+            set -euo pipefail
+
+            cd '<<parameters.path>>'
             <<parameters.build-command>>
 
       - save_cache:
@@ -345,13 +364,17 @@ commands:
       - run:
           name: Install frontend dependencies
           command: |
-            cd <<parameters.path>>
+            set -euo pipefail
+
+            cd '<<parameters.path>>'
             yarn install
 
       - run:
           name: Build frontend
           command: |
-            cd <<parameters.path>>
+            set -euo pipefail
+
+            cd '<<parameters.path>>'
             <<parameters.build-command>>
 
       - save_cache:
@@ -363,7 +386,10 @@ commands:
     steps:
       - run:
           name: Login to the docker registry
-          command: echo $GCLOUD_KEY_JSON | docker login -u _json_key --password-stdin https://$DOCKER_REPO_HOST
+          command: |
+            set -euo pipefail
+
+            printenv GCLOUD_KEY_JSON | docker login -u _json_key --password-stdin "https://$DOCKER_REPO_HOST"
 
   drupal-docker-build:
     steps:
@@ -391,46 +417,54 @@ commands:
       - run:
           name: Set release name
           command: |
+            set -euo pipefail
+
             # Release name length is 37 chars long, which leaves max 16 chars for kubernetes resource name.
             # Release name is prefixed with w because  it _HAS_ to start with alphabetic character. w 4 wunder.
-            BRANCHNAME_LOWER=${CIRCLE_BRANCH,,}
-            BRANCHNAME=${BRANCHNAME_LOWER//[^[:alnum:]]/-}
-            BRANCHNAME_HASH=$(echo -n $BRANCHNAME | shasum -a 256 | cut -c 1-4 )
-            BRANCHNAME_TRUNCATED=$(echo $BRANCHNAME | cut -c 1-15 | sed 's/^\(.*\)-$/\1/' )
-            REPONAME=${CIRCLE_PROJECT_REPONAME,,}
-            REPONAME_HASH=$(echo -n $REPONAME | shasum -a 256 | cut -c 1-4 )
-            REPONAME_TRUNCATED=$(echo $REPONAME | cut -c 1-15 | sed 's/^\(.*\)-$/\1/' )
+            branchname_lower="${CIRCLE_BRANCH,,}"
+            branchname="${branchname_lower//[^[:alnum:]]/-}"
+            branchname_hash=$(printf "$branchname" | shasum -a 256 | cut -c 1-4 )
+            branchname_truncated=$(printf "$branchname" | cut -c 1-15 | sed 's/^\(.*\)-$/\1/' )
+            reponame="${CIRCLE_PROJECT_REPONAME,,}"
+            reponame_hash=$(printf "$reponame" | shasum -a 256 | cut -c 1-4 )
+            reponame_truncated=$(printf "$reponame" | cut -c 1-15 | sed 's/^\(.*\)-$/\1/' )
             # Truncate long names
-            if [ ${#BRANCHNAME} -ge 20 ]; then BRANCHNAME=$BRANCHNAME_TRUNCATED-$BRANCHNAME_HASH; fi;
-            if [ ${#REPONAME} -ge 20 ]; then REPONAME=$REPONAME_TRUNCATED-$REPONAME_HASH; fi;
-            echo "export RELEASE_NAME='$REPONAME--$BRANCHNAME'" >> $BASH_ENV
+            if [ ${#branchname} -ge 20 ]; then branchname="$branchname_truncated-$branchname_hash"; fi
+            if [ ${#reponame} -ge 20 ]; then reponame="$reponame_truncated-$reponame_hash"; fi
+            name="$reponame--$branchname"
+            echo "export RELEASE_NAME='$name'" >> "$BASH_ENV"
 
-            echo "The release name for this branch is $REPONAME--$BRANCHNAME"
+            echo "The release name for this branch is $name"
 
   gcloud-login:
     steps:
       - run:
           name: Google Cloud login
           command: |
+            set -euo pipefail
+
             # Save key, authenticate and set compute zone.
-            echo $GCLOUD_KEY_JSON > ${HOME}/gcloud-service-key.json
-            gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json --project $GCLOUD_PROJECT_NAME
-            gcloud config set compute/zone $GCLOUD_COMPUTE_ZONE
+            printenv GCLOUD_KEY_JSON > "$HOME/gcloud-service-key.json"
+            gcloud auth activate-service-account --key-file="$HOME/gcloud-service-key.json" --project "$GCLOUD_PROJECT_NAME"
+            gcloud config set compute/zone "$GCLOUD_COMPUTE_ZONE"
 
             # Updates a kubeconfig file with appropriate credentials and endpoint information.
-            gcloud container clusters get-credentials $GCLOUD_CLUSTER_NAME --zone $GCLOUD_COMPUTE_ZONE --project $GCLOUD_PROJECT_NAME
+            gcloud container clusters get-credentials "$GCLOUD_CLUSTER_NAME" --zone "$GCLOUD_COMPUTE_ZONE" --project "$GCLOUD_PROJECT_NAME"
 
   helm-cleanup:
     steps:
       - run:
           name: Clean up failed Helm releases
           command: |
-            if [[ "$( helm list --failed | grep $RELEASE_NAME  | cut -f2 )" -eq 1 ]]; then
+            set -euo pipefail
+            reponame="${CIRCLE_PROJECT_REPONAME,,}"
+
+            if [[ $( helm list --failed | grep "$RELEASE_NAME"  | cut -f2 ) -eq 1 ]]; then
               # Remove any existing post-release hook, since it's technically not part of the release.
-              kubectl delete job -n ${CIRCLE_PROJECT_REPONAME,,} $RELEASE_NAME-post-release 2> /dev/null || true
+              kubectl delete job -n "$reponame" "$RELEASE_NAME-post-release" 2> /dev/null || true
 
               echo "Removing failed first release"
-              helm delete --purge $RELEASE_NAME
+              helm delete --purge "$RELEASE_NAME"
 
               echo -n "Waiting for volumes to be deleted."
               until [[ -z `kubectl get pv | grep "$RELEASE_NAME-public-files"` ]]
@@ -463,22 +497,28 @@ commands:
       - run:
           name: Deploy helm release
           command: |
+            set -euo pipefail
 
             # Secret management
-            if [[ ! -z "<<parameters.decrypt_files>>" ]]; then
+            secrets='<<parameters.decrypt_files>>'
+            if [[ ! -z "$secrets" ]]; then
               echo "Decrypting secrets"
-              secrets="<<parameters.decrypt_files>>" 
-              for i in ${secrets//,/}; do 
-                echo $i;
-                openssl enc -d -aes-256-cbc -pbkdf2 -in $i -out $i.tmp -pass pass:${SECRET_KEY};
-                mv $i.tmp $i;
+              for file in ${secrets//,/}
+              do
+                echo "$file"
+                tmp=$(mktemp)
+                openssl enc -d -aes-256-cbc -pbkdf2 -in "$file" -out "$tmp" -pass env:SECRET_KEY
+                mv -v "$tmp" "$file"
               done
             fi
 
+            reponame="${CIRCLE_PROJECT_REPONAME,,}"
+
             # Disable reference data if the required volume is not present.
-            REFERENCE_VOLUME=`kubectl get pv | grep "${CIRCLE_PROJECT_REPONAME,,}\/.*-reference-data"` || true
-            if [[ -z $REFERENCE_VOLUME ]] ; then
-              REFERENCE_DATA_OVERRIDE="--set referenceData.skipMount=true"
+            reference_volume=$(kubectl get pv | grep --extended-regexp "$reponame/.*-reference-data") || true
+            reference_data_override=''
+            if [[ -z "$reference_volume" ]] ; then
+              reference_data_override='--set referenceData.skipMount=true'
             fi
 
             # Structure IP whitelist
@@ -496,37 +536,44 @@ commands:
 
             # Override Database credentials if specified
             if [[ ! -z "$DB_ROOT_PASS" ]] ; then
-              DB_ROOT_PASS_OVERRIDE="--set mariadb.rootUser.password=$DB_ROOT_PASS"
+              db_root_pass_override="--set mariadb.rootUser.password=$DB_ROOT_PASS"
             fi
             if [[ ! -z "$DB_USER_PASS" ]] ; then
-              DB_USER_PASS_OVERRIDE="--set mariadb.db.password=$DB_USER_PASS"
+              db_user_pass_override="--set mariadb.db.password=$DB_USER_PASS"
             fi
 
-            helm upgrade --install $RELEASE_NAME <<parameters.chart_name>> \
-              --repo "<<parameters.chart_repository>>" \
-              --set environmentName=$CIRCLE_BRANCH \
-              --set php.image=$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}-php:$php_HASH \
-              --set nginx.image=$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}-nginx:$nginx_HASH \
-              --set shell.image=$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}-shell:$shell_HASH \
-              $DB_ROOT_PASS_OVERRIDE \
-              $DB_USER_PASS_OVERRIDE \
-              --set shell.gitAuth.repositoryUrl="${CIRCLE_REPOSITORY_URL}" \
-              --set shell.gitAuth.apiToken="${GITAUTH_API_TOKEN}" \
-              --set clusterDomain=$CLUSTER_DOMAIN \
-              $REFERENCE_DATA_OVERRIDE \
-              --namespace=${CIRCLE_PROJECT_REPONAME,,} \
-              --values <<parameters.silta_config>>
+            helm upgrade --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
+              --repo '<<parameters.chart_repository>>' \
+              --set environmentName="$CIRCLE_BRANCH" \
+              --set php.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-php:$php_HASH" \
+              --set nginx.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-nginx:$nginx_HASH" \
+              --set shell.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-shell:$shell_HASH" \
+              $db_root_pass_override \
+              $db_user_pass_override \
+              --set shell.gitAuth.repositoryUrl="$CIRCLE_REPOSITORY_URL" \
+              --set shell.gitAuth.apiToken="$GITAUTH_API_TOKEN" \
+              --set clusterDomain="$CLUSTER_DOMAIN" \
+              $reference_data_override \
+              --namespace="$reponame" \
+              --values '<<parameters.silta_config>>'
 
       - run:
           name: Deployment log
           when: always
           command: |
-            kubectl logs job/${RELEASE_NAME}-post-release -n ${CIRCLE_PROJECT_REPONAME,,} -f --timestamps=true
+            set -euo pipefail
+            reponame="${CIRCLE_PROJECT_REPONAME,,}"
+            kubectl logs "job/$RELEASE_NAME-post-release" -n "$reponame" -f --timestamps=true
 
       - run:
           name: Wait for resources to be ready
           command: |
+            set -euo pipefail
+            reponame="${CIRCLE_PROJECT_REPONAME,,}"
             # Get all deployments in the release and check the status of each one.
-            kubectl get deployment -n ${CIRCLE_PROJECT_REPONAME,,} -l release=${RELEASE_NAME} -o name | xargs -n 1 kubectl rollout status -n ${CIRCLE_PROJECT_REPONAME,,}
+            kubectl get deployment -n "$reponame" -l "release=${RELEASE_NAME}" -o name | xargs -n 1 kubectl rollout status -n "$reponame"
+            
+            # Display only the part following NOTES from the helm status.
+            helm status "$RELEASE_NAME" | sed -e '1,/NOTES/d'
 
       - helm-release-information
