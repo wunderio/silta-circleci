@@ -3,9 +3,8 @@ FROM circleci/php:7.3.9-cli-node
 # Make composer packages executable.
 ENV PATH="/home/circleci/.composer/vendor/bin:${PATH}"
 
-# Install drush, prestissimo and coder.
-RUN composer global require drush/drush-launcher hirak/prestissimo drupal/coder:^8.3.5 \
-  && phpcs --config-set installed_paths ~/.composer/vendor/drupal/coder/coder_sniffer \
+# Install drush, prestissimo and code-quality.
+RUN composer global require drush/drush-launcher hirak/prestissimo wunderio/code-quality \
   && composer clearcache
 
 # Install vim based on popular demand.

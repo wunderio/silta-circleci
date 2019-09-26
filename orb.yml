@@ -33,6 +33,7 @@ jobs:
       - drupal-composer-install:
           install-dev-dependencies: true
       - phpcs
+      - grumphp
       - run:
           name: Silta basic checks
           command: |
@@ -187,6 +188,17 @@ commands:
               vendor/bin/phpcs --standard=phpcs.xml -s --colors
             else
               phpcs --standard=phpcs.xml -s --colors
+            fi
+
+  grumphp:
+    steps:
+      - run:
+          name: grumphp validation
+          command: |
+            set -euo pipefail
+
+            if [ -f grumphp.yml ]; then
+              grumphp run
             fi
 
   drupal-composer-install:
