@@ -30,10 +30,10 @@ jobs:
       - checkout:
           path: ~/project
       - steps: <<parameters.pre-validation>>
-      - phpcs
-      - grumphp
       - drupal-composer-install:
           install-dev-dependencies: true
+      - phpcs
+      - grumphp
       - run:
           name: Silta basic checks
           command: |
@@ -183,8 +183,8 @@ commands:
           command: |
             set -euo pipefail
 
-            if [ -f phpcs.xml ]; then
-              phpcs --standard=phpcs.xml -s --colors
+            if [ -f phpcs.xml ] && [ -f vendor/bin/phpcs ]; then
+              vendor/bin/phpcs --standard=phpcs.xml -s --colors
             fi
 
   grumphp:
@@ -194,7 +194,7 @@ commands:
           command: |
             set -euo pipefail
 
-            if [ -f grumphp.yml ]; then
+            if [ -f grumphp.yml ] && [ -f vendor/bin/grumphp ]; then
               grumphp run
             fi
 
