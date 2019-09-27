@@ -135,6 +135,9 @@ jobs:
       skip-deployment:
         type: boolean
         default: false
+      cluster-domain:
+        type: env_var_name
+        default: CLUSTER_DOMAIN
     steps:
       - checkout
 
@@ -167,7 +170,7 @@ jobs:
                     --repo '<<parameters.chart_repository>>' \
                     --set environmentName="$CIRCLE_BRANCH" \
                     --set frontend.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-node:$node_HASH" \
-                    --set clusterDomain=$CLUSTER_DOMAIN \
+                    --set clusterDomain=${<<parameters.cluster_domain>>} \
                     --namespace="$reponame" \
                     --values '<<parameters.silta_config>>'
 
