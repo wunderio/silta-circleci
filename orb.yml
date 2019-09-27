@@ -135,7 +135,7 @@ jobs:
       skip-deployment:
         type: boolean
         default: false
-      cluster-domain:
+      cluster_domain:
         type: env_var_name
         default: CLUSTER_DOMAIN
     steps:
