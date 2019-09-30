@@ -322,14 +322,11 @@ commands:
             # Persist the image tag so it is available during deployment.
             echo "export <<parameters.identifier>>_HASH='$image_tag'" >> "$BASH_ENV"
 
-  npm-install-build:
+  npm-install:
     parameters:
       path:
         type: string
         default: "."
-      build-command:
-        type: string
-        default: "npm run build"
       cache-version:
         type: string
         default: "v1"
@@ -347,6 +344,27 @@ commands:
             cd '<<parameters.path>>'
             npm install
 
+      - save_cache:
+          paths:
+            - <<parameters.path>>/node_modules
+          key: <<parameters.cache-version>>-npm-{{ checksum "<<parameters.path>>/package-lock.json" }}
+
+  npm-install-build:
+    parameters:
+      path:
+        type: string
+        default: "."
+      build-command:
+        type: string
+        default: "npm run build"
+      cache-version:
+        type: string
+        default: "v1"
+    steps:
+      - npm-install:
+          path: <<parameters.path>>
+          cache-version: <<parameters.cache-version>>
+
       - run:
           name: Build frontend
           command: |
@@ -354,11 +372,6 @@ commands:
 
             cd '<<parameters.path>>'
             <<parameters.build-command>>
-
-      - save_cache:
-          paths:
-            - <<parameters.path>>/node_modules
-          key: <<parameters.cache-version>>-npm-{{ checksum "<<parameters.path>>/package-lock.json" }}
 
   yarn-install-build:
     parameters:
