@@ -305,7 +305,7 @@ commands:
             # Also make sure modification time or order play no role.
             image_tag=$(tar \
               --sort=name \
-              "$exclude_dockerignore" \
+              $exclude_dockerignore \
               --exclude=vendor/composer \
               --exclude=vendor/autoload.php \
               --mtime='2000-01-01 00:00Z' \
