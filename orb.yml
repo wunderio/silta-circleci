@@ -225,17 +225,6 @@ commands:
                 command: |
                   composer install -n --prefer-dist --ignore-platform-reqs --no-dev --optimize-autoloader
 
-      - run:
-          name: Clean up vendor tests
-          command: |
-            for directory in vendor web/core web/*/contrib
-            do
-              if [ -d "$directory" ]
-              then
-                find "$directory" \( -name .git -o -name test -o -name tests -o -name Tests \) -print0 | xargs -0 rm -rf
-              fi
-            done
-
       - save_cache:
           paths:
             - ./vendor
