@@ -475,7 +475,7 @@ commands:
             set -euo pipefail
             reponame="${CIRCLE_PROJECT_REPONAME,,}"
 
-            if [[ $( helm list --failed | grep "$RELEASE_NAME"  | cut -f2 ) -eq 1 ]]; then
+            if [[ $( helm list --failed "$RELEASE_NAME" | cut -f2 ) -eq 1 ]]; then
               # Remove any existing post-release hook, since it's technically not part of the release.
               kubectl delete job -n "$reponame" "$RELEASE_NAME-post-release" 2> /dev/null || true
 
