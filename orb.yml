@@ -37,8 +37,6 @@ jobs:
       - run:
           name: Silta basic checks
           command: |
-            set -euo pipefail
-
             files=(
               silta/silta.yml
               silta/silta-prod.yml
@@ -169,7 +167,6 @@ jobs:
             - run:
                 name: Deploy helm release
                 command: |
-                  set -euo pipefail
                   reponame="${CIRCLE_PROJECT_REPONAME,,}"
                   helm upgrade --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
                     --repo '<<parameters.chart_repository>>' \
@@ -188,8 +185,6 @@ commands:
       - run:
           name: phpcs validation
           command: |
-            set -euo pipefail
-
             if [ -f phpcs.xml ] && [ -f vendor/bin/phpcs ]; then
               vendor/bin/phpcs --standard=phpcs.xml -s --colors
             fi
@@ -199,8 +194,6 @@ commands:
       - run:
           name: grumphp validation
           command: |
-            set -euo pipefail
-
             if [ -f grumphp.yml ] && [ -f vendor/bin/grumphp ]; then
               grumphp run
             fi
@@ -222,8 +215,6 @@ commands:
             - run:
                 name: composer install
                 command: |
-                  set -euo pipefail
-
                   composer install -n --prefer-dist --ignore-platform-reqs --optimize-autoloader
 
       - unless:
@@ -232,15 +223,11 @@ commands:
             - run:
                 name: composer install
                 command: |
-                  set -euo pipefail
-
                   composer install -n --prefer-dist --ignore-platform-reqs --no-dev --optimize-autoloader
 
       - run:
           name: Clean up vendor tests
           command: |
-            set -euo pipefail
-
             for directory in vendor web/core web/*/contrib
             do
               if [ -d "$directory" ]
@@ -290,8 +277,6 @@ commands:
       - run:
           name: Build <<parameters.identifier>> docker image
           command: |
-            set -euo pipefail
-
             image_url="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}"-'<<parameters.identifier>>'
 
             # Only exclude files
@@ -342,16 +327,12 @@ commands:
       - run:
           name: Install frontend dependencies
           command: |
-            set -euo pipefail
-
             cd '<<parameters.path>>'
             npm install
 
       - run:
           name: Build frontend
           command: |
-            set -euo pipefail
-
             cd '<<parameters.path>>'
             <<parameters.build-command>>
 
@@ -380,16 +361,12 @@ commands:
       - run:
           name: Install frontend dependencies
           command: |
-            set -euo pipefail
-
             cd '<<parameters.path>>'
             yarn install
 
       - run:
           name: Build frontend
           command: |
-            set -euo pipefail
-
             cd '<<parameters.path>>'
             <<parameters.build-command>>
 
@@ -403,8 +380,6 @@ commands:
       - run:
           name: Login to the docker registry
           command: |
-            set -euo pipefail
-
             printenv GCLOUD_KEY_JSON | docker login -u _json_key --password-stdin "https://$DOCKER_REPO_HOST"
 
   drupal-docker-build:
@@ -433,8 +408,6 @@ commands:
       - run:
           name: Set release name
           command: |
-            set -euo pipefail
-
             # Release name length is 37 chars long, which leaves max 16 chars for kubernetes resource name.
             # Release name is prefixed with w because  it _HAS_ to start with alphabetic character. w 4 wunder.
             branchname_lower="${CIRCLE_BRANCH,,}"
@@ -457,8 +430,6 @@ commands:
       - run:
           name: Google Cloud login
           command: |
-            set -euo pipefail
-
             # Save key, authenticate and set compute zone.
             printenv GCLOUD_KEY_JSON > "$HOME/gcloud-service-key.json"
             gcloud auth activate-service-account --key-file="$HOME/gcloud-service-key.json" --project "$GCLOUD_PROJECT_NAME"
@@ -472,7 +443,6 @@ commands:
       - run:
           name: Clean up failed Helm releases
           command: |
-            set -euo pipefail
             reponame="${CIRCLE_PROJECT_REPONAME,,}"
 
             if [[ $( helm list --failed "$RELEASE_NAME" | cut -f2 ) -eq 1 ]]; then
@@ -516,8 +486,6 @@ commands:
       - run:
           name: Deploy helm release
           command: |
-            set -euo pipefail
-
             # Secret management
             secrets='<<parameters.decrypt_files>>'
             if [[ ! -z "$secrets" ]]; then
@@ -580,14 +548,12 @@ commands:
           name: Deployment log
           when: always
           command: |
-            set -euo pipefail
             reponame="${CIRCLE_PROJECT_REPONAME,,}"
             kubectl logs "job/$RELEASE_NAME-post-release" -n "$reponame" -f --timestamps=true
 
       - run:
           name: Wait for resources to be ready
           command: |
-            set -euo pipefail
             reponame="${CIRCLE_PROJECT_REPONAME,,}"
             # Get all deployments and statefulsets in the release and check the status of each one.
             kubectl get deployment -n "$reponame" -l "release=${RELEASE_NAME}" -o name | xargs -n 1 kubectl rollout status -n "$reponame"
