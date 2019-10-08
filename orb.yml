@@ -531,7 +531,8 @@ commands:
               --set clusterDomain="${<<parameters.cluster_domain>>}" \
               $reference_data_override \
               --namespace="$reponame" \
-              --values '<<parameters.silta_config>>'
+              --values '<<parameters.silta_config>>' \
+              --timeout 600
 
       - run:
           name: Deployment log
