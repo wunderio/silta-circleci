@@ -518,7 +518,7 @@ commands:
               db_user_pass_override="--set mariadb.db.password=$DB_USER_PASS"
             fi
 
-            helm upgrade --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
+            output=$((helm upgrade --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
               --repo '<<parameters.chart_repository>>' \
               --set environmentName="$CIRCLE_BRANCH" \
               --set php.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-php:$php_HASH" \
@@ -532,7 +532,16 @@ commands:
               $reference_data_override \
               --namespace="$reponame" \
               --values '<<parameters.silta_config>>' \
-              --timeout 600
+              --timeout 600) 2>&1) || EXIT_CODE=$?
+
+            if [[ $output == *"BackoffLimitExceeded"* ]]; then
+              # Don't show BackoffLimitExceeded, it confuses everyone.
+              echo "The post-release job failed, see log output in the next step below."
+            else
+              echo "$output"
+            fi
+
+            exit $EXIT_CODE
 
       - run:
           name: Deployment log
