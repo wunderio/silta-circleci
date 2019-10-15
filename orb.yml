@@ -385,7 +385,12 @@ commands:
       - run:
           name: Login to the docker registry
           command: |
-            printenv GCLOUD_KEY_JSON | docker login -u _json_key --password-stdin "https://$DOCKER_REPO_HOST"
+            if [ -z "$GCLOUD_KEY_JSON" ]
+            then
+              echo "\$GCLOUD_KEY_JSON is empty, have you set a context for this CircleCI job?"
+            else
+              printenv GCLOUD_KEY_JSON | docker login -u _json_key --password-stdin "https://$DOCKER_REPO_HOST"
+            fi
 
   drupal-docker-build:
     steps:
