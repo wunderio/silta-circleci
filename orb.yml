@@ -459,8 +459,11 @@ commands:
               # Remove any existing post-release hook, since it's technically not part of the release.
               kubectl delete job -n "$reponame" "$RELEASE_NAME-post-release" 2> /dev/null || true
 
-              echo "Removing failed first release"
+              echo "Removing failed first release."
               helm delete --purge "$RELEASE_NAME"
+
+              echo "Delete persistent volume claims left over from statefulsets."
+              kubectl get pvc -n "$reponame" -l release="$RELEASE_NAME" -o name | xargs -n 1 kubectl delete -n "$reponame"
 
               echo -n "Waiting for volumes to be deleted."
               until [[ -z `kubectl get pv | grep "$RELEASE_NAME-public-files"` ]]
