@@ -274,6 +274,9 @@ commands:
         type: string
       identifier:
         type: string
+      docker-hash-prefix:
+        type: string
+        default: v1
     steps:
       - run:
           name: Build <<parameters.identifier>> docker image
@@ -297,6 +300,7 @@ commands:
               --mtime='2000-01-01 00:00Z' \
               --clamp-mtime \
               -cf - '<<parameters.path>>' '<<parameters.dockerfile>>' | sha1sum | cut -c 1-40)
+            image_tag="<<parameters.docker-hash-prefix>>-$image_tag"
 
             if gcloud container images list-tags "$image_url" | grep -q "$image_tag"; then
               echo "This <<parameters.identifier>> image has already been built, the existing image from the Docker repository will be used."
