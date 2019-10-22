@@ -487,13 +487,6 @@ commands:
               done
             fi
 
-  helm-limit-release-count:
-    steps:
-      - run:
-          name: Limit the number of releases per project
-          command: |
-
-
   helm-release-information:
     steps:
       - run:
