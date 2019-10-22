@@ -187,6 +187,12 @@ jobs:
                     --set clusterDomain=${<<parameters.cluster_domain>>} \
                     --namespace="$reponame" \
                     --values '<<parameters.silta_config>>'
+            - run:
+                name: Wait for resources to be ready
+                command: |
+                  reponame="${CIRCLE_PROJECT_REPONAME,,}"
+                  # Get all deployments in the release and check the status of each one.
+                  kubectl get deployment -n "$reponame" -l "release=${RELEASE_NAME}" -o name | xargs -n 1 kubectl rollout status -n "$reponame"
 
             - helm-release-information
 
