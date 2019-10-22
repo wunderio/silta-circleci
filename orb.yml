@@ -492,12 +492,15 @@ commands:
             helm status "$RELEASE_NAME" | sed -e '1,/NOTES/d'
 
   decrypt-files:
+    parameters:
+      files:
+        type: string
     steps:
       - run:
           name: Decrypt secret files
           command: |
             # Secret management
-            secrets='<<parameters.decrypt_files>>'
+            secrets='<<parameters.files>>'
             if [[ ! -z "$secrets" ]]; then
               echo "Decrypting secrets"
               for file in ${secrets//,/}
@@ -524,7 +527,8 @@ commands:
         default: CLUSTER_DOMAIN
     steps:
       - helm-cleanup
-      - decrypt-files
+      - decrypt-files:
+          files: <<parameters.decrypt_files>>
       - run:
           name: Deploy helm release
           command: |
@@ -595,7 +599,7 @@ commands:
           command: |
             reponame="${CIRCLE_PROJECT_REPONAME,,}"
             # Get all deployments and statefulsets in the release and check the status of each one.
-            kubectl get deployment -n "$reponame" -l "release=${RELEASE_NAME}" -o name | xargs -n 1 kubectl rollout status -n "$reponame"
             kubectl get statefulset -n "$reponame" -l "release=${RELEASE_NAME}" -o name | xargs -n 1 kubectl rollout status -n "$reponame"
+            kubectl get deployment -n "$reponame" -l "release=${RELEASE_NAME}" -o name | xargs -n 1 kubectl rollout status -n "$reponame"
             
       - helm-release-information
