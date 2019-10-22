@@ -106,13 +106,14 @@ jobs:
           condition: <<parameters.skip-deployment>>
           steps:
             - gcloud-login
+            - decrypt-files:
+                files: <<parameters.decrypt_files>>
             - drupal-docker-build
             - set-release-name
             - steps: <<parameters.pre-release>>
             - drupal-helm-deploy:
                 chart_name: <<parameters.chart_name>>
                 chart_repository: <<parameters.chart_repository>>
-                decrypt_files: <<parameters.decrypt_files>>
                 silta_config: <<parameters.silta_config>>
                 cluster_domain: <<parameters.cluster_domain>>
 
@@ -518,8 +519,6 @@ commands:
         type: string
       chart_repository:
         type: string
-      decrypt_files:
-        type: string
       silta_config:
         type: string
       cluster_domain:
@@ -527,8 +526,6 @@ commands:
         default: CLUSTER_DOMAIN
     steps:
       - helm-cleanup
-      - decrypt-files:
-          files: <<parameters.decrypt_files>>
       - run:
           name: Deploy helm release
           command: |
