@@ -487,6 +487,13 @@ commands:
               done
             fi
 
+  helm-limit-release-count:
+    steps:
+      - run:
+          name: Limit the number of releases per project
+          command: |
+
+
   helm-release-information:
     steps:
       - run:
@@ -513,6 +520,7 @@ commands:
                 tmp=$(mktemp)
                 openssl enc -d -aes-256-cbc -pbkdf2 -in "$file" -out "$tmp" -pass env:SECRET_KEY
                 mv -v "$tmp" "$file"
+                chmod a+r "$file"
               done
             fi
 
