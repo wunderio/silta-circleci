@@ -491,6 +491,24 @@ commands:
             # Display only the part following NOTES from the helm status.
             helm status "$RELEASE_NAME" | sed -e '1,/NOTES/d'
 
+  decrypt-files:
+    steps:
+      - run:
+          name: Decrypt secret files
+          command: |
+            # Secret management
+            secrets='<<parameters.decrypt_files>>'
+            if [[ ! -z "$secrets" ]]; then
+              echo "Decrypting secrets"
+              for file in ${secrets//,/}
+              do
+                echo "$file"
+                tmp=$(mktemp)
+                openssl enc -d -aes-256-cbc -pbkdf2 -in "$file" -out "$tmp" -pass env:SECRET_KEY
+                mv -v "$tmp" "$file"
+              done
+            fi
+
   drupal-helm-deploy:
     parameters:
       chart_name:
@@ -506,22 +524,10 @@ commands:
         default: CLUSTER_DOMAIN
     steps:
       - helm-cleanup
+      - decrypt-files
       - run:
           name: Deploy helm release
           command: |
-            # Secret management
-            secrets='<<parameters.decrypt_files>>'
-            if [[ ! -z "$secrets" ]]; then
-              echo "Decrypting secrets"
-              for file in ${secrets//,/}
-              do
-                echo "$file"
-                tmp=$(mktemp)
-                openssl enc -d -aes-256-cbc -pbkdf2 -in "$file" -out "$tmp" -pass env:SECRET_KEY
-                mv -v "$tmp" "$file"
-              done
-            fi
-
             reponame="${CIRCLE_PROJECT_REPONAME,,}"
 
             # Disable reference data if the required volume is not present.
