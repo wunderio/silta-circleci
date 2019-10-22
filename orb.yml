@@ -106,8 +106,11 @@ jobs:
           condition: <<parameters.skip-deployment>>
           steps:
             - gcloud-login
-            - decrypt-files:
-                files: <<parameters.decrypt_files>>
+            - when:
+                condition: <<parameters.decrypt_files>>
+                steps:
+                  - decrypt-files:
+                      files: <<parameters.decrypt_files>>
             - drupal-docker-build
             - set-release-name
             - steps: <<parameters.pre-release>>
