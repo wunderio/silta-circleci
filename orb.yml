@@ -593,7 +593,10 @@ commands:
           when: always
           command: |
             reponame="${CIRCLE_PROJECT_REPONAME,,}"
-            kubectl logs "job/$RELEASE_NAME-post-release" -n "$reponame" -f --timestamps=true
+
+            podName=$(kubectl get pod -n "$reponame" -l "job-name=$RELEASE_NAME-post-release" -o name)
+            kubectl wait -n "$reponame" --for=condition=Ready --timeout=60s "$podName"
+            kubectl logs -n "$reponame" --follow=true "$podName"
 
       - run:
           name: Wait for resources to be ready
