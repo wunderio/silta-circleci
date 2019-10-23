@@ -18,7 +18,7 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.
   && sudo apt-get clean
 
 # Install Helm
-ENV HELM_VERSION v2.15.0
+ENV HELM_VERSION v2.15.1
 ENV FILENAME helm-${HELM_VERSION}-linux-amd64.tar.gz
 ENV HELM_URL https://storage.googleapis.com/kubernetes-helm/${FILENAME}
 
