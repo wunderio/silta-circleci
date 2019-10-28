@@ -499,6 +499,9 @@ commands:
     parameters:
       files:
         type: string
+      secret_key_env:
+        type: env_var_name
+        default: SECRET_KEY
     steps:
       - run:
           name: Decrypt secret files
@@ -511,7 +514,7 @@ commands:
               do
                 echo "$file"
                 tmp=$(mktemp)
-                openssl enc -d -aes-256-cbc -pbkdf2 -in "$file" -out "$tmp" -pass env:SECRET_KEY
+                openssl enc -d -aes-256-cbc -pbkdf2 -in "$file" -out "$tmp" -pass env:<<parameters.secret_key_env>>
                 mv -v "$tmp" "$file"
                 chmod a+r "$file"
               done
