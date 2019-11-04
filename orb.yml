@@ -477,7 +477,7 @@ commands:
               helm delete --purge "$RELEASE_NAME"
 
               echo "Delete persistent volume claims left over from statefulsets."
-              kubectl get pvc -n "$reponame" -l release="$RELEASE_NAME" -o name | xargs -n 1 kubectl delete -n "$reponame"
+              kubectl get pvc -n "$reponame" -l release="$RELEASE_NAME" -o name | xargs -n 1 kubectl delete --ignore-not-found=true -n "$reponame"
 
               echo -n "Waiting for volumes to be deleted."
               until [[ -z `kubectl get pv | grep "$RELEASE_NAME-public-files"` ]]
