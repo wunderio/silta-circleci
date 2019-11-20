@@ -188,6 +188,8 @@ jobs:
                     --repo '<<parameters.chart_repository>>' \
                     --set environmentName="$CIRCLE_BRANCH" \
                     $image_overrides \
+                    --set shell.gitAuth.repositoryUrl="$CIRCLE_REPOSITORY_URL" \
+                    --set shell.gitAuth.apiToken="$GITAUTH_API_TOKEN" \
                     --set clusterDomain=${<<parameters.cluster_domain>>} \
                     --namespace="$reponame" \
                     --values '<<parameters.silta_config>>'
