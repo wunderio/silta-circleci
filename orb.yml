@@ -477,7 +477,7 @@ commands:
               kubectl delete job -n "$reponame" "$RELEASE_NAME-post-release" 2> /dev/null || true
 
               echo "Removing failed first release."
-              helm delete --purge "$RELEASE_NAME"
+              helm delete "$RELEASE_NAME"
 
               echo "Delete persistent volume claims left over from statefulsets."
               kubectl get pvc -n "$reponame" -l release="$RELEASE_NAME" -o name | xargs -n 1 kubectl delete --ignore-not-found=true -n "$reponame"
