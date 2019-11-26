@@ -114,6 +114,7 @@ jobs:
             - drupal-docker-build
             - set-release-name
             - steps: <<parameters.pre-release>>
+            - helm3-upgrade
             - drupal-helm-deploy:
                 chart_name: <<parameters.chart_name>>
                 chart_repository: <<parameters.chart_repository>>
@@ -609,3 +610,22 @@ commands:
             kubectl get deployment -n "$reponame" -l "release=${RELEASE_NAME}" -o name | xargs -n 1 kubectl rollout status -n "$reponame"
             
       - helm-release-information
+
+  helm3-upgrade:
+    steps:
+      - run:
+          name: Install helm 3
+          command: |
+            curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+            helm plugin install https://github.com/helm/helm-2to3
+            helm 2to3 move config
+
+      - run:
+          name: Migrate eventual helm 2 releases
+          command: |
+            helm 2to3 convert "$RELEASE_NAME" --delete-v2-releases || true
+
+      - run:
+          name: Set current kubernetes namespace
+          command: |
+            kubectl config set-context --current --namespace="${CIRCLE_PROJECT_REPONAME,,}"
