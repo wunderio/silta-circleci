@@ -496,7 +496,7 @@ commands:
           name: Release information
           command: |
             # Display only the part following NOTES from the helm status.
-            helm status "$RELEASE_NAME" | sed -e '1,/NOTES/d'
+            helm get notes "$RELEASE_NAME"
 
   decrypt-files:
     parameters:
