@@ -187,6 +187,7 @@ jobs:
                   helm upgrade --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
                     --repo '<<parameters.chart_repository>>' \
                     --set environmentName="$CIRCLE_BRANCH" \
+                    --set nginx.noauthips.vpn="$VPN_IP/32" \
                     $image_overrides \
                     --set shell.gitAuth.repositoryUrl="$CIRCLE_REPOSITORY_URL" \
                     --set shell.gitAuth.apiToken="$GITAUTH_API_TOKEN" \
@@ -547,17 +548,6 @@ commands:
               reference_data_override='--set referenceData.skipMount=true'
             fi
 
-            # Structure IP whitelist
-            #export WHITELIST_IP_oldVpn="1.1.1.1"
-            #export WHITELIST_IP_newVpn="2.2.2.2"
-
-            #WHITELISTED_IPS=""
-            #for var in `env | grep WHITELIST_IP_`; do
-            #  NAME=`echo $var | cut -f 1 -d "="| sed "s/WHITELIST_IP_//"`
-            #  IP=`echo $var | cut -f 2 -d "="`
-            #  WHITELISTED_IPS="$WHITELISTED_IPS --set nginx.basicauth.noauthips.$NAME='$IP'"
-            #done
-
             # echo $WHITELISTED_IPS
 
             # Override Database credentials if specified
@@ -574,6 +564,7 @@ commands:
               --set php.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-php:$php_HASH" \
               --set nginx.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-nginx:$nginx_HASH" \
               --set shell.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-shell:$shell_HASH" \
+              --set nginx.noauthips.vpn="$VPN_IP/32" \
               $db_root_pass_override \
               $db_user_pass_override \
               --set shell.gitAuth.repositoryUrl="$CIRCLE_REPOSITORY_URL" \
