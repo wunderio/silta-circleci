@@ -583,7 +583,7 @@ commands:
               $reference_data_override \
               --namespace="$reponame" \
               --values '<<parameters.silta_config>>' \
-              --timeout 600s) 2>&1) || EXIT_CODE=$?
+              --timeout 10m) 2>&1) || EXIT_CODE=$?
 
             if [[ $output == *"BackoffLimitExceeded"* ]]; then
               # Don't show BackoffLimitExceeded, it confuses everyone.
