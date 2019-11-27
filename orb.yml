@@ -170,7 +170,7 @@ jobs:
           condition: <<parameters.skip-deployment>>
           steps:
             - set-release-name
-
+            - helm3-upgrade
             - helm-cleanup
 
             - run:
