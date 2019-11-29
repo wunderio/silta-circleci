@@ -183,11 +183,17 @@ jobs:
                     image_tag="${identifier}_HASH"
                     image_overrides="$image_overrides --set services.${identifier}.image=${image_url}:${!image_tag}"
                   done
-
+                  
+                  # Add internal VPN if defined in environment
+                  extra_noauthips=""
+                  if [[ ! -z "$VPN_IP" ]] ; then
+                    extra_noauthips="--set nginx.noauthips.vpn=\"${VPN_IP}/32\"" \                    
+                  fi
+                  
                   helm upgrade --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
                     --repo '<<parameters.chart_repository>>' \
                     --set environmentName="$CIRCLE_BRANCH" \
-                    --set nginx.noauthips.vpn="$VPN_IP/32" \
+                    $extra_noauthips \
                     $image_overrides \
                     --set shell.gitAuth.repositoryUrl="$CIRCLE_REPOSITORY_URL" \
                     --set shell.gitAuth.apiToken="$GITAUTH_API_TOKEN" \
@@ -557,6 +563,12 @@ commands:
             if [[ ! -z "$DB_USER_PASS" ]] ; then
               db_user_pass_override="--set mariadb.db.password=$DB_USER_PASS"
             fi
+            
+            # Add internal VPN if defined in environment
+            extra_noauthips=""
+            if [[ ! -z "$VPN_IP" ]] ; then
+              extra_noauthips="--set nginx.noauthips.vpn=\"${VPN_IP}/32\"" \                    
+            fi
 
             output=$((helm upgrade --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
               --repo '<<parameters.chart_repository>>' \
@@ -564,7 +576,7 @@ commands:
               --set php.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-php:$php_HASH" \
               --set nginx.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-nginx:$nginx_HASH" \
               --set shell.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-shell:$shell_HASH" \
-              --set nginx.noauthips.vpn="$VPN_IP/32" \
+              $extra_noauthips \
               $db_root_pass_override \
               $db_user_pass_override \
               --set shell.gitAuth.repositoryUrl="$CIRCLE_REPOSITORY_URL" \
