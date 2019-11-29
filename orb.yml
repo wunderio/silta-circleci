@@ -185,7 +185,6 @@ jobs:
                   done
                   
                   # Add internal VPN if defined in environment
-                  extra_noauthips=""
                   if [[ ! -z "$VPN_IP" ]] ; then
                     extra_noauthips="--set nginx.noauthips.vpn=\"${VPN_IP}/32\"" \                    
                   fi
@@ -565,7 +564,6 @@ commands:
             fi
             
             # Add internal VPN if defined in environment
-            extra_noauthips=""
             if [[ ! -z "$VPN_IP" ]] ; then
               extra_noauthips="--set nginx.noauthips.vpn=\"${VPN_IP}/32\"" \                    
             fi
