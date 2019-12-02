@@ -114,7 +114,6 @@ jobs:
             - drupal-docker-build
             - set-release-name
             - steps: <<parameters.pre-release>>
-            - helm3-upgrade
             - drupal-helm-deploy:
                 chart_name: <<parameters.chart_name>>
                 chart_repository: <<parameters.chart_repository>>
@@ -170,7 +169,7 @@ jobs:
           condition: <<parameters.skip-deployment>>
           steps:
             - set-release-name
-            - helm3-upgrade
+
             - helm-cleanup
 
             - run:
@@ -479,12 +478,12 @@ commands:
           command: |
             reponame="${CIRCLE_PROJECT_REPONAME,,}"
 
-            if [[ $( helm list --failed --filter "$RELEASE_NAME" | tail -1 | cut -f3 ) -eq 1 ]]; then
+            if [[ $( helm list --failed "$RELEASE_NAME" | tail -1 | cut -f2 ) -eq 1 ]]; then
               # Remove any existing post-release hook, since it's technically not part of the release.
               kubectl delete job -n "$reponame" "$RELEASE_NAME-post-release" 2> /dev/null || true
 
               echo "Removing failed first release."
-              helm delete "$RELEASE_NAME"
+              helm delete --purge "$RELEASE_NAME"
 
               echo "Delete persistent volume claims left over from statefulsets."
               kubectl get pvc -n "$reponame" -l release="$RELEASE_NAME" -o name | xargs -n 1 kubectl delete --ignore-not-found=true -n "$reponame"
@@ -503,7 +502,7 @@ commands:
           name: Release information
           command: |
             # Display only the part following NOTES from the helm status.
-            helm get notes "$RELEASE_NAME"
+            helm status "$RELEASE_NAME" | sed -e '1,/NOTES/d'
 
   decrypt-files:
     parameters:
@@ -586,7 +585,7 @@ commands:
               $reference_data_override \
               --namespace="$reponame" \
               --values '<<parameters.silta_config>>' \
-              --timeout 10m) 2>&1) || EXIT_CODE=$?
+              --timeout 600) 2>&1) || EXIT_CODE=$?
 
             if [[ $output == *"BackoffLimitExceeded"* ]]; then
               # Don't show BackoffLimitExceeded, it confuses everyone.
@@ -613,22 +612,3 @@ commands:
             kubectl get deployment -n "$reponame" -l "release=${RELEASE_NAME}" -o name | xargs -n 1 kubectl rollout status -n "$reponame"
             
       - helm-release-information
-
-  helm3-upgrade:
-    steps:
-      - run:
-          name: Install helm 3
-          command: |
-            curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
-            helm plugin install https://github.com/helm/helm-2to3
-            helm 2to3 move config
-
-      - run:
-          name: Migrate eventual helm 2 releases
-          command: |
-            helm 2to3 convert "$RELEASE_NAME" --delete-v2-releases || true
-
-      - run:
-          name: Set current kubernetes namespace
-          command: |
-            kubectl config set-context --current --namespace="${CIRCLE_PROJECT_REPONAME,,}"
