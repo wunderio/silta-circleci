@@ -685,3 +685,25 @@ commands:
             kubectl get deployment -n "$reponame" -l "release=${RELEASE_NAME}" -o name | xargs -n 1 kubectl rollout status -n "$reponame"
             
       - helm-release-information
+
+  gatsby-google-cloud-storage-deploy:
+    parameters:
+      bucket_name:
+        type: string
+      folder:
+        type: string
+        default: public
+      static_files:
+        type: string
+        default: static
+    steps:
+      - run:
+          name: Deploy to Google Cloud Storage
+          command: |
+            cd <<parameters.folder>>
+            # We need this rsync mainly to delete obsolete files, but without downtime.
+            gsutil -m -h "Cache-Control:public, max-age=300" rsync -d -r . <<parameters.bucket_name>>
+            # Make sure all text files can be served gzipped. This is unfortunately not possible with the rsync command.
+            gsutil -m -h "Cache-Control:public, max-age=300" cp -z html,css,js -r . <<parameters.bucket_name>>
+            # Set a longer cache time for all files in the static folder.
+            gsutil -m setmeta -r -h "Cache-Control:public, max-age=31536000" <<parameters.bucket_name>>/<<parameters.static_files>>
