@@ -707,7 +707,7 @@ commands:
     parameters:
       bucket_name:
         type: string
-      folder:
+      build_folder:
         type: string
         default: public
       static_files:
@@ -717,7 +717,7 @@ commands:
       - run:
           name: Deploy to Google Cloud Storage
           command: |
-            cd <<parameters.folder>>
+            cd <<parameters.build_folder>>
             # We need this rsync mainly to delete obsolete files, but without downtime.
             gsutil -m -h "Cache-Control:public, max-age=300" rsync -d -r . <<parameters.bucket_name>>
             # Make sure all text files can be served gzipped. This is unfortunately not possible with the rsync command.
