@@ -686,6 +686,23 @@ commands:
             
       - helm-release-information
 
+  gatsby-move-to-subfolder:
+    parameters:
+      subfolder_name:
+        type: string
+      build_folder:
+        type: string
+        default: public
+    steps:
+      - run:
+          name: Move to subfolder
+          command: |
+            mv <<parameters.build_folder>> <<parameters.subfolder_name>>
+            mkdir <<parameters.build_folder>>
+            mv <<parameters.subfolder_name>> <<parameters.build_folder>>/<<parameters.subfolder_name>>
+            mv <<parameters.build_folder>>/<<parameters.subfolder_name>>/.dockerignore <<parameters.build_folder>>/.dockerignore
+            echo '<meta http-equiv="refresh" content="0; URL=<<parameters.subfolder_name>>" />' > <<parameters.build_folder>>/index.html
+
   gatsby-google-cloud-storage-deploy:
     parameters:
       bucket_name:
