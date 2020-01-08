@@ -32,6 +32,18 @@ RUN curl -o /tmp/$FILENAME ${HELM_URL} \
   && helm repo add wunderio https://storage.googleapis.com/charts.wdr.io \
   && helm repo remove local
 
+# Install Helm 3
+ENV HELM_VERSION v3.0.2
+ENV FILENAME helm-${HELM_VERSION}-linux-amd64.tar.gz
+ENV HELM_URL https://get.helm.sh/${FILENAME}
+
+RUN curl -o /tmp/$FILENAME ${HELM_URL} \
+  && tar -zxvf /tmp/${FILENAME} -C /tmp \
+  && rm /tmp/${FILENAME} \
+  && sudo mv /tmp/linux-amd64/helm /bin/helm3 \
+  && helm3 repo add stable https://kubernetes-charts.storage.googleapis.com/ \
+  && helm3 repo add wunderio https://storage.googleapis.com/charts.wdr.io
+
 # Add custom php config and lift memory limit.
 COPY conf/php/memory.ini /usr/local/etc/php/conf.d/memory.ini
 
