@@ -262,6 +262,8 @@ jobs:
       - unless:
           condition: <<parameters.skip-deployment>>
           steps:
+            - use-helm-3
+
             - set-release-name
 
             - helm-cleanup
@@ -521,19 +523,26 @@ commands:
       - run:
           name: Set release name
           command: |
-            # Release name length is 37 chars long, which leaves max 16 chars for kubernetes resource name.
-            # Release name is prefixed with w because  it _HAS_ to start with alphabetic character. w 4 wunder.
-            branchname_lower="${CIRCLE_BRANCH,,}"
-            branchname="${branchname_lower//[^[:alnum:]]/-}"
-            branchname_hash=$(printf "$branchname" | shasum -a 256 | cut -c 1-4 )
-            branchname_truncated=$(printf "$branchname" | cut -c 1-15 | sed 's/^\(.*\)-$/\1/' )
-            reponame="${CIRCLE_PROJECT_REPONAME,,}"
-            reponame_hash=$(printf "$reponame" | shasum -a 256 | cut -c 1-4 )
-            reponame_truncated=$(printf "$reponame" | cut -c 1-15 | sed 's/^\(.*\)-$/\1/' )
-            # Truncate long names
-            if [ ${#branchname} -ge 20 ]; then branchname="$branchname_truncated-$branchname_hash"; fi
-            if [ ${#reponame} -ge 20 ]; then reponame="$reponame_truncated-$reponame_hash"; fi
-            name="$reponame--$branchname"
+            if [ $USE_HELM_3 ]
+            then
+              branchname_lower="${CIRCLE_BRANCH,,}"
+              name="${branchname_lower//[^[:alnum:]]/-}"
+            else
+              # Release name length is 37 chars long, which leaves max 16 chars for kubernetes resource name.
+              # Release name is prefixed with w because  it _HAS_ to start with alphabetic character. w 4 wunder.
+              branchname_lower="${CIRCLE_BRANCH,,}"
+              branchname="${branchname_lower//[^[:alnum:]]/-}"
+              branchname_hash=$(printf "$branchname" | shasum -a 256 | cut -c 1-4 )
+              branchname_truncated=$(printf "$branchname" | cut -c 1-15 | sed 's/^\(.*\)-$/\1/' )
+              reponame="${CIRCLE_PROJECT_REPONAME,,}"
+              reponame_hash=$(printf "$reponame" | shasum -a 256 | cut -c 1-4 )
+              reponame_truncated=$(printf "$reponame" | cut -c 1-15 | sed 's/^\(.*\)-$/\1/' )
+              # Truncate long names
+              if [ ${#branchname} -ge 20 ]; then branchname="$branchname_truncated-$branchname_hash"; fi
+              if [ ${#reponame} -ge 20 ]; then reponame="$reponame_truncated-$reponame_hash"; fi
+              name="$reponame--$branchname"
+            fi
+
             echo "export RELEASE_NAME='$name'" >> "$BASH_ENV"
 
             echo "The release name for this branch is $name"
@@ -551,6 +560,21 @@ commands:
             # Updates a kubeconfig file with appropriate credentials and endpoint information.
             gcloud container clusters get-credentials "$GCLOUD_CLUSTER_NAME" --zone "$GCLOUD_COMPUTE_ZONE" --project "$GCLOUD_PROJECT_NAME"
 
+  use-helm-3:
+    steps:
+      - run:
+          name: Use helm 3
+          command: |
+            reponame="${CIRCLE_PROJECT_REPONAME,,}"
+
+            # Use the helm3 binary.
+            sudo mv /bin/helm3 /bin/helm
+
+            # Set the current namespace to match the project name
+            kubectl config set-context --current --namespace=$reponame
+
+            echo "export USE_HELM_3=1" >> "$BASH_ENV"
+
   helm-cleanup:
     steps:
       - run:
@@ -558,12 +582,21 @@ commands:
           command: |
             reponame="${CIRCLE_PROJECT_REPONAME,,}"
 
-            if [[ $( helm list --failed "$RELEASE_NAME" | tail -1 | cut -f2 ) -eq 1 ]]; then
+            if [ $USE_HELM_3 ]
+            then
+              failed_revision=$(helm list --failed --filter="$RELEASE_NAME" | tail -1 | cut -f3)
+              purge=""
+            else
+              failed_revision=$( helm list --failed "$RELEASE_NAME" | tail -1 | cut -f2 )
+              purge="--purge"
+            fi
+
+            if [[ "$failed_revision" -eq 1 ]]; then
               # Remove any existing post-release hook, since it's technically not part of the release.
               kubectl delete job -n "$reponame" "$RELEASE_NAME-post-release" 2> /dev/null || true
 
               echo "Removing failed first release."
-              helm delete --purge "$RELEASE_NAME"
+              helm delete $purge "$RELEASE_NAME"
 
               echo "Delete persistent volume claims left over from statefulsets."
               kubectl get pvc -n "$reponame" -l release="$RELEASE_NAME" -o name | xargs -n 1 kubectl delete --ignore-not-found=true -n "$reponame"
@@ -650,6 +683,13 @@ commands:
               extra_noauthips="--set nginx.noauthips.vpn=${VPN_IP}/32"
             fi
 
+            if [ $USE_HELM_3 ]
+            then
+              timeout="6m"
+            else
+              timeout="600"
+            fi
+
             output=$((helm upgrade --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
               --repo '<<parameters.chart_repository>>' \
               --set environmentName="$CIRCLE_BRANCH" \
@@ -665,7 +705,7 @@ commands:
               $reference_data_override \
               --namespace="$reponame" \
               --values '<<parameters.silta_config>>' \
-              --timeout 600) 2>&1) || EXIT_CODE=$?
+              --timeout $timeout) 2>&1) || EXIT_CODE=$?
 
             if [[ $output == *"BackoffLimitExceeded"* ]]; then
               # Don't show BackoffLimitExceeded, it confuses everyone.
