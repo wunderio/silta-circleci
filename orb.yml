@@ -168,6 +168,8 @@ jobs:
       - unless:
           condition: <<parameters.skip-deployment>>
           steps:
+            - use-helm-3
+
             - set-release-name
 
             - helm-cleanup
