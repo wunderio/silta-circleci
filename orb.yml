@@ -116,6 +116,7 @@ jobs:
             - steps: <<parameters.pre-release>>
             - drupal-helm-deploy:
                 chart_name: <<parameters.chart_name>>
+                chart_version: <<parameters.chart_version>>
                 chart_repository: <<parameters.chart_repository>>
                 silta_config: <<parameters.silta_config>>
                 cluster_domain: <<parameters.cluster_domain>>
@@ -650,6 +651,8 @@ commands:
         type: string
       chart_repository:
         type: string
+      chart_version:
+        type: string
       silta_config:
         type: string
       cluster_domain:
@@ -692,8 +695,13 @@ commands:
               timeout="600"
             fi
 
+            if [[ ! -z "<<parameters.chart_version>>" ]] ; then
+              version="--version <<parameters.chart_version>>"
+            fi
+
             output=$((helm upgrade --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
               --repo '<<parameters.chart_repository>>' \
+              $version \
               --set environmentName="$CIRCLE_BRANCH" \
               --set php.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-php:$php_HASH" \
               --set nginx.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-nginx:$nginx_HASH" \
