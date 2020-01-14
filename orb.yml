@@ -82,6 +82,9 @@ jobs:
       chart_name:
         type: string
         default: drupal
+      chart_version:
+        type: string
+        default: "0.2.1"
       chart_repository:
         type: string
         default: https://storage.googleapis.com/charts.wdr.io
