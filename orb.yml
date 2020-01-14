@@ -586,10 +586,10 @@ commands:
 
             if [ $USE_HELM_3 ]
             then
-              failed_revision=$(helm list --failed --filter="$RELEASE_NAME" | tail -1 | cut -f3)
+              failed_revision=$(helm list --failed --pending --filter="$RELEASE_NAME" | tail -1 | cut -f3)
               purge=""
             else
-              failed_revision=$( helm list --failed "$RELEASE_NAME" | tail -1 | cut -f2 )
+              failed_revision=$( helm list --failed --pending "$RELEASE_NAME" | tail -1 | cut -f2 )
               purge="--purge"
             fi
 
