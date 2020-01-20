@@ -115,7 +115,6 @@ jobs:
                   - decrypt-files:
                       files: <<parameters.decrypt_files>>
             - drupal-docker-build
-            - use-helm-3
             - set-release-name
             - steps: <<parameters.pre-release>>
             - drupal-helm-deploy:
@@ -173,8 +172,6 @@ jobs:
       - unless:
           condition: <<parameters.skip-deployment>>
           steps:
-            - use-helm-3
-
             - set-release-name
 
             - helm-cleanup
@@ -269,8 +266,6 @@ jobs:
       - unless:
           condition: <<parameters.skip-deployment>>
           steps:
-            - use-helm-3
-
             - set-release-name
 
             - helm-cleanup
@@ -549,22 +544,6 @@ commands:
 
             # Updates a kubeconfig file with appropriate credentials and endpoint information.
             gcloud container clusters get-credentials "$GCLOUD_CLUSTER_NAME" --zone "$GCLOUD_COMPUTE_ZONE" --project "$GCLOUD_PROJECT_NAME"
-
-  use-helm-3:
-    steps:
-      - run:
-          name: Use helm 3
-          command: |
-            reponame="${CIRCLE_PROJECT_REPONAME,,}"
-
-            # Use the helm 3 binary. If it doesn't exists we already have helm 3.
-            if [ -f /bin/helm3 ]
-            then
-              sudo mv /bin/helm3 /bin/helm
-            fi
-
-            # Set the current namespace to match the project name
-            kubectl config set-context --current --namespace=$reponame
 
   helm-cleanup:
     steps:
