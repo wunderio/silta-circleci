@@ -530,29 +530,12 @@ commands:
       - run:
           name: Set release name
           command: |
-            if [ $USE_HELM_3 ]
-            then
-              branchname_lower="${CIRCLE_BRANCH,,}"
-              name="${branchname_lower//[^[:alnum:]]/-}"
-            else
-              # Release name length is 37 chars long, which leaves max 16 chars for kubernetes resource name.
-              # Release name is prefixed with w because  it _HAS_ to start with alphabetic character. w 4 wunder.
-              branchname_lower="${CIRCLE_BRANCH,,}"
-              branchname="${branchname_lower//[^[:alnum:]]/-}"
-              branchname_hash=$(printf "$branchname" | shasum -a 256 | cut -c 1-4 )
-              branchname_truncated=$(printf "$branchname" | cut -c 1-15 | sed 's/^\(.*\)-$/\1/' )
-              reponame="${CIRCLE_PROJECT_REPONAME,,}"
-              reponame_hash=$(printf "$reponame" | shasum -a 256 | cut -c 1-4 )
-              reponame_truncated=$(printf "$reponame" | cut -c 1-15 | sed 's/^\(.*\)-$/\1/' )
-              # Truncate long names
-              if [ ${#branchname} -ge 20 ]; then branchname="$branchname_truncated-$branchname_hash"; fi
-              if [ ${#reponame} -ge 20 ]; then reponame="$reponame_truncated-$reponame_hash"; fi
-              name="$reponame--$branchname"
-            fi
+            branchname_lower="${CIRCLE_BRANCH,,}"
+            release_name="${branchname_lower//[^[:alnum:]]/-}"
 
-            echo "export RELEASE_NAME='$name'" >> "$BASH_ENV"
+            echo "export RELEASE_NAME='$release_name'" >> "$BASH_ENV"
 
-            echo "The release name for this branch is $name"
+            echo "The release name for this branch is $release_name"
 
   gcloud-login:
     steps:
@@ -583,8 +566,6 @@ commands:
             # Set the current namespace to match the project name
             kubectl config set-context --current --namespace=$reponame
 
-            echo "export USE_HELM_3=1" >> "$BASH_ENV"
-
   helm-cleanup:
     steps:
       - run:
@@ -592,21 +573,14 @@ commands:
           command: |
             reponame="${CIRCLE_PROJECT_REPONAME,,}"
 
-            if [ $USE_HELM_3 ]
-            then
-              failed_revision=$(helm list --failed --pending --filter="$RELEASE_NAME" | tail -1 | cut -f3)
-              purge=""
-            else
-              failed_revision=$( helm list --failed --pending "$RELEASE_NAME" | tail -1 | cut -f2 )
-              purge="--purge"
-            fi
+            failed_revision=$(helm list -n "$reponame" --failed --pending --filter="$RELEASE_NAME" | tail -1 | cut -f3)
 
             if [[ "$failed_revision" -eq 1 ]]; then
               # Remove any existing post-release hook, since it's technically not part of the release.
               kubectl delete job -n "$reponame" "$RELEASE_NAME-post-release" 2> /dev/null || true
 
               echo "Removing failed first release."
-              helm delete $purge "$RELEASE_NAME"
+              helm delete -n "$reponame" "$RELEASE_NAME"
 
               echo "Delete persistent volume claims left over from statefulsets."
               kubectl get pvc -n "$reponame" -l release="$RELEASE_NAME" -o name | xargs -n 1 kubectl delete --ignore-not-found=true -n "$reponame"
@@ -624,8 +598,10 @@ commands:
       - run:
           name: Release information
           command: |
+            reponame="${CIRCLE_PROJECT_REPONAME,,}"
+
             # Display only the part following NOTES from the helm status.
-            helm status "$RELEASE_NAME" | sed -e '1,/NOTES/d'
+            helm -n "$reponame" get notes "$RELEASE_NAME"
 
   decrypt-files:
     parameters:
@@ -695,13 +671,6 @@ commands:
               extra_noauthips="--set nginx.noauthips.vpn=${VPN_IP}/32"
             fi
 
-            if [ $USE_HELM_3 ]
-            then
-              timeout="6m"
-            else
-              timeout="600"
-            fi
-
             if [[ ! -z "<<parameters.chart_version>>" ]] ; then
               version="--version <<parameters.chart_version>>"
             fi
@@ -722,7 +691,7 @@ commands:
               $reference_data_override \
               --namespace="$reponame" \
               --values '<<parameters.silta_config>>' \
-              --timeout $timeout) 2>&1) || EXIT_CODE=$?
+              --timeout 10m) 2>&1) || EXIT_CODE=$?
 
             if [[ $output == *"BackoffLimitExceeded"* ]]; then
               # Don't show BackoffLimitExceeded, it confuses everyone.
