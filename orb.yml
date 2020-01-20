@@ -574,8 +574,11 @@ commands:
           command: |
             reponame="${CIRCLE_PROJECT_REPONAME,,}"
 
-            # Use the helm3 binary.
-            sudo mv /bin/helm3 /bin/helm
+            # Use the helm 3 binary. If it doesn't exists we already have helm 3.
+            if [ -f /bin/helm3 ]
+            then
+              sudo mv /bin/helm3 /bin/helm
+            fi
 
             # Set the current namespace to match the project name
             kubectl config set-context --current --namespace=$reponame
