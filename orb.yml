@@ -524,6 +524,11 @@ commands:
             # Make sure namespace is lowercase.
             namespace="${CIRCLE_PROJECT_REPONAME,,}"
 
+            # Create the namespace if it doesn't exist.
+            if ! kubectl get namespace "$namespace" &>/dev/null ; then
+              kubectl create namespace "$namespace"
+            fi
+
             # Make sure release name is lowercase without special characters.
             branchname_lower="${CIRCLE_BRANCH,,}"
             release_name="${branchname_lower//[^[:alnum:]]/-}"
