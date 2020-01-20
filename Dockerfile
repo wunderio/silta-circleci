@@ -27,7 +27,11 @@ RUN curl -o /tmp/$FILENAME ${HELM_URL} \
   && rm /tmp/${FILENAME} \
   && sudo mv /tmp/linux-amd64/helm /bin/helm \
   && helm repo add stable https://kubernetes-charts.storage.googleapis.com/ \
-  && helm repo add wunderio https://storage.googleapis.com/charts.wdr.io
+  && helm repo add wunderio https://storage.googleapis.com/charts.wdr.io \
+  && helm plugin install https://github.com/anikin-aa/helm-unittest
+
+# TODO: when https://github.com/lrills/helm-unittest/issues/87 is merged,
+# switch back to using https://github.com/lrills/helm-unittest as the source
 
 # Add custom php config and lift memory limit.
 COPY conf/php/memory.ini /usr/local/etc/php/conf.d/memory.ini
