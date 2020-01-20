@@ -108,14 +108,13 @@ jobs:
       - unless:
           condition: <<parameters.skip-deployment>>
           steps:
-            - gcloud-login
             - when:
                 condition: <<parameters.decrypt_files>>
                 steps:
                   - decrypt-files:
                       files: <<parameters.decrypt_files>>
+            - silta-setup
             - drupal-docker-build
-            - set-release-name
             - steps: <<parameters.pre-release>>
             - drupal-helm-deploy:
                 chart_name: <<parameters.chart_name>>
@@ -161,18 +160,13 @@ jobs:
 
       - steps: <<parameters.codebase-build>>
 
-      - setup_remote_docker
-
-      - gcloud-login
-
-      - docker-login
+      - silta-setup
 
       - steps: <<parameters.image_build_steps>>
 
       - unless:
           condition: <<parameters.skip-deployment>>
           steps:
-            - set-release-name
 
             - helm-cleanup
 
@@ -250,11 +244,7 @@ jobs:
 
       - steps: <<parameters.codebase-build>>
 
-      - setup_remote_docker
-
-      - gcloud-login
-
-      - docker-login
+      - silta-setup
 
       - build-docker-image:
           dockerfile: 'silta/nginx.Dockerfile'
@@ -264,8 +254,6 @@ jobs:
       - unless:
           condition: <<parameters.skip-deployment>>
           steps:
-            - set-release-name
-
             - helm-cleanup
 
             - run:
@@ -497,10 +485,6 @@ commands:
 
   drupal-docker-build:
     steps:
-      - setup_remote_docker
-
-      - docker-login
-
       - build-docker-image:
           dockerfile: silta/nginx.Dockerfile
           path: web
@@ -515,6 +499,13 @@ commands:
           dockerfile: silta/shell.Dockerfile
           path: "."
           identifier: shell
+
+  silta-setup:
+    steps:
+      - setup_remote_docker
+      - docker-login
+      - gcloud-login
+      - set-release-name
 
   set-release-name:
     steps:
