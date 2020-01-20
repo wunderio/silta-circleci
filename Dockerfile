@@ -17,21 +17,6 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.
   && sudo apt-get update && sudo apt-get install google-cloud-sdk kubectl \
   && sudo apt-get clean
 
-# Install Helm
-ENV HELM_VERSION v2.14.3
-ENV FILENAME helm-${HELM_VERSION}-linux-amd64.tar.gz
-ENV HELM_URL https://storage.googleapis.com/kubernetes-helm/${FILENAME}
-
-RUN curl -o /tmp/$FILENAME ${HELM_URL} \
-  && tar -zxvf /tmp/${FILENAME} -C /tmp \
-  && rm /tmp/${FILENAME} \
-  && sudo mv /tmp/linux-amd64/helm /bin/helm \
-  && helm init --client-only \
-  && helm plugin install https://github.com/lrills/helm-unittest \
-  && helm repo add codecentric https://codecentric.github.io/helm-charts \
-  && helm repo add wunderio https://storage.googleapis.com/charts.wdr.io \
-  && helm repo remove local
-
 # Install Helm 3
 ENV HELM_VERSION v3.0.2
 ENV FILENAME helm-${HELM_VERSION}-linux-amd64.tar.gz
@@ -40,9 +25,9 @@ ENV HELM_URL https://get.helm.sh/${FILENAME}
 RUN curl -o /tmp/$FILENAME ${HELM_URL} \
   && tar -zxvf /tmp/${FILENAME} -C /tmp \
   && rm /tmp/${FILENAME} \
-  && sudo mv /tmp/linux-amd64/helm /bin/helm3 \
-  && helm3 repo add stable https://kubernetes-charts.storage.googleapis.com/ \
-  && helm3 repo add wunderio https://storage.googleapis.com/charts.wdr.io
+  && sudo mv /tmp/linux-amd64/helm /bin/helm \
+  && helm repo add stable https://kubernetes-charts.storage.googleapis.com/ \
+  && helm repo add wunderio https://storage.googleapis.com/charts.wdr.io
 
 # Add custom php config and lift memory limit.
 COPY conf/php/memory.ini /usr/local/etc/php/conf.d/memory.ini
