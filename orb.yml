@@ -601,7 +601,7 @@ commands:
             reponame="${CIRCLE_PROJECT_REPONAME,,}"
 
             # Display only the part following NOTES from the helm status.
-            helm -n "$reponame" status "$RELEASE_NAME" | sed -e '1,/NOTES/d'
+            helm -n "$reponame" get notes "$RELEASE_NAME"
 
   decrypt-files:
     parameters:
