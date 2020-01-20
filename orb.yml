@@ -525,12 +525,17 @@ commands:
       - run:
           name: Set release name
           command: |
+            # Make sure namespace is lowercase.
+            namespace="${CIRCLE_PROJECT_REPONAME,,}"
+
+            # Make sure release name is lowercase without special characters.
             branchname_lower="${CIRCLE_BRANCH,,}"
             release_name="${branchname_lower//[^[:alnum:]]/-}"
 
             echo "export RELEASE_NAME='$release_name'" >> "$BASH_ENV"
+            echo "export NAMESPACE='$namespace'" >> "$BASH_ENV"
 
-            echo "The release name for this branch is $release_name"
+            echo "The release name for this branch is \"$release_name\" in the \"$namespace\" namespace"
 
   gcloud-login:
     steps:
