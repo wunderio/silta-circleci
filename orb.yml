@@ -108,14 +108,13 @@ jobs:
       - unless:
           condition: <<parameters.skip-deployment>>
           steps:
-            - gcloud-login
             - when:
                 condition: <<parameters.decrypt_files>>
                 steps:
                   - decrypt-files:
                       files: <<parameters.decrypt_files>>
+            - silta-setup
             - drupal-docker-build
-            - set-release-name
             - steps: <<parameters.pre-release>>
             - drupal-helm-deploy:
                 chart_name: <<parameters.chart_name>>
@@ -161,29 +160,23 @@ jobs:
 
       - steps: <<parameters.codebase-build>>
 
-      - setup_remote_docker
-
-      - gcloud-login
-
-      - docker-login
+      - silta-setup
 
       - steps: <<parameters.image_build_steps>>
 
       - unless:
           condition: <<parameters.skip-deployment>>
           steps:
-            - set-release-name
 
             - helm-cleanup
 
             - run:
                 name: Deploy helm release
                 command: |
-                  reponame="${CIRCLE_PROJECT_REPONAME,,}"
                   image_overrides=""
                   for var in `env | grep _IMAGE_IDENTIFIER`; do
                     identifier=`echo $var | cut -f 2 -d "="`
-                    image_url="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-$identifier"
+                    image_url="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$NAMESPACE-$identifier"
                     image_tag="${identifier}_HASH"
                     image_overrides="$image_overrides --set services.${identifier}.image=${image_url}:${!image_tag}"
                   done
@@ -202,14 +195,13 @@ jobs:
                     --set shell.gitAuth.repositoryUrl="$CIRCLE_REPOSITORY_URL" \
                     --set shell.gitAuth.apiToken="$GITAUTH_API_TOKEN" \
                     --set clusterDomain=${<<parameters.cluster_domain>>} \
-                    --namespace="$reponame" \
+                    --namespace="$NAMESPACE" \
                     --values '<<parameters.silta_config>>'
             - run:
                 name: Wait for resources to be ready
                 command: |
-                  reponame="${CIRCLE_PROJECT_REPONAME,,}"
                   # Get all deployments in the release and check the status of each one.
-                  kubectl get deployment -n "$reponame" -l "release=${RELEASE_NAME}" -o name | xargs -n 1 kubectl rollout status -n "$reponame"
+                  kubectl get deployment -n "$NAMESPACE" -l "release=${RELEASE_NAME}" -o name | xargs -n 1 kubectl rollout status -n "$NAMESPACE"
 
             - helm-release-information
 
@@ -252,11 +244,7 @@ jobs:
 
       - steps: <<parameters.codebase-build>>
 
-      - setup_remote_docker
-
-      - gcloud-login
-
-      - docker-login
+      - silta-setup
 
       - build-docker-image:
           dockerfile: 'silta/nginx.Dockerfile'
@@ -266,15 +254,11 @@ jobs:
       - unless:
           condition: <<parameters.skip-deployment>>
           steps:
-            - set-release-name
-
             - helm-cleanup
 
             - run:
                 name: Deploy helm release
                 command: |
-                  reponame="${CIRCLE_PROJECT_REPONAME,,}"
-
                   # Add internal VPN if defined in environment
                   extra_noauthips=""
                   if [[ ! -z "$VPN_IP" ]] ; then
@@ -286,8 +270,8 @@ jobs:
                     --set environmentName="$CIRCLE_BRANCH" \
                     $extra_noauthips \
                     --set clusterDomain=${<<parameters.cluster_domain>>} \
-                    --set nginx.image=$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}-nginx:$nginx_HASH \
-                    --namespace="$reponame" \
+                    --set nginx.image=$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$NAMESPACE-nginx:$nginx_HASH \
+                    --namespace="$NAMESPACE" \
                     --values '<<parameters.silta_config>>' \
                     --wait
 
@@ -384,7 +368,7 @@ commands:
       - run:
           name: Build <<parameters.identifier>> docker image
           command: |
-            image_url="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/${CIRCLE_PROJECT_REPONAME,,}"-'<<parameters.identifier>>'
+            image_url="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$NAMESPACE"-'<<parameters.identifier>>'
 
             # Only exclude files
             exclude_dockerignore=''
@@ -501,10 +485,6 @@ commands:
 
   drupal-docker-build:
     steps:
-      - setup_remote_docker
-
-      - docker-login
-
       - build-docker-image:
           dockerfile: silta/nginx.Dockerfile
           path: web
@@ -520,17 +500,34 @@ commands:
           path: "."
           identifier: shell
 
+  silta-setup:
+    steps:
+      - setup_remote_docker
+      - docker-login
+      - gcloud-login
+      - set-release-name
+
   set-release-name:
     steps:
       - run:
           name: Set release name
           command: |
+            # Make sure namespace is lowercase.
+            namespace="${CIRCLE_PROJECT_REPONAME,,}"
+
+            # Create the namespace if it doesn't exist.
+            if ! kubectl get namespace "$namespace" &>/dev/null ; then
+              kubectl create namespace "$namespace"
+            fi
+
+            # Make sure release name is lowercase without special characters.
             branchname_lower="${CIRCLE_BRANCH,,}"
             release_name="${branchname_lower//[^[:alnum:]]/-}"
 
             echo "export RELEASE_NAME='$release_name'" >> "$BASH_ENV"
+            echo "export NAMESPACE='$namespace'" >> "$BASH_ENV"
 
-            echo "The release name for this branch is $release_name"
+            echo "The release name for this branch is \"$release_name\" in the \"$namespace\" namespace"
 
   gcloud-login:
     steps:
@@ -550,19 +547,17 @@ commands:
       - run:
           name: Clean up failed Helm releases
           command: |
-            reponame="${CIRCLE_PROJECT_REPONAME,,}"
-
-            failed_revision=$(helm list -n "$reponame" --failed --pending --filter="$RELEASE_NAME" | tail -1 | cut -f3)
+            failed_revision=$(helm list -n "$NAMESPACE" --failed --pending --filter="$RELEASE_NAME" | tail -1 | cut -f3)
 
             if [[ "$failed_revision" -eq 1 ]]; then
               # Remove any existing post-release hook, since it's technically not part of the release.
-              kubectl delete job -n "$reponame" "$RELEASE_NAME-post-release" 2> /dev/null || true
+              kubectl delete job -n "$NAMESPACE" "$RELEASE_NAME-post-release" 2> /dev/null || true
 
               echo "Removing failed first release."
-              helm delete -n "$reponame" "$RELEASE_NAME"
+              helm delete -n "$NAMESPACE" "$RELEASE_NAME"
 
               echo "Delete persistent volume claims left over from statefulsets."
-              kubectl get pvc -n "$reponame" -l release="$RELEASE_NAME" -o name | xargs -n 1 kubectl delete --ignore-not-found=true -n "$reponame"
+              kubectl get pvc -n "$NAMESPACE" -l release="$RELEASE_NAME" -o name | xargs -n 1 kubectl delete --ignore-not-found=true -n "$NAMESPACE"
 
               echo -n "Waiting for volumes to be deleted."
               until [[ -z `kubectl get pv | grep "$RELEASE_NAME-public-files"` ]]
@@ -577,10 +572,8 @@ commands:
       - run:
           name: Release information
           command: |
-            reponame="${CIRCLE_PROJECT_REPONAME,,}"
-
             # Display only the part following NOTES from the helm status.
-            helm -n "$reponame" get notes "$RELEASE_NAME"
+            helm -n "$NAMESPACE" get notes "$RELEASE_NAME"
 
   decrypt-files:
     parameters:
@@ -625,10 +618,8 @@ commands:
       - run:
           name: Deploy helm release
           command: |
-            reponame="${CIRCLE_PROJECT_REPONAME,,}"
-
             # Disable reference data if the required volume is not present.
-            reference_volume=$(kubectl get pv | grep --extended-regexp "$reponame/.*-reference-data") || true
+            reference_volume=$(kubectl get pv | grep --extended-regexp "$NAMESPACE/.*-reference-data") || true
             reference_data_override=''
             if [[ -z "$reference_volume" ]] ; then
               reference_data_override='--set referenceData.skipMount=true'
@@ -658,9 +649,9 @@ commands:
               --repo '<<parameters.chart_repository>>' \
               $version \
               --set environmentName="$CIRCLE_BRANCH" \
-              --set php.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-php:$php_HASH" \
-              --set nginx.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-nginx:$nginx_HASH" \
-              --set shell.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$reponame-shell:$shell_HASH" \
+              --set php.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$NAMESPACE-php:$php_HASH" \
+              --set nginx.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$NAMESPACE-nginx:$nginx_HASH" \
+              --set shell.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$NAMESPACE-shell:$shell_HASH" \
               $extra_noauthips \
               $db_root_pass_override \
               $db_user_pass_override \
@@ -668,7 +659,7 @@ commands:
               --set shell.gitAuth.apiToken="$GITAUTH_API_TOKEN" \
               --set clusterDomain="${<<parameters.cluster_domain>>}" \
               $reference_data_override \
-              --namespace="$reponame" \
+              --namespace="$NAMESPACE" \
               --values '<<parameters.silta_config>>' \
               --timeout 10m) 2>&1) || EXIT_CODE=$?
 
@@ -685,16 +676,14 @@ commands:
           name: Deployment log
           when: always
           command: |
-            reponame="${CIRCLE_PROJECT_REPONAME,,}"
-            kubectl logs "job/$RELEASE_NAME-post-release" -n "$reponame" -f --timestamps=true
+            kubectl logs "job/$RELEASE_NAME-post-release" -n "$NAMESPACE" -f --timestamps=true
 
       - run:
           name: Wait for resources to be ready
           command: |
-            reponame="${CIRCLE_PROJECT_REPONAME,,}"
             # Get all deployments and statefulsets in the release and check the status of each one.
-            kubectl get statefulset -n "$reponame" -l "release=${RELEASE_NAME}" -o name | xargs -n 1 kubectl rollout status -n "$reponame"
-            kubectl get deployment -n "$reponame" -l "release=${RELEASE_NAME}" -o name | xargs -n 1 kubectl rollout status -n "$reponame"
+            kubectl get statefulset -n "$NAMESPACE" -l "release=${RELEASE_NAME}" -o name | xargs -n 1 kubectl rollout status -n "$NAMESPACE"
+            kubectl get deployment -n "$NAMESPACE" -l "release=${RELEASE_NAME}" -o name | xargs -n 1 kubectl rollout status -n "$NAMESPACE"
             
       - helm-release-information
 
