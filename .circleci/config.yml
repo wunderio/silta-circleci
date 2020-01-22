@@ -7,6 +7,12 @@ workflows:
   btd:
     jobs:
       - orb-tools/publish:
+          pre-steps:
+            - checkout
+            - run:
+                name: Pack the orb
+                command: circleci config pack orb/ > orb.yml
+
           name: "Publish development orb"
           orb-path: orb.yml
           orb-ref: silta/silta@dev:${CIRCLE_BRANCH}
