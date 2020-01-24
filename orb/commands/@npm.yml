@@ -1,0 +1,87 @@
+
+npm-install-build:
+  parameters:
+    path:
+      type: string
+      default: "."
+    build-command:
+      type: string
+      default: "npm run build"
+    cache-version:
+      type: string
+      default: "v1"
+  steps:
+    - restore_cache:
+        keys:
+          - <<parameters.cache-version>>-npm-{{ checksum "<<parameters.path>>/package-lock.json" }}
+          - <<parameters.cache-version>>-npm-
+
+    - run:
+        name: Install frontend dependencies
+        command: |
+          cd '<<parameters.path>>'
+          npm install
+
+    - run:
+        name: Build frontend
+        command: |
+          cd '<<parameters.path>>'
+          <<parameters.build-command>>
+
+    - save_cache:
+        paths:
+          - <<parameters.path>>/node_modules
+        key: <<parameters.cache-version>>-npm-{{ checksum "<<parameters.path>>/package-lock.json" }}
+
+yarn-install-build:
+  parameters:
+    path:
+      type: string
+      default: "."
+    build-command:
+      type: string
+      default: "yarn build"
+    cache-version:
+      type: string
+      default: "v1"
+  steps:
+    - restore_cache:
+        keys:
+          - <<parameters.cache-version>>-yarn-{{ checksum "<<parameters.path>>/yarn.lock" }}
+          - <<parameters.cache-version>>-yarn-
+
+    - run:
+        name: Install frontend dependencies
+        command: |
+          cd '<<parameters.path>>'
+          yarn install
+
+    - run:
+        name: Build frontend
+        command: |
+          cd '<<parameters.path>>'
+          <<parameters.build-command>>
+
+    - save_cache:
+        paths:
+          - <<parameters.path>>/node_modules
+        key: <<parameters.cache-version>>-yarn-{{ checksum "<<parameters.path>>/yarn.lock" }}
+
+# Deprecated in favor of the yarn-install-build command, or even better switch to npm and use npm-install-build.
+yarn-install:
+  parameters:
+    cache-version:
+      type: string
+      default: "v1"
+  steps:
+    - restore_cache:
+        keys:
+          - <<parameters.cache-version>>-yarn-{{ checksum "yarn.lock" }}
+          - <<parameters.cache-version>>-yarn-
+
+    - run: yarn install
+
+    - save_cache:
+        paths:
+          - node_modules
+        key: <<parameters.cache-version>>-yarn-{{ checksum "yarn.lock" }}

@@ -1,0 +1,161 @@
+
+
+build-docker-image:
+  parameters:
+    dockerfile:
+      type: string
+    path:
+      type: string
+    identifier:
+      type: string
+    docker-hash-prefix:
+      type: string
+      default: v1
+  steps:
+    - run:
+        name: Build <<parameters.identifier>> docker image
+        command: |
+          image_url="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$NAMESPACE"-'<<parameters.identifier>>'
+
+          # Only exclude files
+          exclude_dockerignore=''
+          if [ -f '<<parameters.path>>/.dockerignore' ]
+          then
+            exclude_dockerignore=--exclude-from='<<parameters.path>>'/.dockerignore
+          fi
+
+          # Take a hash of all files in the folder except those ignored by docker.
+          # Also make sure modification time or order play no role.
+          image_tag=$(tar \
+            --sort=name \
+            $exclude_dockerignore \
+            --exclude=vendor/composer \
+            --exclude=vendor/autoload.php \
+            --mtime='2000-01-01 00:00Z' \
+            --clamp-mtime \
+            -cf - '<<parameters.path>>' '<<parameters.dockerfile>>' | sha1sum | cut -c 1-40)
+          image_tag="<<parameters.docker-hash-prefix>>-$image_tag"
+
+          if gcloud container images list-tags "$image_url" | grep -q "$image_tag"; then
+            echo "This <<parameters.identifier>> image has already been built, the existing image from the Docker repository will be used."
+          else
+            docker build -t "$image_url:$image_tag" -f '<<parameters.dockerfile>>' '<<parameters.path>>'
+            docker push "$image_url:$image_tag"
+          fi
+
+          # Persist the image identifier and tag so it is available during deployment.
+          echo "export <<parameters.identifier>>_IMAGE_IDENTIFIER='<<parameters.identifier>>'" >> "$BASH_ENV"
+          echo "export <<parameters.identifier>>_HASH='$image_tag'" >> "$BASH_ENV"
+
+
+docker-login:
+  steps:
+    - run:
+        name: Login to the docker registry
+        command: |
+          if [ -z "$GCLOUD_KEY_JSON" ]
+          then
+            echo "\$GCLOUD_KEY_JSON is empty, have you set a context for this CircleCI job?"
+          else
+            printenv GCLOUD_KEY_JSON | docker login -u _json_key --password-stdin "https://$DOCKER_REPO_HOST"
+          fi
+
+silta-setup:
+  steps:
+    - setup_remote_docker
+    - docker-login
+    - gcloud-login
+    - set-release-name
+
+set-release-name:
+  steps:
+    - run:
+        name: Set release name
+        command: |
+          # Make sure namespace is lowercase.
+          namespace="${CIRCLE_PROJECT_REPONAME,,}"
+
+          # Create the namespace if it doesn't exist.
+          if ! kubectl get namespace "$namespace" &>/dev/null ; then
+            kubectl create namespace "$namespace"
+          fi
+
+          # Make sure release name is lowercase without special characters.
+          branchname_lower="${CIRCLE_BRANCH,,}"
+          release_name="${branchname_lower//[^[:alnum:]]/-}"
+
+          echo "export RELEASE_NAME='$release_name'" >> "$BASH_ENV"
+          echo "export NAMESPACE='$namespace'" >> "$BASH_ENV"
+
+          echo "The release name for this branch is \"$release_name\" in the \"$namespace\" namespace"
+
+gcloud-login:
+  steps:
+    - run:
+        name: Google Cloud login
+        command: |
+          # Save key, authenticate and set compute zone.
+          printenv GCLOUD_KEY_JSON > "$HOME/gcloud-service-key.json"
+          gcloud auth activate-service-account --key-file="$HOME/gcloud-service-key.json" --project "$GCLOUD_PROJECT_NAME"
+          gcloud config set compute/zone "$GCLOUD_COMPUTE_ZONE"
+
+          # Updates a kubeconfig file with appropriate credentials and endpoint information.
+          gcloud container clusters get-credentials "$GCLOUD_CLUSTER_NAME" --zone "$GCLOUD_COMPUTE_ZONE" --project "$GCLOUD_PROJECT_NAME"
+
+helm-cleanup:
+  steps:
+    - run:
+        name: Clean up failed Helm releases
+        command: |
+          failed_revision=$(helm list -n "$NAMESPACE" --failed --pending --filter="$RELEASE_NAME" | tail -1 | cut -f3)
+
+          if [[ "$failed_revision" -eq 1 ]]; then
+            # Remove any existing post-release hook, since it's technically not part of the release.
+            kubectl delete job -n "$NAMESPACE" "$RELEASE_NAME-post-release" 2> /dev/null || true
+
+            echo "Removing failed first release."
+            helm delete -n "$NAMESPACE" "$RELEASE_NAME"
+
+            echo "Delete persistent volume claims left over from statefulsets."
+            kubectl get pvc -n "$NAMESPACE" -l release="$RELEASE_NAME" -o name | xargs -n 1 kubectl delete --ignore-not-found=true -n "$NAMESPACE"
+
+            echo -n "Waiting for volumes to be deleted."
+            until [[ -z `kubectl get pv | grep "$RELEASE_NAME-public-files"` ]]
+            do
+              echo -n "."
+              sleep 5
+            done
+          fi
+
+helm-release-information:
+  steps:
+    - run:
+        name: Release information
+        command: |
+          # Display only the part following NOTES from the helm status.
+          helm -n "$NAMESPACE" get notes "$RELEASE_NAME"
+
+decrypt-files:
+  parameters:
+    files:
+      type: string
+    secret_key_env:
+      type: env_var_name
+      default: SECRET_KEY
+  steps:
+    - run:
+        name: Decrypt secret files
+        command: |
+          # Secret management
+          secrets='<<parameters.files>>'
+          if [[ ! -z "$secrets" ]]; then
+            echo "Decrypting secrets"
+            for file in ${secrets//,/}
+            do
+              echo "$file"
+              tmp=$(mktemp)
+              openssl enc -d -aes-256-cbc -pbkdf2 -in "$file" -out "$tmp" -pass env:<<parameters.secret_key_env>>
+              mv -v "$tmp" "$file"
+              chmod a+r "$file"
+            done
+          fi

@@ -1,0 +1,113 @@
+drupal-validate:
+  executor: <<parameters.executor>>
+  parameters:
+    executor:
+      description: The name of custom executor to use
+      type: executor
+      default: silta
+    drupal-root:
+      type: string
+      default: "."
+    pre-validation:
+      type: steps
+      default: []
+    post-validation:
+      type: steps
+      default: []
+  working_directory: ~/project/<<parameters.drupal-root>>
+  steps:
+    - checkout:
+        path: ~/project
+    - steps: <<parameters.pre-validation>>
+    - drupal-composer-install:
+        install-dev-dependencies: true
+    - phpcs
+    - grumphp
+    - run:
+        name: Silta basic checks
+        command: |
+          files=(
+            silta/silta.yml
+            silta/silta-prod.yml
+            silta/nginx.Dockerfile
+            silta/php.Dockerfile
+            silta/shell.Dockerfile
+            .dockerignore
+            web/.dockerignore
+          )
+
+          for file in "${files[@]}"; do
+            if [ -f "$file" ]; then
+              echo "✅ $file is present"
+            else
+              echo "❌ $file is missing from the repository."
+              exit 1
+            fi
+          done
+
+          if grep "drush.*8" composer.json; then
+            echo "❌ Silta is not compatible with drush 8."
+          fi
+
+    - steps: <<parameters.post-validation>>
+
+drupal-build-deploy:
+  executor: <<parameters.executor>>
+  parameters:
+    executor:
+      description: The name of custom executor to use
+      type: executor
+      default: silta
+    drupal-root:
+      type: string
+      default: "."
+    codebase-build:
+      type: steps
+      default: []
+    pre-release:
+      description: Steps to be executed before the Helm release is created.
+      type: steps
+      default: []
+    chart_name:
+      type: string
+      default: drupal
+    chart_version:
+      type: string
+      default: "0.3.0"
+    chart_repository:
+      type: string
+      default: https://storage.googleapis.com/charts.wdr.io
+    decrypt_files:
+      type: string
+      default: ""
+    silta_config:
+      type: string
+      default: "silta/silta.yml"
+    skip-deployment:
+      type: boolean
+      default: false
+    cluster_domain:
+      type: env_var_name
+      default: CLUSTER_DOMAIN
+  working_directory: ~/project/<<parameters.drupal-root>>
+  steps:
+    - checkout:
+        path: ~/project
+    - steps: <<parameters.codebase-build>>
+    - unless:
+        condition: <<parameters.skip-deployment>>
+        steps:
+          - when:
+              condition: <<parameters.decrypt_files>>
+              steps:
+                - decrypt-files:
+                    files: <<parameters.decrypt_files>>
+          - silta-setup
+          - drupal-docker-build
+          - steps: <<parameters.pre-release>>
+          - drupal-helm-deploy:
+              chart_name: <<parameters.chart_name>>
+              chart_version: <<parameters.chart_version>>
+              chart_repository: <<parameters.chart_repository>>
+              silta_config: <<parameters.silta_config>>
+              cluster_domain: <<parameters.cluster_domain>>

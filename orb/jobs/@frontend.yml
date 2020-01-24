@@ -1,0 +1,81 @@
+frontend-build-deploy:
+  executor: <<parameters.executor>>
+  parameters:
+    executor:
+      description: The name of custom executor to use
+      type: executor
+      default: silta
+    codebase-build:
+      type: steps
+      default: []
+    chart_name:
+      type: string
+      default: frontend
+    chart_repository:
+      type: string
+      default: https://storage.googleapis.com/charts.wdr.io
+    silta_config:
+      type: string
+      default: "silta/silta.yml"
+    skip-deployment:
+      type: boolean
+      default: false
+    cluster_domain:
+      type: env_var_name
+      default: CLUSTER_DOMAIN
+    image_build_steps:
+      type: steps
+      default:
+      - build-docker-image:
+          dockerfile: 'silta/node.Dockerfile'
+          path: '.'
+          identifier: 'node'
+  steps:
+    - checkout
+
+    - steps: <<parameters.codebase-build>>
+
+    - silta-setup
+
+    - steps: <<parameters.image_build_steps>>
+
+    - unless:
+        condition: <<parameters.skip-deployment>>
+        steps:
+
+          - helm-cleanup
+
+          - run:
+              name: Deploy helm release
+              command: |
+                image_overrides=""
+                for var in `env | grep _IMAGE_IDENTIFIER`; do
+                  identifier=`echo $var | cut -f 2 -d "="`
+                  image_url="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$NAMESPACE-$identifier"
+                  image_tag="${identifier}_HASH"
+                  image_overrides="$image_overrides --set services.${identifier}.image=${image_url}:${!image_tag}"
+                done
+
+                # Add internal VPN if defined in environment
+                extra_noauthips=""
+                if [[ ! -z "$VPN_IP" ]] ; then
+                  extra_noauthips="--set nginx.noauthips.vpn=${VPN_IP}/32"
+                fi
+
+                helm upgrade --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
+                  --repo '<<parameters.chart_repository>>' \
+                  --set environmentName="$CIRCLE_BRANCH" \
+                  $extra_noauthips \
+                  $image_overrides \
+                  --set shell.gitAuth.repositoryUrl="$CIRCLE_REPOSITORY_URL" \
+                  --set shell.gitAuth.apiToken="$GITAUTH_API_TOKEN" \
+                  --set clusterDomain=${<<parameters.cluster_domain>>} \
+                  --namespace="$NAMESPACE" \
+                  --values '<<parameters.silta_config>>'
+          - run:
+              name: Wait for resources to be ready
+              command: |
+                # Get all deployments in the release and check the status of each one.
+                kubectl get deployment -n "$NAMESPACE" -l "release=${RELEASE_NAME}" -o name | xargs -n 1 kubectl rollout status -n "$NAMESPACE"
+
+          - helm-release-information
