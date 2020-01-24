@@ -6,7 +6,13 @@ orbs:
 workflows:
   btd:
     jobs:
-      - orb-tools/publish:
+      - orb-tools/publish:  &publish
+          pre-steps:
+            - checkout
+            - run:
+                name: Pack the orb
+                command: circleci config pack orb/ > orb.yml
+
           name: "Publish development orb"
           orb-path: orb.yml
           orb-ref: silta/silta@dev:${CIRCLE_BRANCH}
@@ -14,11 +20,9 @@ workflows:
           validate: true
 
       - orb-tools/publish:
+          <<: *publish
           name: "Publish production orb"
-          orb-path: orb.yml
           orb-ref: silta/silta@${CIRCLE_TAG}
-          publish-token-variable: "$CIRCLECI_DEV_API_TOKEN"
-          validate: true
           filters:
             tags:
               only: /\d+\.\d+\.\d+/
