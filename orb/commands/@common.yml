@@ -56,7 +56,7 @@ build-docker-image:
           fi
 
           if gcloud container images list-tags "$image_url" | grep -q "$image_tag"; then
-            echo "This <<parameters.identifier>> image has already been built, the existing image from the Docker repository will be used."
+            echo "This $image_url:$image_tag image has already been built, the existing image from the Docker repository will be used."
           else
             docker build -t "$image_url:$image_tag" -f '<<parameters.dockerfile>>' $path
             docker push "$image_url:$image_tag"
