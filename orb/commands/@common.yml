@@ -5,41 +5,60 @@ build-docker-image:
     dockerfile:
       type: string
     path:
+      description: The path to be used as the context when building the docker image. An empty directory is used by default.
       type: string
+      default: ''
     identifier:
       type: string
     docker-hash-prefix:
       type: string
       default: v1
+    tag:
+      description: If provided, the given tag will be used for the docker image. By default a hash of the codebase (content of the path excluding files matched by .dockerignore) will be created.
+      type: string
+      default: ''
   steps:
     - run:
         name: Build <<parameters.identifier>> docker image
         command: |
           image_url="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$NAMESPACE"-'<<parameters.identifier>>'
 
-          # Only exclude files
+          # Only exclude files if they exist
           exclude_dockerignore=''
           if [ -f '<<parameters.path>>/.dockerignore' ]
           then
             exclude_dockerignore=--exclude-from='<<parameters.path>>'/.dockerignore
           fi
 
-          # Take a hash of all files in the folder except those ignored by docker.
-          # Also make sure modification time or order play no role.
-          image_tag=$(tar \
-            --sort=name \
-            $exclude_dockerignore \
-            --exclude=vendor/composer \
-            --exclude=vendor/autoload.php \
-            --mtime='2000-01-01 00:00Z' \
-            --clamp-mtime \
-            -cf - '<<parameters.path>>' '<<parameters.dockerfile>>' | sha1sum | cut -c 1-40)
-          image_tag="<<parameters.docker-hash-prefix>>-$image_tag"
+          if [ -n '<<parameters.path>>' ]; then
+            path='<<parameters.path>>'
+          else
+            # No path is specified, build from an empty directory.
+            mkdir /tmp/empty
+            path='/tmp/empty'
+          fi
+
+          if [ -n '<<parameters.tag>>' ]; then
+            # A tag has been specified, use it.
+            image_tag="<<parameters.tag>>"
+          else
+            # Take a hash of all files in the folder except those ignored by docker.
+            # Also make sure modification time or order play no role.
+            image_tag=$(tar \
+              --sort=name \
+              $exclude_dockerignore \
+              --exclude=vendor/composer \
+              --exclude=vendor/autoload.php \
+              --mtime='2000-01-01 00:00Z' \
+              --clamp-mtime \
+              -cf - $path '<<parameters.dockerfile>>' | sha1sum | cut -c 1-40)
+            image_tag="<<parameters.docker-hash-prefix>>-$image_tag"
+          fi
 
           if gcloud container images list-tags "$image_url" | grep -q "$image_tag"; then
             echo "This <<parameters.identifier>> image has already been built, the existing image from the Docker repository will be used."
           else
-            docker build -t "$image_url:$image_tag" -f '<<parameters.dockerfile>>' '<<parameters.path>>'
+            docker build -t "$image_url:$image_tag" -f '<<parameters.dockerfile>>' $path
             docker push "$image_url:$image_tag"
           fi
 
