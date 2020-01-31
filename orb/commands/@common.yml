@@ -17,6 +17,10 @@ build-docker-image:
       description: If provided, the given tag will be used for the docker image. By default a hash of the codebase (content of the path excluding files matched by .dockerignore) will be created.
       type: string
       default: ''
+    expose_image:
+      description: Whether to export an environment variable with the image name. This can be used by helm charts (currently only the frontend chart) to automatically adding the image reference to the release values.
+      type: boolean
+      default: true
   steps:
     - run:
         name: Build <<parameters.identifier>> docker image
@@ -62,10 +66,11 @@ build-docker-image:
             docker push "$image_url:$image_tag"
           fi
 
-          # Persist the image identifier and tag so it is available during deployment.
-          echo "export <<parameters.identifier>>_IMAGE_IDENTIFIER='<<parameters.identifier>>'" >> "$BASH_ENV"
-          echo "export <<parameters.identifier>>_HASH='$image_tag'" >> "$BASH_ENV"
-
+          if [ '<<parameters.expose_image>>' = 'true' ]; then
+            # Persist the image identifier and tag so it is available during deployment.
+            echo "export <<parameters.identifier>>_IMAGE_IDENTIFIER='<<parameters.identifier>>'" >> "$BASH_ENV"
+            echo "export <<parameters.identifier>>_HASH='$image_tag'" >> "$BASH_ENV"
+          fi
 
 docker-login:
   steps:
