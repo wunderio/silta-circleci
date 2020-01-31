@@ -13,7 +13,7 @@ grumphp:
         name: grumphp validation
         command: |
           if [ -f grumphp.yml ] && [ -f vendor/bin/grumphp ]; then
-            grumphp run
+            vendor/bin/grumphp run
           fi
 
 drupal-composer-install:
