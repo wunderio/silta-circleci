@@ -3,6 +3,42 @@ version: 2.1
 orbs:
   orb-tools: circleci/orb-tools@2.0.0
 
+jobs:
+  validate:
+    docker:
+      - image: circleci/node:lts
+    steps:
+      - test-project:
+          project: drupal-project-k8s
+      - test-project:
+          project: frontend-project-k8s
+
+commands:
+  test-project:
+    parameters:
+      project:
+        type: string
+    steps:
+      - run:
+          name: Validate orb with <<parameters.project>>
+          command: |
+            base_api_url="https://circleci.com/api/v1.1/project/github/wunderio/<<parameters.project>>"
+
+            # Trigger a new deployment.
+            curl -s -X POST $base_api_url/build?circle-token=$CIRCLECI_DEV_API_TOKEN
+            sleep 10
+
+            # Wait for deployment to be complete
+            while curl -s "$base_api_url?circle-token=$CIRCLECI_DEV_API_TOKEN&limit=2" | jq -e 'any(.[]; .status == "running")' > /dev/null
+            do
+              echo "still running"
+              sleep 10
+            done
+
+            # Test that the build was successful
+            curl -s "$base_api_url?circle-token=$CIRCLECI_DEV_API_TOKEN&limit=2" | jq '.[] | { job_name: .workflows.job_name, status: .status }'
+            curl -s "$base_api_url?circle-token=$CIRCLECI_DEV_API_TOKEN&limit=2" | jq -e 'all(.[]; .status == "success")' > /dev/null
+
 workflows:
   btd:
     jobs:
@@ -28,3 +64,10 @@ workflows:
               only: /\d+\.\d+\.\d+/
             branches:
               ignore: /.*/
+
+      - validate:
+          requires:
+            - "Publish development orb"
+          filters:
+            branches:
+              only: master
