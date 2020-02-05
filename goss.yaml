@@ -1,0 +1,21 @@
+command:
+  drush:
+    exit-status: 1
+  helm plugin list:
+    exit-status: 0
+    stdout:
+    - "/unittest/"
+    stderr: []
+  helm repo list:
+    exit-status: 0
+    stdout:
+    - "/stable/"
+    - "/wunderio/"
+  helm version:
+    exit-status: 0
+    stdout:
+    - /version.BuildInfo/
+  kubectl version --client=true:
+    exit-status: 0
+    stdout:
+    - '/Client Version: version.Info/'
