@@ -73,7 +73,7 @@ drupal-build-deploy:
       default: drupal
     chart_version:
       type: string
-      default: "0.3.5"
+      default: "0.3.6"
     chart_repository:
       type: string
       default: https://storage.googleapis.com/charts.wdr.io
