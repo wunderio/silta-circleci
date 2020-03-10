@@ -152,7 +152,10 @@ drupal-helm-deploy:
         name: Wait for resources to be ready
         command: |
           # Get all deployments and statefulsets in the release and check the status of each one.
-          kubectl get statefulset -n "$NAMESPACE" -l "release=${RELEASE_NAME}" -o name | xargs -n 1 kubectl rollout status -n "$NAMESPACE"
+          statefulsets=$(kubectl get statefulset -n "$NAMESPACE" -l "release=${RELEASE_NAME}" -o name)
+          if [ ! -z "$statefulsets" ]; then
+            echo "$statefulsets" | xargs -n 1 kubectl rollout status -n "$NAMESPACE"
+          fi
           kubectl get deployment -n "$NAMESPACE" -l "release=${RELEASE_NAME}" -o name | xargs -n 1 kubectl rollout status -n "$NAMESPACE"
 
     - helm-release-information
