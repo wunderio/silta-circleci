@@ -78,7 +78,7 @@ drupal-helm-deploy:
       type: string
     chart_version:
       type: string
-      default: "latest"
+      default: ""
     silta_config:
       type: string
     cluster_domain:
@@ -112,9 +112,7 @@ drupal-helm-deploy:
             extra_noauthips="--set nginx.noauthips.vpn=${VPN_IP}/32"
           fi
 
-          if [[ "<<parameters.chart_version>>" == "latest" ]] ; then
-            version="--version 0.3.7"
-          else
+          if [[ ! -z "<<parameters.chart_version>>" ]] ; then
             version="--version <<parameters.chart_version>>"
           fi
 
