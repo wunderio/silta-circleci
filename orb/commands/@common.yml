@@ -107,9 +107,11 @@ set-release-name:
           # Make sure release name is lowercase without special characters.
           branchname_lower="${CIRCLE_BRANCH,,}"
           release_name="${branchname_lower//[^[:alnum:]]/-}"
+          silta_environment_name="${CIRCLE_BRANCH,,}"
 
           echo "export RELEASE_NAME='$release_name'" >> "$BASH_ENV"
           echo "export NAMESPACE='$namespace'" >> "$BASH_ENV"
+          echo "export SILTA_ENVIRONMENT_NAME='$silta_environment_name'" >> "$BASH_ENV"
 
           echo "The release name for this branch is \"$release_name\" in the \"$namespace\" namespace"
 

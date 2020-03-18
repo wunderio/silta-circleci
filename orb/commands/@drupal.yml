@@ -78,6 +78,7 @@ drupal-helm-deploy:
       type: string
     chart_version:
       type: string
+      default: ""
     silta_config:
       type: string
     cluster_domain:
@@ -118,7 +119,8 @@ drupal-helm-deploy:
           output=$((helm upgrade --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
             --repo '<<parameters.chart_repository>>' \
             $version \
-            --set environmentName="$CIRCLE_BRANCH" \
+            --set environmentName="$SILTA_ENVIRONMENT_NAME" \
+            --set branchName="$CIRCLE_BRANCH" \
             --set php.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$NAMESPACE-php:$php_HASH" \
             --set nginx.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$NAMESPACE-nginx:$nginx_HASH" \
             --set shell.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$NAMESPACE-shell:$shell_HASH" \
