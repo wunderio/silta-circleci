@@ -143,7 +143,8 @@ helm-cleanup:
             helm delete -n "$NAMESPACE" "$RELEASE_NAME"
 
             echo "Delete persistent volume claims left over from statefulsets."
-            kubectl get pvc -n "$NAMESPACE" -l release="$RELEASE_NAME" -o name | xargs -n 1 kubectl delete --ignore-not-found=true -n "$NAMESPACE"
+            kubectl delete pvc -n "$NAMESPACE" -l release="$RELEASE_NAME"
+            kubectl delete pvc -n "$NAMESPACE" -l app="$RELEASE_NAME-es"
 
             echo -n "Waiting for volumes to be deleted."
             until [[ -z `kubectl get pv | grep "$NAMESPACE/$RELEASE_NAME-"` ]]
