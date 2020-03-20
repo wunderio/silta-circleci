@@ -146,7 +146,7 @@ helm-cleanup:
             kubectl get pvc -n "$NAMESPACE" -l release="$RELEASE_NAME" -o name | xargs -n 1 kubectl delete --ignore-not-found=true -n "$NAMESPACE"
 
             echo -n "Waiting for volumes to be deleted."
-            until [[ -z `kubectl get pv | grep "$RELEASE_NAME-public-files"` ]]
+            until [[ -z `kubectl get pv | grep "$NAMESPACE/$RELEASE_NAME-"` ]]
             do
               echo -n "."
               sleep 5
