@@ -64,6 +64,7 @@ drupal-docker-build:
         dockerfile: silta/php.Dockerfile
         path: "."
         identifier: php
+        docker-hash-prefix: v2
 
     - build-docker-image:
         dockerfile: silta/shell.Dockerfile
