@@ -120,6 +120,7 @@ drupal-helm-deploy:
           output=$((helm upgrade --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
             --repo '<<parameters.chart_repository>>' \
             $version \
+            --cleanup-on-fail \
             --set environmentName="$SILTA_ENVIRONMENT_NAME" \
             --set branchName="$CIRCLE_BRANCH" \
             --set php.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$NAMESPACE-php:$php_HASH" \
@@ -134,7 +135,7 @@ drupal-helm-deploy:
             $reference_data_override \
             --namespace="$NAMESPACE" \
             --values '<<parameters.silta_config>>' \
-            --timeout 10m) 2>&1) || EXIT_CODE=$?
+            --timeout 15m) 2>&1) || EXIT_CODE=$?
 
           if [[ $output == *"BackoffLimitExceeded"* ]]; then
             # Don't show BackoffLimitExceeded, it confuses everyone.
