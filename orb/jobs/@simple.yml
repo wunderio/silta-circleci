@@ -59,6 +59,7 @@ simple-build-deploy:
 
                 helm upgrade --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
                   --repo '<<parameters.chart_repository>>' \
+                  --cleanup-on-fail \
                   --set environmentName="$SILTA_ENVIRONMENT_NAME" \
                   --set branchName="$CIRCLE_BRANCH" \
                   $extra_noauthips \
