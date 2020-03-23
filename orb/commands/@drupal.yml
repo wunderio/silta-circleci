@@ -89,6 +89,7 @@ drupal-helm-deploy:
     - helm-cleanup
     - run:
         name: Deploy helm release
+        no_output_timeout: "15m"
         command: |
           # Disable reference data if the required volume is not present.
           reference_volume=$(kubectl get pv | grep --extended-regexp "$NAMESPACE/.*-reference-data") || true
