@@ -123,7 +123,7 @@ drupal-helm-deploy:
             $version \
             --cleanup-on-fail \
             --set environmentName="$SILTA_ENVIRONMENT_NAME" \
-            --set branchName="$CIRCLE_BRANCH" \
+            --set silta-release.branchName="$CIRCLE_BRANCH" \
             --set php.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$NAMESPACE-php:$php_HASH" \
             --set nginx.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$NAMESPACE-nginx:$nginx_HASH" \
             --set shell.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$NAMESPACE-shell:$shell_HASH" \
