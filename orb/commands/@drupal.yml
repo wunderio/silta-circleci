@@ -22,22 +22,28 @@ drupal-composer-install:
       type: boolean
       default: false
   steps:
-    - restore_cache:
-        keys:
-          - v1-dependencies-{{ checksum "composer.lock" }}-<<parameters.install-dev-dependencies>>
-          - v1-dependencies-{{ checksum "composer.lock" }}
-
     - when:
+        # Install dev dependencies.
         condition: <<parameters.install-dev-dependencies>>
         steps:
+          # Restore from cache entries with or without dev dependencies.
+          - restore_cache:
+              keys:
+                - v1-dependencies-{{ checksum "composer.lock" }}-<<parameters.install-dev-dependencies>>
+                - v1-dependencies-{{ checksum "composer.lock" }}
           - run:
               name: composer install
               command: |
                 composer install -n --prefer-dist --ignore-platform-reqs --optimize-autoloader
 
     - unless:
+        # Don't install dev dependencies.
         condition: <<parameters.install-dev-dependencies>>
         steps:
+          # Only restore from cache entries without dev dependencies.
+          - restore_cache:
+              keys:
+                - v1-dependencies-{{ checksum "composer.lock" }}-<<parameters.install-dev-dependencies>>
           - run:
               name: composer install
               command: |
