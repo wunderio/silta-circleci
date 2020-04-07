@@ -29,7 +29,7 @@ RUN curl -o /tmp/$FILENAME ${HELM_URL} \
   && sudo mv /tmp/linux-amd64/helm /bin/helm \
   && helm repo add stable https://kubernetes-charts.storage.googleapis.com/ \
   && helm repo add wunderio https://storage.googleapis.com/charts.wdr.io \
-  && helm plugin install https://github.com/anikin-aa/helm-unittest
+  && helm plugin install https://github.com/quintush/helm-unittest
 
 # TODO: when https://github.com/lrills/helm-unittest/issues/87 is merged,
 # switch back to using https://github.com/lrills/helm-unittest as the source
