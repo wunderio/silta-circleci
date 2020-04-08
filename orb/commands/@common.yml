@@ -110,7 +110,7 @@ set-release-name:
 
           # If name is too long, truncate it and append a hash
           if [ ${#release_name} -ge 40 ]; then
-            release_name="$(printf "$release_name" | cut -c 1-35)-$(printf "$branchname" | shasum -a 256 | cut -c 1-4 )"
+            release_name="$(printf "$release_name" | cut -c 1-35)-$(printf "$branchname_lower" | shasum -a 256 | cut -c 1-4 )"
           fi
 
           silta_environment_name="${CIRCLE_BRANCH,,}"
