@@ -102,6 +102,7 @@ set-release-name:
           # Create the namespace if it doesn't exist.
           if ! kubectl get namespace "$namespace" &>/dev/null ; then
             kubectl create namespace "$namespace"
+            kubectl label namespace "$namespace" "name=$namespace"
           fi
 
           # Make sure release name is lowercase without special characters.
