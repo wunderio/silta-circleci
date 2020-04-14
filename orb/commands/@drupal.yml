@@ -57,6 +57,7 @@ drupal-composer-install:
           - ./web/themes/contrib
           - ./web/profiles/contrib
           - ./web/libraries
+          - ./web/_ping.php
         key: v1-dependencies-{{ checksum "composer.lock" }}-<<parameters.install-dev-dependencies>>
 
 drupal-docker-build:
