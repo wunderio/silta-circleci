@@ -30,10 +30,7 @@ RUN curl -o /tmp/$FILENAME ${HELM_URL} \
   && helm repo add stable https://kubernetes-charts.storage.googleapis.com/ \
   && helm repo add bitnami https://charts.bitnami.com/bitnami \
   && helm repo add wunderio https://storage.googleapis.com/charts.wdr.io \
-  && wget  https://github.com/quintush/helm-unittest/releases/download/v0.1.8/helm-unittest-linux-0.1.8.tgz \
-  && mkdir -p ${HOME}/.local/share/helm/plugins/unittest \
-  && tar xzf  helm-unittest-linux-0.1.8.tgz -C ${HOME}/.local/share/helm/plugins/unittest \
-  && rm helm-unittest-linux-0.1.8.tgz
+  && helm plugin install https://github.com/quintush/helm-unittest --version 0.1.8
 
 # NOTE: quintush/helm-unittest v0.2.0 release breaks helm tests.
 
