@@ -21,6 +21,10 @@ drupal-composer-install:
     install-dev-dependencies:
       type: boolean
       default: false
+    cache-version:
+      description: "Cache key prefix"
+      type: string
+      default: "v2"
   steps:
     - when:
         # Install dev dependencies.
@@ -29,8 +33,8 @@ drupal-composer-install:
           # Restore from cache entries with or without dev dependencies.
           - restore_cache:
               keys:
-                - v1-dependencies-{{ checksum "composer.lock" }}-<<parameters.install-dev-dependencies>>
-                - v1-dependencies-{{ checksum "composer.lock" }}
+                - <<parameters.cache-version>>-dependencies-{{ checksum "composer.lock" }}-<<parameters.install-dev-dependencies>>
+                - <<parameters.cache-version>>-dependencies-{{ checksum "composer.lock" }}
           - run:
               name: composer install
               command: |
@@ -43,7 +47,7 @@ drupal-composer-install:
           # Only restore from cache entries without dev dependencies.
           - restore_cache:
               keys:
-                - v1-dependencies-{{ checksum "composer.lock" }}-<<parameters.install-dev-dependencies>>
+                - <<parameters.cache-version>>-dependencies-{{ checksum "composer.lock" }}-<<parameters.install-dev-dependencies>>
           - run:
               name: composer install
               command: |
@@ -58,7 +62,7 @@ drupal-composer-install:
           - ./web/profiles/contrib
           - ./web/libraries
           - ./web/_ping.php
-        key: v1-dependencies-{{ checksum "composer.lock" }}-<<parameters.install-dev-dependencies>>
+        key: <<parameters.cache-version>>-dependencies-{{ checksum "composer.lock" }}-<<parameters.install-dev-dependencies>>
 
 drupal-docker-build:
   steps:
