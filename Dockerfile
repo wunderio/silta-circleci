@@ -19,7 +19,7 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.
   && sudo apt-get clean
 
 # Install Helm 3
-ENV HELM_VERSION v3.1.2
+ENV HELM_VERSION v3.2.0
 ENV FILENAME helm-${HELM_VERSION}-linux-amd64.tar.gz
 ENV HELM_URL https://get.helm.sh/${FILENAME}
 
@@ -30,7 +30,12 @@ RUN curl -o /tmp/$FILENAME ${HELM_URL} \
   && helm repo add stable https://kubernetes-charts.storage.googleapis.com/ \
   && helm repo add bitnami https://charts.bitnami.com/bitnami \
   && helm repo add wunderio https://storage.googleapis.com/charts.wdr.io \
-  && helm plugin install https://github.com/quintush/helm-unittest
+  && wget  https://github.com/quintush/helm-unittest/releases/download/v0.1.8/helm-unittest-linux-0.1.8.tgz \
+  && mkdir -p ${HOME}/.local/share/helm/plugins/unittest \
+  && tar xzf  helm-unittest-linux-0.1.8.tgz -C ${HOME}/.local/share/helm/plugins/unittest \
+  && rm helm-unittest-linux-0.1.8.tgz
+
+# NOTE: quintush/helm-unittest v0.2.0 release breaks helm tests.
 
 # TODO: when https://github.com/lrills/helm-unittest/issues/87 is merged,
 # switch back to using https://github.com/lrills/helm-unittest as the source
