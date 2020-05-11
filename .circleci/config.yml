@@ -29,7 +29,7 @@ commands:
             sleep 10
 
             # Wait for deployment to be complete
-            while curl -s "$base_api_url?circle-token=$CIRCLECI_DEV_API_TOKEN&limit=2" | jq -e 'any(.[]; .status == "running")' > /dev/null
+            while curl -s "$base_api_url?circle-token=$CIRCLECI_DEV_API_TOKEN&limit=2" | jq -e 'any(.[]; (.status == "running") or (.status == "queued"))' > /dev/null
             do
               echo "still running"
               sleep 10
