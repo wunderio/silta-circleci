@@ -109,8 +109,6 @@ drupal-helm-deploy:
             reference_data_override='--set referenceData.skipMount=true'
           fi
 
-          # echo $WHITELISTED_IPS
-
           # Override Database credentials if specified
           if [[ ! -z "$DB_ROOT_PASS" ]] ; then
             db_root_pass_override="--set mariadb.rootUser.password=$DB_ROOT_PASS"
