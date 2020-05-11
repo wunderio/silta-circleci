@@ -10,14 +10,19 @@ jobs:
     steps:
       - test-project:
           project: drupal-project-k8s
+          job_count: 2
       - test-project:
           project: frontend-project-k8s
+          job_count: 1
 
 commands:
   test-project:
     parameters:
       project:
         type: string
+      job_count:
+        type: integer
+        description: The expected number of jobs.
     steps:
       - run:
           name: Validate orb with <<parameters.project>>
@@ -29,15 +34,15 @@ commands:
             sleep 10
 
             # Wait for deployment to be complete
-            while curl -s "$base_api_url?circle-token=$CIRCLECI_DEV_API_TOKEN&limit=2" | jq -e 'any(.[]; (.status == "running") or (.status == "queued"))' > /dev/null
+            while curl -s "$base_api_url?circle-token=$CIRCLECI_DEV_API_TOKEN&limit=<<parameters.job_count>>" | jq -e 'any(.[]; (.status == "running") or (.status == "queued"))' > /dev/null
             do
               echo "still running"
               sleep 10
             done
 
             # Test that the build was successful
-            curl -s "$base_api_url?circle-token=$CIRCLECI_DEV_API_TOKEN&limit=2" | jq '.[] | { job_name: .workflows.job_name, status: .status }'
-            curl -s "$base_api_url?circle-token=$CIRCLECI_DEV_API_TOKEN&limit=2" | jq -e 'all(.[]; .status == "success")' > /dev/null
+            curl -s "$base_api_url?circle-token=$CIRCLECI_DEV_API_TOKEN&limit=<<parameters.job_count>>" | jq '.[] | { job_name: .workflows.job_name, status: .status }'
+            curl -s "$base_api_url?circle-token=$CIRCLECI_DEV_API_TOKEN&limit=<<parameters.job_count>>" | jq -e 'all(.[]; .status == "success")' > /dev/null
 
 workflows:
   btd:
