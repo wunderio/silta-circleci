@@ -154,11 +154,13 @@ drupal-helm-deploy:
           echo -n "Waiting for containers to start"
 
           TIME_WAITING=0
+          LOGS_SHOWN=false
           while true; do
-            if kubectl get pod -l job-name="$RELEASE_NAME-post-release" -n "$NAMESPACE" --ignore-not-found | grep  -qE "Running|Completed"; then
+            if [ $LOGS_SHOWN == false ] && kubectl get pod -l job-name="$RELEASE_NAME-post-release" -n "$NAMESPACE" --ignore-not-found | grep  -qE "Running|Completed" ; then
               echo ""
               echo "Deployment log:"
               kubectl logs "job/$RELEASE_NAME-post-release" -n "$NAMESPACE" -f --timestamps=true
+              LOGS_SHOWN=true
             fi
 
             # Helm command is complete.
