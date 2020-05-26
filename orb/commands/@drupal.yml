@@ -144,6 +144,8 @@ drupal-helm-deploy:
             $db_user_pass_override \
             --set shell.gitAuth.repositoryUrl="$CIRCLE_REPOSITORY_URL" \
             --set shell.gitAuth.apiToken="$GITAUTH_API_TOKEN" \
+            --set shell.gitAuth.keyserver.username="$GITAUTH_USERNAME" \
+            --set shell.gitAuth.keyserver.password="$GITAUTH_PASSWORD" \
             --set clusterDomain="${<<parameters.cluster_domain>>}" \
             $reference_data_override \
             --namespace="$NAMESPACE" \
