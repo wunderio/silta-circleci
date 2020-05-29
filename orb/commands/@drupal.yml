@@ -81,6 +81,7 @@ drupal-docker-build:
         dockerfile: silta/shell.Dockerfile
         path: "."
         identifier: shell
+        docker-hash-prefix: v5
 
 drupal-helm-deploy:
   parameters:
