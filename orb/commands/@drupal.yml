@@ -131,7 +131,7 @@ drupal-helm-deploy:
           backup=""
           backupID=$(git log --pretty='format:%Creset%s' -1 | cat | grep -oP "^\#restoreBackup=\K([a-zA-Z0-9'-]+)") || true
           if [[ ! -z "$backupID" ]] ; then
-            backup="--set backupID=${backupID}"
+            backup="--set backup.restoreId=${backupID} --set referenceData.enabled=false"
           fi
 
 
