@@ -75,13 +75,11 @@ drupal-docker-build:
         dockerfile: silta/php.Dockerfile
         path: "."
         identifier: php
-        docker-hash-prefix: v3
 
     - build-docker-image:
         dockerfile: silta/shell.Dockerfile
         path: "."
         identifier: shell
-        docker-hash-prefix: v5
 
 drupal-helm-deploy:
   parameters:
