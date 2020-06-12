@@ -178,8 +178,10 @@ drupal-helm-deploy:
               LOGS_SHOWN=true
             fi
 
-            if [ failing_pods -ne 0 ]; then
-              exit $?
+            failing_pods
+            result=$?
+            if [ $result -ne 0 ]; then
+              exit $result
             fi
             # Helm command is complete.
             if ! ps -p "$pid" > /dev/null; then
