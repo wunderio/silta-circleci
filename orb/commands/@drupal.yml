@@ -106,13 +106,12 @@ drupal-helm-deploy:
           #Detect pods in FAILED state
           function failing_pods() {
             failed_pods=$(kubectl get pod -l "release=$RELEASE_NAME" -n "$NAMESPACE" --no-headers | grep -Ev '([0-9]+)/\1' | grep -Eo '^[^ ]+'c)
-            echo "failed pods function"
             if [[ ! -z "$failed_pods" ]] ; then
               echo "Failing pods:"
               echo "$failed_pods"
-              return 1
+              true
             fi
-            return 0
+            false
           }
           
           # Delete existing jobs to prevent getting wrong log output
@@ -178,10 +177,8 @@ drupal-helm-deploy:
               LOGS_SHOWN=true
             fi
 
-            failing_pods
-            result=$?
-            if [ $result -ne 0 ]; then
-              exit $result
+            if failing_pods; then
+              exit 1
             fi
             # Helm command is complete.
             if ! ps -p "$pid" > /dev/null; then
