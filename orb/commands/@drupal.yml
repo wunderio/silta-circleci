@@ -109,9 +109,11 @@ drupal-helm-deploy:
             if [[ ! -z "$failed_pods" ]] ; then
               echo "Failing pods:"
               echo "$failed_pods"
-              true
+              echo ""
+              echo "Please check logs for the pods above"
+              false
             fi
-            false
+            true
           }
           
           # Delete existing jobs to prevent getting wrong log output
@@ -177,6 +179,7 @@ drupal-helm-deploy:
               LOGS_SHOWN=true
             fi
 
+            echo ""; echo ""
             if failing_pods; then
               exit 1
             fi
