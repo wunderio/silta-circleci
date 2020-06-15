@@ -104,7 +104,7 @@ drupal-helm-deploy:
         no_output_timeout: "15m"
         command: |
           #Detect pods in FAILED state
-          function failing_pods() {
+          function show_failing_pods() {
             failed_pods=$(kubectl get pod -l "release=$RELEASE_NAME" -n "$NAMESPACE" --no-headers | grep -Ev '([0-9]+)/\1' | grep -Eo '^[^ ]+'c)
             if [[ ! -z "$failed_pods" ]] ; then
               echo "Failing pods:"
@@ -180,14 +180,14 @@ drupal-helm-deploy:
             fi
 
             echo ""; echo ""
-            if failing_pods; then
+            if show_failing_pods; then
               exit 1
             fi
             # Helm command is complete.
             if ! ps -p "$pid" > /dev/null; then
               if grep -q BackoffLimitExceeded helm-output.log ; then
                 # Don't show BackoffLimitExceeded, it confuses everyone.
-                failing_pods
+                show_failing_pods
                 echo "The post-release job failed, see log output above."
               else
                 echo "Helm output:"
@@ -199,7 +199,7 @@ drupal-helm-deploy:
 
             if [ $TIME_WAITING -gt 120 ]; then
               echo "Timeout waiting for resources."
-              failing_pods
+              show_failing_pods
               exit 1
             fi
 
