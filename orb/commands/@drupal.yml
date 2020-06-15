@@ -111,9 +111,9 @@ drupal-helm-deploy:
               echo "$failed_pods"
               echo ""
               echo "Please check logs for the pods above"
-              false
+              true
             fi
-            true
+            false
           }
           
           # Delete existing jobs to prevent getting wrong log output
