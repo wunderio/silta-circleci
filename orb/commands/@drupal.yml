@@ -179,10 +179,6 @@ drupal-helm-deploy:
               LOGS_SHOWN=true
             fi
 
-            echo ""; echo ""
-            if show_failing_pods; then
-              exit 1
-            fi
             # Helm command is complete.
             if ! ps -p "$pid" > /dev/null; then
               if grep -q BackoffLimitExceeded helm-output.log ; then
