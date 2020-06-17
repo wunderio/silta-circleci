@@ -191,7 +191,7 @@ drupal-helm-deploy:
               break
             fi
 
-            if [ $TIME_WAITING -gt 120 ]; then
+            if [ $TIME_WAITING -gt 300 ]; then
               echo "Timeout waiting for resources."
               show_failing_pods
               exit 1
