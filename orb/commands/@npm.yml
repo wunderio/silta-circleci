@@ -9,7 +9,7 @@ npm-install-build:
       default: "npm run build"
     cache-version:
       type: string
-      default: "v1"
+      default: "v1.1"
   steps:
     - restore_cache:
         keys:
