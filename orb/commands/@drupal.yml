@@ -102,7 +102,7 @@ drupal-helm-deploy:
         command: |
           function version_lt() { test "$(printf '%s\n' "$@" | sort -rV | head -n 1)" != "$1"; }
 
-          if [[ -n "$CURRENT_CHART_VERSION" ]];
+          if [[ -n "$CURRENT_CHART_VERSION" ]] && [[ $CURRENT_CHART_VERSION = drupal-* ]]
           then
             if version_lt "$CURRENT_CHART_VERSION" drupal-0.3.43
             then
