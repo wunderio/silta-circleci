@@ -122,6 +122,14 @@ set-release-name:
 
           echo "The release name for this branch is \"$release_name\" in the \"$namespace\" namespace"
 
+          if helm status -n "$namespace" "$release_name" > /dev/null  2>&1
+          then
+            current_chart_version=$(helm history -n "$namespace" "$release_name" --max 1 --output json | jq -r '.[].chart')
+            echo "export CURRENT_CHART_VERSION='$current_chart_version'" >> "$BASH_ENV"
+
+            echo "There is an existing chart with version $current_chart_version"
+          fi
+
 gcloud-login:
   steps:
     - run:
