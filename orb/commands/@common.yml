@@ -107,11 +107,11 @@ set-release-name:
 
           # Make sure release name is lowercase without special characters.
           branchname_lower="${CIRCLE_BRANCH,,}"
-          export release_name="${branchname_lower//[^[:alnum:]]/-}"
+          release_name="${branchname_lower//[^[:alnum:]]/-}"
 
           # If name is too long, truncate it and append a hash
           if [ ${#release_name} -ge 40 ]; then
-            export release_name="$(printf "$release_name" | cut -c 1-35)-$(printf "$branchname_lower" | shasum -a 256 | cut -c 1-4 )"
+            release_name="$(printf "$release_name" | cut -c 1-35)-$(printf "$branchname_lower" | shasum -a 256 | cut -c 1-4 )"
           fi
 
           silta_environment_name="${CIRCLE_BRANCH,,}"
@@ -122,9 +122,9 @@ set-release-name:
 
           echo "The release name for this branch is \"$release_name\" in the \"$namespace\" namespace"
 
-          if helm status -n $namespace $release_name > /dev/null  2>&1
+          if helm status -n "$namespace" "$release_name" > /dev/null  2>&1
           then
-            current_chart_version=$(helm list --all -n $namespace -o json | jq -r '.[] | select(.name == env.release_name) | .chart ')
+            current_chart_version=$(helm history -n "$namespace" "$release_name" --max 1 --output json | jq -r '.[].chart')
             echo "export CURRENT_CHART_VERSION='$current_chart_version'" >> "$BASH_ENV"
 
             echo "There is an existing chart with version $current_chart_version"
