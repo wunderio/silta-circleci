@@ -129,7 +129,7 @@ drupal-helm-deploy:
 
           #Extract backup ID from commit message; if present - push to Helm arguments
           backup=""
-          backupID=$(git log --pretty='format:%Creset%s' -1 | cat | grep -oP "^\#restoreBackup=\K([a-zA-Z0-9'/_-]+)$") || true
+          backupID=$(git log --pretty='format:%Creset%s' -1 | cat | grep -oP "^\#DestroyCurrentAndRestoreBackup=\K([a-zA-Z0-9'/_-]+)$") || true
           if [[ ! -z "$backupID" ]] ; then
             backup="--set backup.restoreId=${backupID} --set referenceData.enabled=false"
           fi
