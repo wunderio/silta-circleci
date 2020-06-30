@@ -12,7 +12,7 @@ build-docker-image:
       type: string
     docker-hash-prefix:
       type: string
-      default: v4
+      default: v5
     tag:
       description: If provided, the given tag will be used for the docker image. By default a hash of the codebase (content of the path excluding files matched by .dockerignore) will be created.
       type: string
@@ -122,6 +122,14 @@ set-release-name:
 
           echo "The release name for this branch is \"$release_name\" in the \"$namespace\" namespace"
 
+          if helm status -n "$namespace" "$release_name" > /dev/null  2>&1
+          then
+            current_chart_version=$(helm history -n "$namespace" "$release_name" --max 1 --output json | jq -r '.[].chart')
+            echo "export CURRENT_CHART_VERSION='$current_chart_version'" >> "$BASH_ENV"
+
+            echo "There is an existing chart with version $current_chart_version"
+          fi
+
 gcloud-login:
   steps:
     - run:
@@ -140,7 +148,7 @@ helm-cleanup:
     - run:
         name: Clean up failed Helm releases
         command: |
-          failed_revision=$(helm list -n "$NAMESPACE" --failed --pending --filter="$RELEASE_NAME" | tail -1 | cut -f3)
+          failed_revision=$(helm list -n "$NAMESPACE" --failed --pending --filter="\b($RELEASE_NAME)\b" | tail -1 | cut -f3)
 
           if [[ "$failed_revision" -eq 1 ]]; then
             # Remove any existing post-release hook, since it's technically not part of the release.
