@@ -152,6 +152,14 @@ drupal-helm-deploy:
             extra_noauthips="--set nginx.noauthips.vpn=${VPN_IP}/32"
           fi
 
+          #Extract backup ID from commit message; if present - push to Helm arguments
+          backup=""
+          backupID=$(git log --pretty='format:%Creset%s' -1 | cat | grep -oP "^\#DestroyCurrentAndRestoreBackup=\K([a-zA-Z0-9'/_-]+)$") || true
+          if [[ ! -z "$backupID" ]] ; then
+            backup="--set backup.restoreId=${backupID} --set referenceData.enabled=false"
+          fi
+
+
           if [[ ! -z "<<parameters.chart_version>>" ]] ; then
             version="--version <<parameters.chart_version>>"
           fi
@@ -168,6 +176,7 @@ drupal-helm-deploy:
             $extra_noauthips \
             $db_root_pass_override \
             $db_user_pass_override \
+            $backup \
             --set shell.gitAuth.repositoryUrl="$CIRCLE_REPOSITORY_URL" \
             --set shell.gitAuth.apiToken="$GITAUTH_API_TOKEN" \
             --set shell.gitAuth.keyserver.username="$GITAUTH_USERNAME" \
