@@ -19,7 +19,7 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.
   && sudo apt-get clean
 
 # Install Helm 3
-ENV HELM_VERSION v3.2.0
+ENV HELM_VERSION v3.2.4
 ENV FILENAME helm-${HELM_VERSION}-linux-amd64.tar.gz
 ENV HELM_URL https://get.helm.sh/${FILENAME}
 
