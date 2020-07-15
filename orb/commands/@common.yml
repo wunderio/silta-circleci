@@ -12,7 +12,7 @@ build-docker-image:
       type: string
     docker-hash-prefix:
       type: string
-      default: v5
+      default: v1
     tag:
       description: If provided, the given tag will be used for the docker image. By default a hash of the codebase (content of the path excluding files matched by .dockerignore) will be created.
       type: string

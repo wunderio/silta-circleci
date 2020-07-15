@@ -42,6 +42,7 @@ simple-build-deploy:
         dockerfile: 'silta/nginx.Dockerfile'
         path: <<parameters.build_folder>>
         identifier: 'nginx'
+        docker-hash-prefix: v5
 
     - unless:
         condition: <<parameters.skip-deployment>>

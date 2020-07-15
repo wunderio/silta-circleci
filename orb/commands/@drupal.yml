@@ -70,16 +70,19 @@ drupal-docker-build:
         dockerfile: silta/nginx.Dockerfile
         path: web
         identifier: nginx
+        docker-hash-prefix: v5
 
     - build-docker-image:
         dockerfile: silta/php.Dockerfile
         path: "."
         identifier: php
+        docker-hash-prefix: v5
 
     - build-docker-image:
         dockerfile: silta/shell.Dockerfile
         path: "."
         identifier: shell
+        docker-hash-prefix: v6
 
 drupal-helm-deploy:
   parameters:
