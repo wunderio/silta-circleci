@@ -29,6 +29,9 @@ simple-build-deploy:
     build_folder:
       type: string
       default: public
+    release-suffix:
+      type: string
+      default: ''
   working_directory: ~/project/<<parameters.codebase_root>>
   steps:
     - checkout:
@@ -36,7 +39,8 @@ simple-build-deploy:
 
     - steps: <<parameters.codebase-build>>
 
-    - silta-setup
+    - silta-setup:
+        release-suffix: '<<parameters.release-suffix>>'
 
     - build-docker-image:
         dockerfile: 'silta/nginx.Dockerfile'

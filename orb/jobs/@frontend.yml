@@ -31,12 +31,16 @@ frontend-build-deploy:
           path: '.'
           identifier: 'node'
           docker-hash-prefix: v6
+    release-suffix:
+      type: string
+      default: ''
   steps:
     - checkout
 
     - steps: <<parameters.codebase-build>>
 
-    - silta-setup
+    - silta-setup:
+        release-suffix: '<<parameters.release-suffix>>'
 
     - steps: <<parameters.image_build_steps>>
 

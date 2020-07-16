@@ -85,13 +85,22 @@ docker-login:
           fi
 
 silta-setup:
+  parameters:
+    release-suffix:
+      type: string
+      default: ''
   steps:
     - setup_remote_docker
     - docker-login
     - gcloud-login
-    - set-release-name
+    - set-release-name:
+        release-suffix: '<<parameters.release-suffix>>'
 
 set-release-name:
+  parameters:
+    release-suffix:
+      type: string
+      default: ''
   steps:
     - run:
         name: Set release name
@@ -116,6 +125,10 @@ set-release-name:
           # If name is too long, truncate it and append a hash
           if [ ${#release_name} -ge 40 ]; then
             release_name="$(printf "$release_name" | cut -c 1-35)-$(printf "$branchname_lower" | shasum -a 256 | cut -c 1-4 )"
+          fi
+
+          if [[ -n '<<parameters.release-suffix>>' ]]; then
+            release_name="${release_name}-<<parameters.release-suffix>>"
           fi
 
           silta_environment_name="${CIRCLE_BRANCH,,}"
