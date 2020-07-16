@@ -89,6 +89,9 @@ drupal-build-deploy:
     cluster_domain:
       type: env_var_name
       default: CLUSTER_DOMAIN
+    release-suffix:
+      type: string
+      default: ''
   working_directory: ~/project/<<parameters.drupal-root>>
   steps:
     - checkout:
@@ -102,7 +105,8 @@ drupal-build-deploy:
               steps:
                 - decrypt-files:
                     files: <<parameters.decrypt_files>>
-          - silta-setup
+          - silta-setup:
+              release-suffix: '<<parameters.release-suffix>>'
           - drupal-docker-build
           - steps: <<parameters.pre-release>>
           - drupal-helm-deploy:
