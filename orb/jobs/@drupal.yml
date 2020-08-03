@@ -1,3 +1,27 @@
+analyze:
+  executor: <<parameters.executor>>
+  parameters:
+    executor:
+      description: The name of custom executor to use
+      type: executor
+      default: sonar
+    sonar_host:
+      type: env_var_name
+      default: SONAR_HOST
+    sonar_token:
+      type: env_var_name
+      default: SONAR_TOKEN
+    sources:
+      type: string
+      default: "web/modules,web/themes,src"
+  steps:
+    - checkout
+    - run: >-
+        sonar-scanner -Dsonar.host.url='<<parameters.sonar_host>>'
+        -Dsonar.login='<<parameters.sonar_token>>'
+        -Dsonar.projectKey="${CIRCLE_PROJECT_REPONAME,,}"
+        -Dsonar.sources='<<parameters.sources>>'
+
 drupal-validate:
   executor: <<parameters.executor>>
   parameters:
