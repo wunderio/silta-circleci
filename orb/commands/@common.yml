@@ -90,7 +90,8 @@ silta-setup:
       type: string
       default: ''
   steps:
-    - setup_remote_docker
+    - setup_remote_docker:
+        version: 19.03.8
     - set-up-socks-proxy
     - docker-login
     - gcloud-login
