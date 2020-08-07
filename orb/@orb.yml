@@ -6,3 +6,6 @@ executors:
   silta:
     docker:
       - image: wunderio/silta-circleci:v0.1
+  sonar:
+    docker:
+      - image: wunderio/circleci-sonar-scanner:latest
