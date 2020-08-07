@@ -7,7 +7,7 @@ analyze:
       default: sonar
     sources:
       type: string
-      default: "web/modules,web/themes,src"
+      default: "web/modules,web/themes"
   steps:
     - checkout
     - run: >-
