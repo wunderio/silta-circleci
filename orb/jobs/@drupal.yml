@@ -17,8 +17,8 @@ analyze:
   steps:
     - checkout
     - run: >-
-        sonar-scanner -Dsonar.host.url='<<parameters.sonar_host>>'
-        -Dsonar.login='<<parameters.sonar_token>>'
+        sonar-scanner -Dsonar.host.url=${'<<parameters.sonar_host>>'}
+        -Dsonar.login==${'<<parameters.sonar_token>>'}
         -Dsonar.projectKey="${CIRCLE_PROJECT_REPONAME,,}"
         -Dsonar.sources='<<parameters.sources>>'
 
