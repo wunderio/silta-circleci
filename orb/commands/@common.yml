@@ -155,10 +155,15 @@ gcloud-login:
           # Save key, authenticate and set compute zone.
           printenv GCLOUD_KEY_JSON > "$HOME/gcloud-service-key.json"
           gcloud auth activate-service-account --key-file="$HOME/gcloud-service-key.json" --project "$GCLOUD_PROJECT_NAME"
-          gcloud config set compute/zone "$GCLOUD_COMPUTE_ZONE"
+
+          if [[ -n "$GCLOUD_COMPUTE_REGION" ]]; then
+            location="--region $GCLOUD_COMPUTE_REGION"
+          else
+            location="--zone $GCLOUD_COMPUTE_ZONE"
+          fi
 
           # Updates a kubeconfig file with appropriate credentials and endpoint information.
-          gcloud container clusters get-credentials "$GCLOUD_CLUSTER_NAME" --zone "$GCLOUD_COMPUTE_ZONE" --project "$GCLOUD_PROJECT_NAME"
+          gcloud container clusters get-credentials "$GCLOUD_CLUSTER_NAME" $location --project "$GCLOUD_PROJECT_NAME"
 
 helm-cleanup:
   steps:
