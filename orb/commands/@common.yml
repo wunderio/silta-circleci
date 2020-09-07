@@ -91,6 +91,7 @@ silta-setup:
       default: ''
   steps:
     - setup_remote_docker
+    - set-up-socks-proxy
     - docker-login
     - gcloud-login
     - set-release-name:
