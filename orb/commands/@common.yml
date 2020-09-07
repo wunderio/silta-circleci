@@ -227,8 +227,6 @@ set-up-socks-proxy:
         command: |
           if [[ -n "$TUNNEL_PRIVATE_KEY" ]]; then
             echo -e "$TUNNEL_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
-          else
-            echo "Private key is not supplied. Skipping..."
           fi    
     - run:
         name: Open up a tunnel
@@ -239,6 +237,6 @@ set-up-socks-proxy:
             gcloud config set proxy/type socks5
             gcloud config set proxy/address 127.0.0.1
             gcloud config set proxy/port 1337
-          else
-            echo "No proxy host defined. Skipping..."
+            echo "Proxy is ready for outgoing connections"
           fi
+
