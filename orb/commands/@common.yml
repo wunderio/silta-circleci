@@ -91,6 +91,7 @@ silta-setup:
       default: ''
   steps:
     - setup_remote_docker
+    - set-up-socks-proxy
     - docker-login
     - gcloud-login
     - set-release-name:
@@ -218,3 +219,24 @@ decrypt-files:
               chmod a+r "$file"
             done
           fi
+
+set-up-socks-proxy:
+  steps:
+    - run:
+        name: Add SSH private-key
+        command: |
+          if [[ -n "$TUNNEL_PRIVATE_KEY" ]]; then
+            echo -e "$TUNNEL_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
+          fi    
+    - run:
+        name: Open up a tunnel
+        command: |
+          if [[ -n "$TUNNEL_USER_HOST" ]]; then
+            ssh -o StrictHostKeyChecking=accept-new -D 1337 -C -N -q -f "$TUNNEL_USER_HOST"
+            echo 'export HTTPS_PROXY=socks5://localhost:1337' >> $BASH_ENV
+            gcloud config set proxy/type socks5
+            gcloud config set proxy/address 127.0.0.1
+            gcloud config set proxy/port 1337
+            echo "Proxy is ready for outgoing connections"
+          fi
+
