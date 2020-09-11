@@ -29,6 +29,7 @@ RUN curl -o /tmp/$FILENAME ${HELM_URL} \
   && sudo mv /tmp/linux-amd64/helm /bin/helm \
   && helm repo add stable https://kubernetes-charts.storage.googleapis.com/ \
   && helm repo add bitnami https://charts.bitnami.com/bitnami \
+  && helm repo add add minio https://helm.min.io/ \
   && helm repo add wunderio https://storage.googleapis.com/charts.wdr.io \
   && helm plugin install https://github.com/quintush/helm-unittest --version 0.1.8
 
