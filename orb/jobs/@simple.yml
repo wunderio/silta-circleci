@@ -1,5 +1,6 @@
 simple-build-deploy:
   executor: <<parameters.executor>>
+  resource_class: <<parameters.resource_class>>
   parameters:
     executor:
       description: The name of custom executor to use
@@ -32,6 +33,10 @@ simple-build-deploy:
     release-suffix:
       type: string
       default: ''
+    resource_class:
+      type: string
+      # Medium is the default when not specified.
+      default: medium
   working_directory: ~/project/<<parameters.codebase_root>>
   steps:
     - checkout:
