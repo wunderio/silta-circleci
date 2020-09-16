@@ -3,8 +3,8 @@ FROM circleci/php:7.3.19-cli-node
 # Make composer packages executable.
 ENV PATH="/home/circleci/.composer/vendor/bin:${PATH}"
 
-# Install drush, prestissimo and code-quality.
-RUN composer global require drush/drush-launcher hirak/prestissimo wunderio/code-quality \
+# Install drush and prestissimo.
+RUN composer global require drush/drush-launcher hirak/prestissimo \
   && composer clearcache
 
 # Install vim based on popular demand.
