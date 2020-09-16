@@ -61,6 +61,14 @@ frontend-build-deploy:
                   image_overrides="$image_overrides --set services.${identifier}.image=${image_url}:${!image_tag}"
                 done
 
+                # Override Database credentials if specified
+                if [[ ! -z "$DB_ROOT_PASS" ]] ; then
+                  db_root_pass_override="--set mariadb.rootUser.password=$DB_ROOT_PASS"
+                fi
+                if [[ ! -z "$DB_USER_PASS" ]] ; then
+                  db_user_pass_override="--set mariadb.db.password=$DB_USER_PASS"
+                fi
+                
                 # Add internal VPN if defined in environment
                 extra_noauthips=""
                 if [[ ! -z "$VPN_IP" ]] ; then
@@ -74,6 +82,8 @@ frontend-build-deploy:
                   --set silta-release.branchName="$CIRCLE_BRANCH" \
                   $extra_noauthips \
                   $image_overrides \
+                  $db_root_pass_override \
+                  $db_user_pass_override \
                   --set shell.gitAuth.repositoryUrl="$CIRCLE_REPOSITORY_URL" \
                   --set shell.gitAuth.apiToken="$GITAUTH_API_TOKEN" \
                   --set shell.gitAuth.keyserver.username="$GITAUTH_USERNAME" \
