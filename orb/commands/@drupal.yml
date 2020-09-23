@@ -66,14 +66,14 @@ drupal-composer-install:
 
 drupal-docker-build:
   parameters:
-    build_context:
+    nginx_build_context:
       type: string
       default: "web"
       description: "Path to be used as build context for Nginx image."
   steps:
     - build-docker-image:
         dockerfile: silta/nginx.Dockerfile
-        path: <<parameters.build_context>>
+        path: <<parameters.nginx_build_context>>
         identifier: nginx
         docker-hash-prefix: v5
 
