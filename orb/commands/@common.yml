@@ -128,11 +128,13 @@ set-release-name:
             release_name="$(printf "$release_name" | cut -c 1-35)-$(printf "$branchname_lower" | shasum -a 256 | cut -c 1-4 )"
           fi
 
+          silta_environment_name="${CIRCLE_BRANCH,,}"
+
           if [[ -n '<<parameters.release-suffix>>' ]]; then
             release_name="${release_name}-<<parameters.release-suffix>>"
+            silta_environment_name="${CIRCLE_BRANCH,,}-<<parameters.release-suffix>>"
           fi
 
-          silta_environment_name="${CIRCLE_BRANCH,,}"
 
           echo "export RELEASE_NAME='$release_name'" >> "$BASH_ENV"
           echo "export NAMESPACE='$namespace'" >> "$BASH_ENV"
