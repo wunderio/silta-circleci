@@ -31,7 +31,7 @@ RUN curl -o /tmp/$FILENAME ${HELM_URL} \
   && helm repo add bitnami https://charts.bitnami.com/bitnami \
   && helm repo add minio https://helm.min.io/ \
   && helm repo add wunderio https://storage.googleapis.com/charts.wdr.io \
-  && helm plugin install https://github.com/quintush/helm-unittest --version 0.1.8
+  && helm plugin install https://github.com/quintush/helm-unittest --version 0.2.4
 
 # NOTE: quintush/helm-unittest v0.2.0 release breaks helm tests.
 
