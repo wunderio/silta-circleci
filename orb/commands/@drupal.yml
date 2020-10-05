@@ -65,10 +65,15 @@ drupal-composer-install:
         key: <<parameters.cache-version>>-dependencies-{{ checksum "composer.lock" }}-<<parameters.install-dev-dependencies>>
 
 drupal-docker-build:
+  parameters:
+    nginx_build_context:
+      type: string
+      default: "web"
+      description: "Path to be used as build context for Nginx image."
   steps:
     - build-docker-image:
         dockerfile: silta/nginx.Dockerfile
-        path: web
+        path: <<parameters.nginx_build_context>>
         identifier: nginx
         docker-hash-prefix: v5
 
