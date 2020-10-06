@@ -203,6 +203,20 @@ helm-release-information:
         command: |
           # Display only the part following NOTES from the helm status.
           helm -n "$NAMESPACE" get notes "$RELEASE_NAME"
+    - run:
+        name: Post release info to Github
+        command: |
+          if [ ! -z $GITHUB_TOKEN ]
+          then
+            RELEASE_NOTES=`helm -n "$NAMESPACE" get notes "$RELEASE_NAME"`
+            if [ -z $CIRCLE_PR_NUMBER ]
+            then
+              CIRCLE_PR_NUMBER="${CIRCLE_PULL_REQUEST//[^0-9]/}"
+            fi
+            GITHUB_API_URL="https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/issues/$CIRCLE_PR_NUMBER/comments"
+            FORMATTED_NOTES=$(echo "$RELEASE_NOTES" | sed 's/\\/\\\\/g' | sed 's/"/\\\"/g' | sed 's/\$/\\n/g' | sed 's/\//\\\//g')
+            curl -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: application/json" -X POST -d '{"body": "'"${FORMATTED_NOTES//$'\n'/'\n'}"'"}' $GITHUB_API_URL
+          fi
 
 decrypt-files:
   parameters:
