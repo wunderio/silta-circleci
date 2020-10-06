@@ -37,14 +37,6 @@ simple-build-deploy:
       type: string
       # Medium is the default when not specified.
       default: medium
-    image_build_steps:
-      type: steps
-      default:
-      - build-docker-image:
-          dockerfile: 'silta/nginx.Dockerfile'
-          path: <<parameters.build_folder>>
-          identifier: 'nginx'
-          docker-hash-prefix: v6
   working_directory: ~/project/<<parameters.codebase_root>>
   steps:
     - checkout:
@@ -54,8 +46,12 @@ simple-build-deploy:
 
     - silta-setup:
         release-suffix: '<<parameters.release-suffix>>'
-
-    - steps: <<parameters.image_build_steps>>
+        
+    - build-docker-image:
+        dockerfile: 'silta/nginx.Dockerfile'
+        path: <<parameters.build_folder>>
+        identifier: 'nginx'
+        docker-hash-prefix: v5
 
     - unless:
         condition: <<parameters.skip-deployment>>
