@@ -30,6 +30,9 @@ simple-build-deploy:
     build_folder:
       type: string
       default: public
+    predeployment-steps:
+      type: steps
+      default: []
     release-suffix:
       type: string
       default: ''
@@ -46,12 +49,14 @@ simple-build-deploy:
 
     - silta-setup:
         release-suffix: '<<parameters.release-suffix>>'
-        
+
     - build-docker-image:
         dockerfile: 'silta/nginx.Dockerfile'
         path: <<parameters.build_folder>>
         identifier: 'nginx'
-        docker-hash-prefix: v5
+        docker-hash-prefix: v7
+
+    - steps: <<parameters.predeployment-steps>>
 
     - unless:
         condition: <<parameters.skip-deployment>>
