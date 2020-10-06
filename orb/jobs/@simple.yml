@@ -42,9 +42,9 @@ simple-build-deploy:
       default:
       - build-docker-image:
           dockerfile: 'silta/nginx.Dockerfile'
-          path: '.'
+          path: <<parameters.build_folder>>
           identifier: 'nginx'
-          docker-hash-prefix: v5
+          docker-hash-prefix: v6
   working_directory: ~/project/<<parameters.codebase_root>>
   steps:
     - checkout:
