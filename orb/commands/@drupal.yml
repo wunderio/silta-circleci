@@ -125,7 +125,7 @@ drupal-helm-deploy:
         command: |
           #Detect pods in FAILED state
           function show_failing_pods() {
-            failed_pods=$(kubectl get pod -l "release=$RELEASE_NAME" -n "$NAMESPACE" --no-headers | grep -Ev '([0-9]+)/\1' | grep -Eo '^[^ ]+')
+            failed_pods=$(kubectl get pod -l "release=$RELEASE_NAME,cronjob!=true" -n "$NAMESPACE" --no-headers | grep -Ev '([0-9]+)/\1' | grep -Eo '^[^ ]+')
             if [[ ! -z "$failed_pods" ]] ; then
               echo "Failing pods:"
               echo "$failed_pods"
