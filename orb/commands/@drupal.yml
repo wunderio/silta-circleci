@@ -210,7 +210,7 @@ drupal-helm-deploy:
             if [ $LOGS_SHOWN == false ] && kubectl get pod -l job-name="$RELEASE_NAME-post-release" -n "$NAMESPACE" --ignore-not-found | grep  -qE "Running|Completed" ; then
               echo ""
               echo "Deployment log:"
-              kubectl logs "job/$RELEASE_NAME-post-release" -n "$NAMESPACE" -f --timestamps=true
+              kubectl logs "job/$RELEASE_NAME-post-release" -n "$NAMESPACE" -f --timestamps=true || true
               LOGS_SHOWN=true
             fi
 
