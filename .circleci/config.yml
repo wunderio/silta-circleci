@@ -13,6 +13,9 @@ jobs:
           job_count: 2
       - test-project:
           project: frontend-project-k8s
+          job_count: 2
+      - test-project:
+          project: simple-project-k8s
           job_count: 1
 
 commands:
