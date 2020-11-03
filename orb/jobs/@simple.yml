@@ -73,12 +73,19 @@ simple-build-deploy:
                   extra_noauthips="--set nginx.noauthips.vpn=${VPN_IP}/32"
                 fi
 
+                # Pass VPC native setting if defined in environment
+                extra_vpcnative=""
+                if [[ ! -z "$VPC_NATIVE" ]] ; then
+                  extra_vpcnative="--set cluster.vpcNative=${VPC_NATIVE}"
+                fi
+
                 helm upgrade --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
                   --repo '<<parameters.chart_repository>>' \
                   --cleanup-on-fail \
                   --set environmentName="$SILTA_ENVIRONMENT_NAME" \
                   --set silta-release.branchName="$CIRCLE_BRANCH" \
                   $extra_noauthips \
+                  $extra_vpcnative \
                   --set clusterDomain=${<<parameters.cluster_domain>>} \
                   --set nginx.image=$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$NAMESPACE-nginx:$nginx_HASH \
                   --namespace="$NAMESPACE" \

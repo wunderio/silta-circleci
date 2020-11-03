@@ -159,6 +159,12 @@ drupal-helm-deploy:
           if [[ ! -z "$VPN_IP" ]] ; then
             extra_noauthips="--set nginx.noauthips.vpn=${VPN_IP}/32"
           fi
+          
+          # Pass VPC native setting if defined in environment
+          extra_vpcnative=""
+          if [[ ! -z "$VPC_NATIVE" ]] ; then
+            extra_vpcnative="--set cluster.vpcNative=${VPC_NATIVE}"
+          fi
 
           #Extract backup ID from commit message; if present - push to Helm arguments
           backup=""
@@ -166,7 +172,6 @@ drupal-helm-deploy:
           if [[ ! -z "$backupID" ]] ; then
             backup="--set backup.restoreId=${backupID} --set referenceData.enabled=false"
           fi
-
 
           if [[ ! -z "<<parameters.chart_version>>" ]] ; then
             version="--version <<parameters.chart_version>>"
@@ -182,6 +187,7 @@ drupal-helm-deploy:
             --set nginx.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$NAMESPACE-nginx:$nginx_HASH" \
             --set shell.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$NAMESPACE-shell:$shell_HASH" \
             $extra_noauthips \
+            $extra_vpcnative \
             $db_root_pass_override \
             $db_user_pass_override \
             $backup \
