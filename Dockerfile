@@ -1,4 +1,6 @@
-FROM circleci/php:7.3.19-cli-node
+ARG BUILDER_BASE_IMAGE=circleci/php:7.3.19-cli-node
+
+FROM ${BUILDER_BASE_IMAGE}
 
 # Make composer packages executable.
 ENV PATH="/home/circleci/.composer/vendor/bin:${PATH}"
