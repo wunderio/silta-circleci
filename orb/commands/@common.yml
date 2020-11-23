@@ -206,10 +206,10 @@ helm-release-information:
     - run:
         name: Post release info to Github
         command: |
-          if [ ! -z $GITHUB_TOKEN ]
+          if [ -n "$GITHUB_TOKEN" ]
           then
             RELEASE_NOTES=`helm -n "$NAMESPACE" get notes "$RELEASE_NAME"`
-            if [ -z $CIRCLE_PR_NUMBER ]
+            if [ -z "$CIRCLE_PR_NUMBER" ]
             then
               CIRCLE_PR_NUMBER="${CIRCLE_PULL_REQUEST//[^0-9]/}"
             fi
