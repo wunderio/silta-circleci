@@ -77,11 +77,20 @@ docker-login:
     - run:
         name: Login to the docker registry
         command: |
-          if [ -z "$GCLOUD_KEY_JSON" ]
+          if [ -z "$GCLOUD_KEY_JSON$AWS_SECRET_ACCESS_KEY" ]
           then
-            echo "\$GCLOUD_KEY_JSON is empty, have you set a context for this CircleCI job?"
+            echo "\$GCLOUD_KEY_JSON $AWS_SECRET_ACCESS_KEY and is empty, have you set a context for this CircleCI job?"
           else
-            printenv GCLOUD_KEY_JSON | docker login -u _json_key --password-stdin "https://$DOCKER_REPO_HOST"
+            # GCR login
+            if [ ! -z "$GCLOUD_KEY_JSON" ]
+            then
+              printenv GCLOUD_KEY_JSON | docker login -u _json_key --password-stdin "https://$DOCKER_REPO_HOST"
+            fi
+            # ECR Login 
+            if [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
+            then
+              aws ecr get-login --no-include-email | bash
+            fi
           fi
 
 silta-setup:
@@ -94,8 +103,8 @@ silta-setup:
         # Note: default Docker version is 17.09. Using BuildKit requires version 18.09 and dockerignore per dockerfile from 19.03
         version: 19.03.8
     - set-up-socks-proxy
+    - cloud-login
     - docker-login
-    - gcloud-login
     - set-release-name:
         release-suffix: '<<parameters.release-suffix>>'
 
@@ -152,23 +161,38 @@ set-release-name:
             echo "There is an existing chart with version $current_chart_version"
           fi
 
+# This will be deprecated in favor of cloud-login job
 gcloud-login:
+  description: Replace this with cloud-login job!
+  steps:
+    - cloud-login
+
+cloud-login:
   steps:
     - run:
-        name: Google Cloud login
+        name: Cloud login
         command: |
-          # Save key, authenticate and set compute zone.
-          printenv GCLOUD_KEY_JSON > "$HOME/gcloud-service-key.json"
-          gcloud auth activate-service-account --key-file="$HOME/gcloud-service-key.json" --project "$GCLOUD_PROJECT_NAME"
+          if [ ! -z "$GCLOUD_KEY_JSON" ]
+          then
+            # Save key, authenticate and set compute zone.
+            printenv GCLOUD_KEY_JSON > "$HOME/gcloud-service-key.json"
+            gcloud auth activate-service-account --key-file="$HOME/gcloud-service-key.json" --project "$GCLOUD_PROJECT_NAME"
 
-          if [[ -n "$GCLOUD_COMPUTE_REGION" ]]; then
-            location="--region $GCLOUD_COMPUTE_REGION"
-          else
-            location="--zone $GCLOUD_COMPUTE_ZONE"
+            if [[ -n "$GCLOUD_COMPUTE_REGION" ]]; then
+              location="--region $GCLOUD_COMPUTE_REGION"
+            else
+              location="--zone $GCLOUD_COMPUTE_ZONE"
+            fi
+
+            # Updates a kubeconfig file with appropriate credentials and endpoint information.
+            gcloud container clusters get-credentials "$GCLOUD_CLUSTER_NAME" $location --project "$GCLOUD_PROJECT_NAME"
+
+          elif [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
+          then
+            aws eks update-kubeconfig --name $GCLOUD_CLUSTER_NAME
+          
           fi
 
-          # Updates a kubeconfig file with appropriate credentials and endpoint information.
-          gcloud container clusters get-credentials "$GCLOUD_CLUSTER_NAME" $location --project "$GCLOUD_PROJECT_NAME"
 
 helm-cleanup:
   steps:
