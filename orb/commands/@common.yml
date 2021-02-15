@@ -26,7 +26,7 @@ build-docker-image:
         name: Build <<parameters.identifier>> docker image
         command: |
           image_url="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$NAMESPACE"-'<<parameters.identifier>>'
-          
+
           # Only exclude files if they exist
           exclude_dockerignore=''
           if [ -f '<<parameters.path>>/.dockerignore' ]
@@ -59,22 +59,19 @@ build-docker-image:
             image_tag="<<parameters.docker-hash-prefix>>-$image_tag"
           fi
 
-          if gcloud container images list-tags "$image_url" | grep -q "$image_tag"; then
-            echo "This $image_url:$image_tag image has already been built, the existing image from the Docker repository will be used."
+          if [ ! -z "$GCLOUD_KEY_JSON" ] && gcloud container images list-tags "$image_url" | grep -q "$image_tag"; then
+            echo "Image $image_url:$image_tag has already been built, the existing image from the Docker repository will be used."
           
-          # TODO: aws ecr describe-images --repository-name "$image_url"  ? --list-tags-for-resource
-          elif gcloud container images list-tags "$image_url" | grep -q "$image_tag"; then
-            echo "This $image_url:$image_tag image has already been built, the existing image from the Docker repository will be used."
+          elif [ ! -z "$AWS_SECRET_ACCESS_KEY" ] && aws ecr describe-images --repository-name="$DOCKER_REPO_PROJ/$NAMESPACE"-'<<parameters.identifier>>' --image-ids="imageTag=$image_tag" 2>&1 > /dev/null ; then
+            echo "Image $image_url:$image_tag has already been built, the existing image from the Docker repository will be used."
           
           else
             docker build -t "$image_url:$image_tag" -f '<<parameters.dockerfile>>' $path
 
             if [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
             then
-              # Create repository (Because AWS wants a dedicated repository per project)
-              # Either that, or change the image name to be part of image tag (which does not sound great)
+              # Create repository (Because ECR requires a dedicated repository per project)
               if ! aws ecr describe-repositories --repository-name "$DOCKER_REPO_PROJ/$NAMESPACE"-'<<parameters.identifier>>' &>/dev/null ; then
-                echo "Creating remote image repository"
                 aws ecr create-repository --repository-name "$DOCKER_REPO_PROJ/$NAMESPACE"-'<<parameters.identifier>>'
               fi
             fi  
@@ -95,7 +92,7 @@ docker-login:
         command: |
           if [ -z "$GCLOUD_KEY_JSON$AWS_SECRET_ACCESS_KEY" ]
           then
-            echo "\$GCLOUD_KEY_JSON $AWS_SECRET_ACCESS_KEY and is empty, have you set a context for this CircleCI job?"
+            echo "Cloud credentials \$GCLOUD_KEY_JSON or \$AWS_SECRET_ACCESS_KEY are empty, have you set a context for this CircleCI job correctly?"
           else
             # GCR login
             if [ ! -z "$GCLOUD_KEY_JSON" ]
@@ -205,7 +202,7 @@ cloud-login:
 
           elif [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
           then
-            aws eks update-kubeconfig --name $GCLOUD_CLUSTER_NAME
+            aws eks update-kubeconfig --name $GCLOUD_CLUSTER_NAME --region $AWS_REGION
           fi
 
 helm-cleanup:
