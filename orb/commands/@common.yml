@@ -59,10 +59,23 @@ build-docker-image:
             image_tag="<<parameters.docker-hash-prefix>>-$image_tag"
           fi
 
-          if gcloud container images list-tags "$image_url" | grep -q "$image_tag"; then
-            echo "This $image_url:$image_tag image has already been built, the existing image from the Docker repository will be used."
+          if [ ! -z "$GCLOUD_KEY_JSON" ] && gcloud container images list-tags "$image_url" | grep -q "$image_tag"; then
+            echo "Image $image_url:$image_tag has already been built, the existing image from the Docker repository will be used."
+          
+          elif [ ! -z "$AWS_SECRET_ACCESS_KEY" ] && aws ecr describe-images --repository-name="$DOCKER_REPO_PROJ/$NAMESPACE"-'<<parameters.identifier>>' --image-ids="imageTag=$image_tag" 2>&1 > /dev/null ; then
+            echo "Image $image_url:$image_tag has already been built, the existing image from the Docker repository will be used."
+          
           else
             docker build -t "$image_url:$image_tag" -f '<<parameters.dockerfile>>' $path
+
+            if [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
+            then
+              # Create repository (Because ECR requires a dedicated repository per project)
+              if ! aws ecr describe-repositories --repository-name "$DOCKER_REPO_PROJ/$NAMESPACE"-'<<parameters.identifier>>' &>/dev/null ; then
+                aws ecr create-repository --repository-name "$DOCKER_REPO_PROJ/$NAMESPACE"-'<<parameters.identifier>>'
+              fi
+            fi  
+
             docker push "$image_url:$image_tag"
           fi
 
@@ -77,11 +90,20 @@ docker-login:
     - run:
         name: Login to the docker registry
         command: |
-          if [ -z "$GCLOUD_KEY_JSON" ]
+          if [ -z "$GCLOUD_KEY_JSON$AWS_SECRET_ACCESS_KEY" ]
           then
-            echo "\$GCLOUD_KEY_JSON is empty, have you set a context for this CircleCI job?"
+            echo "Cloud credentials \$GCLOUD_KEY_JSON or \$AWS_SECRET_ACCESS_KEY are empty, have you set a context for this CircleCI job correctly?"
           else
-            printenv GCLOUD_KEY_JSON | docker login -u _json_key --password-stdin "https://$DOCKER_REPO_HOST"
+            # GCR login
+            if [ ! -z "$GCLOUD_KEY_JSON" ]
+            then
+              printenv GCLOUD_KEY_JSON | docker login -u _json_key --password-stdin "https://$DOCKER_REPO_HOST"
+            fi
+            # ECR Login 
+            if [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
+            then
+              aws ecr get-login --no-include-email | bash
+            fi
           fi
 
 silta-setup:
@@ -94,8 +116,8 @@ silta-setup:
         # Note: default Docker version is 17.09. Using BuildKit requires version 18.09 and dockerignore per dockerfile from 19.03
         version: 19.03.8
     - set-up-socks-proxy
+    - cloud-login
     - docker-login
-    - gcloud-login
     - set-release-name:
         release-suffix: '<<parameters.release-suffix>>'
 
@@ -152,23 +174,36 @@ set-release-name:
             echo "There is an existing chart with version $current_chart_version"
           fi
 
+# This will be deprecated in favor of cloud-login job
 gcloud-login:
+  description: Replace this with cloud-login job!
+  steps:
+    - cloud-login
+
+cloud-login:
   steps:
     - run:
-        name: Google Cloud login
+        name: Cloud login
         command: |
-          # Save key, authenticate and set compute zone.
-          printenv GCLOUD_KEY_JSON > "$HOME/gcloud-service-key.json"
-          gcloud auth activate-service-account --key-file="$HOME/gcloud-service-key.json" --project "$GCLOUD_PROJECT_NAME"
+          if [ ! -z "$GCLOUD_KEY_JSON" ]
+          then
+            # Save key, authenticate and set compute zone.
+            printenv GCLOUD_KEY_JSON > "$HOME/gcloud-service-key.json"
+            gcloud auth activate-service-account --key-file="$HOME/gcloud-service-key.json" --project "$GCLOUD_PROJECT_NAME"
 
-          if [[ -n "$GCLOUD_COMPUTE_REGION" ]]; then
-            location="--region $GCLOUD_COMPUTE_REGION"
-          else
-            location="--zone $GCLOUD_COMPUTE_ZONE"
+            if [[ -n "$GCLOUD_COMPUTE_REGION" ]]; then
+              location="--region $GCLOUD_COMPUTE_REGION"
+            else
+              location="--zone $GCLOUD_COMPUTE_ZONE"
+            fi
+
+            # Updates a kubeconfig file with appropriate credentials and endpoint information.
+            gcloud container clusters get-credentials "$GCLOUD_CLUSTER_NAME" $location --project "$GCLOUD_PROJECT_NAME"
+
+          elif [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
+          then
+            aws eks update-kubeconfig --name $GCLOUD_CLUSTER_NAME --region $AWS_REGION
           fi
-
-          # Updates a kubeconfig file with appropriate credentials and endpoint information.
-          gcloud container clusters get-credentials "$GCLOUD_CLUSTER_NAME" $location --project "$GCLOUD_PROJECT_NAME"
 
 helm-cleanup:
   steps:
