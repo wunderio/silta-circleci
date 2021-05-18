@@ -105,7 +105,7 @@ drupal-helm-deploy:
       default: CLUSTER_DOMAIN
     deployment_timeout:
       type: string
-      default: 15m
+      default: "15m"
   steps:
     - helm-cleanup
     - run:
