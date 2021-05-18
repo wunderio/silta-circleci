@@ -121,7 +121,7 @@ drupal-helm-deploy:
 
     - run:
         name: Deploy helm release
-        no_output_timeout: "15m"
+        no_output_timeout: "30m"
         command: |
           #Detect pods in FAILED state
           function show_failing_pods() {
