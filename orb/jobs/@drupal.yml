@@ -112,7 +112,7 @@ drupal-build-deploy:
       default: ''
     deployment_timeout:
       type: string
-      default: "15m"
+      default: 15m
   working_directory: ~/project/<<parameters.drupal-root>>
   steps:
     - checkout:
