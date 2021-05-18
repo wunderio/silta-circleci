@@ -103,6 +103,9 @@ drupal-helm-deploy:
     cluster_domain:
       type: env_var_name
       default: CLUSTER_DOMAIN
+    deployment_timeout:
+      type: string
+      default: "15m"
   steps:
     - helm-cleanup
     - run:
@@ -121,7 +124,7 @@ drupal-helm-deploy:
 
     - run:
         name: Deploy helm release
-        no_output_timeout: "30m"
+        no_output_timeout: '<<parameters.deployment_timeout>>'
         command: |
           #Detect pods in FAILED state
           function show_failing_pods() {
@@ -199,7 +202,7 @@ drupal-helm-deploy:
             $reference_data_override \
             --namespace="$NAMESPACE" \
             --values '<<parameters.silta_config>>' \
-            --timeout 15m &> helm-output.log &
+            --timeout <<parameters.deployment_timeout>> &> helm-output.log &
           pid=$!
 
           echo -n "Waiting for containers to start"

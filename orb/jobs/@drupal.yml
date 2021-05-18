@@ -110,6 +110,9 @@ drupal-build-deploy:
     release-suffix:
       type: string
       default: ''
+    deployment_timeout:
+      type: string
+      default: "15m"
   working_directory: ~/project/<<parameters.drupal-root>>
   steps:
     - checkout:
@@ -133,3 +136,4 @@ drupal-build-deploy:
               chart_repository: <<parameters.chart_repository>>
               silta_config: <<parameters.silta_config>>
               cluster_domain: <<parameters.cluster_domain>>
+              deployment_timeout: <<parameters.deployment_timeout>>
