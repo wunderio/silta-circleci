@@ -185,7 +185,12 @@ cloud-login:
     - run:
         name: Cloud login
         command: |
-          if [ ! -z "$GCLOUD_KEY_JSON" ]
+          if [ ! -z "$KUBECTL_CONFIG" ]
+          then
+            # Updates a kubeconfig file with appropriate credentials and endpoint information.
+            echo $KUBECTL_CONFIG | base64 -d - > ~/.kube/config
+
+          elif [ ! -z "$GCLOUD_KEY_JSON" ]
           then
             # Save key, authenticate and set compute zone.
             printenv GCLOUD_KEY_JSON > "$HOME/gcloud-service-key.json"
