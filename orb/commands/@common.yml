@@ -187,6 +187,10 @@ cloud-login:
         command: |
           if [ ! -z "$KUBECTL_CONFIG" ]
           then
+            if [ ! -d "~/.kube" ]
+            then
+              mkdir ~/.kube
+            fi
             # Updates a kubeconfig file with appropriate credentials and endpoint information.
             echo $KUBECTL_CONFIG | base64 -d - > ~/.kube/config
 
