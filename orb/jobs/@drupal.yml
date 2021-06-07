@@ -113,6 +113,10 @@ drupal-build-deploy:
     deployment_timeout:
       type: string
       default: "15m"
+    nginx_build_context:
+      type: string
+      default: "web"
+      description: "Path to be used as build context for Nginx image."
   working_directory: ~/project/<<parameters.drupal-root>>
   steps:
     - checkout:
@@ -128,7 +132,8 @@ drupal-build-deploy:
                     files: <<parameters.decrypt_files>>
           - silta-setup:
               release-suffix: '<<parameters.release-suffix>>'
-          - drupal-docker-build
+          - drupal-docker-build:
+              nginx_build_context: <<parameters.nginx_build_context>>
           - steps: <<parameters.pre-release>>
           - drupal-helm-deploy:
               chart_name: <<parameters.chart_name>>
