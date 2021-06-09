@@ -26,6 +26,9 @@ drupal-validate:
     drupal-root:
       type: string
       default: "."
+    web-root:
+      type: string
+      default: "web"
     pre-validation:
       type: steps
       default: []
@@ -51,7 +54,7 @@ drupal-validate:
             silta/php.Dockerfile
             silta/shell.Dockerfile
             .dockerignore
-            web/.dockerignore
+            <<parameters.web-root>>/.dockerignore
           )
 
           for file in "${files[@]}"; do
