@@ -194,6 +194,8 @@ drupal-helm-deploy:
             $reference_data_override \
             --namespace="$NAMESPACE" \
             --values '<<parameters.silta_config>>' \
+            --wait-for-jobs \
+            --wait \
             --timeout <<parameters.deployment_timeout>> &> helm-output.log &
           pid=$!
 
