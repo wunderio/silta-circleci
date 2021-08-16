@@ -1,4 +1,4 @@
-ARG BUILDER_BASE_IMAGE=circleci/php:7.3.19-cli-node
+ARG BUILDER_BASE_IMAGE=circleci/php:7.3.29-cli-node
 
 FROM ${BUILDER_BASE_IMAGE}
 
