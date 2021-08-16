@@ -5,7 +5,7 @@ description: "A collection of CircleCI tools used by the Silta hosting infrastru
 executors:
   silta:
     docker:
-      - image: wunderio/silta-circleci:v0.1
+      - image: eu.gcr.io/silta-images/cicd:circleci-php7.3-node12-composer1-v0.1
   sonar:
     docker:
       - image: wunderio/circleci-sonar-scanner:latest
