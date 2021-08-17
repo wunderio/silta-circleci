@@ -243,11 +243,6 @@ helm-cleanup:
 helm-release-information:
   steps:
     - run:
-        name: Release information
-        command: |
-          # Display only the part following NOTES from the helm status.
-          helm -n "$NAMESPACE" get notes "$RELEASE_NAME"
-    - run:
         name: Post release info to Github
         command: |
           if [ -n "$GITHUB_TOKEN" ]
@@ -261,6 +256,11 @@ helm-release-information:
             FORMATTED_NOTES=$(echo "$RELEASE_NOTES" | sed 's/\\/\\\\/g' | sed 's/"/\\\"/g' | sed 's/\$/\\n/g' | sed 's/\//\\\//g')
             curl -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: application/json" -X POST -d '{"body": "<details><summary>Release notes for '$RELEASE_NAME'</summary>'"${FORMATTED_NOTES//$'\n'/'\n'}"'</details>"}' $GITHUB_API_URL
           fi
+    - run:
+        name: Release information
+        command: |
+          # Display only the part following NOTES from the helm status.
+          helm -n "$NAMESPACE" get notes "$RELEASE_NAME"
 
 decrypt-files:
   parameters:
