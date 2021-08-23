@@ -240,6 +240,14 @@ helm-cleanup:
             done
           fi
 
+
+          pending_release=$(helm list -n "$NAMESPACE" --pending --filter="(\s|^)($RELEASE_NAME)(\s|$)"| tail -1 | cut -f1)
+
+          if [[ "$pending_release" == "$RELEASE_NAME" ]]; then
+            secret_to_delete=$(kubectl get secret -l owner=helm,status=pending-upgrade,name=bugfix-helm-pending --namespace drupal-project-k8s | awk '{print $1}' | grep -v NAME)
+            echo "$secret_to_delete"
+          fi
+
 helm-release-information:
   steps:
     - run:
