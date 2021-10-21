@@ -147,8 +147,8 @@ set-release-name:
           branchname_lower="${CIRCLE_BRANCH,,}"
           release_name="${branchname_lower//[^[:alnum:]]/-}"
 
-          # Maximum length of a release name + release suffix. -1 is for extra '-' character
-          declare -i rn_max_length=40-${#release_suffix}-1
+          # Maximum length of a release name + release suffix. -3 is for extra '-' characters
+          declare -i rn_max_length=40-${#release_suffix}-3
           # Length of a shortened rn_max_length to allow for an appended hash
           declare -i rn_cut_length=rn_max_length-5
 
