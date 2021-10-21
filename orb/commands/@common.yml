@@ -153,7 +153,7 @@ set-release-name:
           declare -i rn_cut_length=rn_max_length-5
 
           # If name is too long, truncate it and append a hash
-          if [ ${#release_name} -ge rn_max_length ]; then
+          if [ ${#release_name} -ge $rn_max_length ]; then
             release_name="$(printf "$release_name" | cut -c 1-${rn_cut_length})-$(printf "$branchname_lower" | shasum -a 256 | cut -c 1-4 )"
           fi
 
