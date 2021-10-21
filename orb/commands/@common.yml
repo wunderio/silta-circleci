@@ -148,8 +148,9 @@ set-release-name:
           release_name="${branchname_lower//[^[:alnum:]]/-}"
 
           if [[ -n '<<parameters.release-suffix>>' ]]; then
-            #Maximum length of a release name + release suffix.
-            declare -i rn_max_length=40-${#release_suffix}-1
+            suffix='<<parameters.release-suffix>>'
+            #Maximum length of a release name + release suffix. -1 is for separating '-' char before suffix
+            declare -i rn_max_length=40-${#suffix}-1
           else
             declare -i rn_max_length=40
           fi
