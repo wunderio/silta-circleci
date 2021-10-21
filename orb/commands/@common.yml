@@ -149,7 +149,7 @@ set-release-name:
 
           if [[ -n '<<parameters.release-suffix>>' ]]; then
             #Maximum length of a release name + release suffix.
-            declare -i rn_max_length=40-${#release_suffix}-5
+            declare -i rn_max_length=40-${#release_suffix}-1
           else
             declare -i rn_max_length=40
           fi
