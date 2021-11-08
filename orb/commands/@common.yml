@@ -152,9 +152,9 @@ set-release-name:
           suffix=''
           if [[ -n '<<parameters.release-suffix>>' && $total_length -gt 39 ]]; then
             if [[ -n '<<parameters.release-suffix>>' ]]; then
-              $suffix='<<parameters.release-suffix>>'
+              suffix='<<parameters.release-suffix>>'
               if [ ${#suffix} -gt 12 ]; then
-                $suffix="$(printf "$suffix" | cut -c 1-7)-$(printf "$suffix" | shasum -a 256 | cut -c 1-4 )"
+                suffix="$(printf "$suffix" | cut -c 1-7)-$(printf "$suffix" | shasum -a 256 | cut -c 1-4 )"
               fi
               #Maximum length of a release name + release suffix. -1 is for separating '-' char before suffix
               declare -i rn_max_length=40-${#suffix}-1
