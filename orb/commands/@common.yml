@@ -177,11 +177,12 @@ set-release-name:
             if [[ -n "$suffix" ]]; then
               echo "Using suffix variable for release name"
               release_name="${release_name}-${suffix}"
+              silta_environment_name="${CIRCLE_BRANCH,,}-${suffix}"
             else
               echo "Using parameter for release name"
               release_name="${release_name}-<<parameters.release-suffix>>"
+              silta_environment_name="${CIRCLE_BRANCH,,}-<<parameters.release-suffix>>"
             fi
-            silta_environment_name="${CIRCLE_BRANCH,,}-${suffix}"
           fi
 
 
