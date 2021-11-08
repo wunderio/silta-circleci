@@ -175,7 +175,7 @@ set-release-name:
 
           if [[ -n '<<parameters.release-suffix>>' ]]; then
             if [[ -n "$suffix" ]]; then
-              echo "Using suffix variable:$suffix for release name"
+              echo "Using suffix variable for release name"
               release_name="${release_name}-${suffix}"
             else
               echo "Using parameter for release name"
