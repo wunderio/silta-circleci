@@ -173,7 +173,11 @@ set-release-name:
           silta_environment_name="${CIRCLE_BRANCH,,}"
 
           if [[ -n '<<parameters.release-suffix>>' ]]; then
-            release_name="${release_name}-${suffix}"
+            if [[ -n $suffix ]]; then
+              release_name="${release_name}-${suffix}"
+            else
+              release_name="${release_name}-<<parameters.release-suffix>>"
+            fi
             silta_environment_name="${CIRCLE_BRANCH,,}-${suffix}"
           fi
 
