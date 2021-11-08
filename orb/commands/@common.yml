@@ -148,7 +148,8 @@ set-release-name:
           release_name="${branchname_lower//[^[:alnum:]]/-}"
 
           suffix_test='<<parameters.release-suffix>>'
-          if [[ -n '<<parameters.release-suffix>>' ]] && [[ (${#suffix_test} + ${#release_name}) -gt 40]]; then
+          declare -i total_length=${#suffix_test}+${#release_name}
+          if [[ -n '<<parameters.release-suffix>>' ]] && [[ $total_length -gt 40]]; then
             if [[ -n '<<parameters.release-suffix>>' ]]; then
               suffix='<<parameters.release-suffix>>'
               if [ ${#suffix} -gt 12 ]; then
