@@ -147,8 +147,8 @@ set-release-name:
           branchname_lower="${CIRCLE_BRANCH,,}"
           release_name="${branchname_lower//[^[:alnum:]]/-}"
 
-          
-          if [[ -n '<<parameters.release-suffix>>' && suffix_test='<<parameters.release-suffix>>' && (${#suffix_test} + ${#release_name}) -gt 40 ]]; then
+          suffix_test='<<parameters.release-suffix>>'
+          if [[ -n '<<parameters.release-suffix>>' && (${#suffix_test} + ${#release_name}) -gt 40 ]]; then
             if [[ -n '<<parameters.release-suffix>>' ]]; then
               suffix='<<parameters.release-suffix>>'
               if [ ${#suffix} -gt 12 ]; then
