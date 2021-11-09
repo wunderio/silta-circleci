@@ -147,30 +147,38 @@ set-release-name:
           branchname_lower="${CIRCLE_BRANCH,,}"
           release_name="${branchname_lower//[^[:alnum:]]/-}"
 
-          if [[ -n '<<parameters.release-suffix>>' ]]; then
+          suffix_test='<<parameters.release-suffix>>'
+          declare -i total_length=${#suffix_test}+${#release_name}
+          suffix=''
+          if [[ -n '<<parameters.release-suffix>>' && $total_length -gt 39 ]]; then
             suffix='<<parameters.release-suffix>>'
             if [ ${#suffix} -gt 12 ]; then
               suffix="$(printf "$suffix" | cut -c 1-7)-$(printf "$suffix" | shasum -a 256 | cut -c 1-4 )"
             fi
             #Maximum length of a release name + release suffix. -1 is for separating '-' char before suffix
             declare -i rn_max_length=40-${#suffix}-1
-          else
-            declare -i rn_max_length=40
-          fi
 
-          # Length of a shortened rn_max_length to allow for an appended hash
-          declare -i rn_cut_length=rn_max_length-5
+            # Length of a shortened rn_max_length to allow for an appended hash
+            declare -i rn_cut_length=rn_max_length-5
 
-          # If name is too long, truncate it and append a hash
-          if [ ${#release_name} -ge $rn_max_length ]; then
-            release_name="$(printf "$release_name" | cut -c 1-${rn_cut_length})-$(printf "$branchname_lower" | shasum -a 256 | cut -c 1-4 )"
+            # If name is too long, truncate it and append a hash
+            if [ ${#release_name} -ge $rn_max_length ]; then
+              release_name="$(printf "$release_name" | cut -c 1-${rn_cut_length})-$(printf "$branchname_lower" | shasum -a 256 | cut -c 1-4 )"
+            fi
           fi
 
           silta_environment_name="${CIRCLE_BRANCH,,}"
 
           if [[ -n '<<parameters.release-suffix>>' ]]; then
-            release_name="${release_name}-${suffix}"
-            silta_environment_name="${CIRCLE_BRANCH,,}-${suffix}"
+            if [[ -n "$suffix" ]]; then
+              echo "Using suffix variable for release name"
+              release_name="${release_name}-${suffix}"
+              silta_environment_name="${CIRCLE_BRANCH,,}-${suffix}"
+            else
+              echo "Using parameter for release name"
+              release_name="${release_name}-<<parameters.release-suffix>>"
+              silta_environment_name="${CIRCLE_BRANCH,,}-<<parameters.release-suffix>>"
+            fi
           fi
 
 
