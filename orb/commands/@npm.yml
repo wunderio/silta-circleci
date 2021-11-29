@@ -42,7 +42,7 @@ yarn-install-build:
       default: "."
     install-command:
       type: string
-      default: "yarn build"
+      default: "yarn install"
     build-command:
       type: string
       default: "yarn build"
