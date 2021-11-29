@@ -1,4 +1,3 @@
-
 npm-install-build:
   parameters:
     path:
@@ -41,6 +40,9 @@ yarn-install-build:
     path:
       type: string
       default: "."
+    install-command:
+      type: string
+      default: "yarn build"
     build-command:
       type: string
       default: "yarn build"
@@ -57,7 +59,7 @@ yarn-install-build:
         name: Install frontend dependencies
         command: |
           cd '<<parameters.path>>'
-          yarn install
+          <<parameters.install-command>>
 
     - run:
         name: Build frontend
