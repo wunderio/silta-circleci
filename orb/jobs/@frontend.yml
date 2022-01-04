@@ -1,29 +1,37 @@
 frontend-build-deploy:
+  description: "Build and deploy frontend chart release."
   executor: <<parameters.executor>>
   parameters:
     executor:
-      description: The name of custom executor to use
+      description: "The name of custom executor to use."
       type: executor
       default: silta
     codebase-build:
+      description: "Preparational build steps run after code checkout."
       type: steps
       default: []
     chart_name:
+      description: "Helm chart name."
       type: string
       default: frontend
     chart_repository:
+      description: "Helm chart repository."
       type: string
       default: https://storage.googleapis.com/charts.wdr.io
     silta_config:
+      description: "Chart values override file. Can have multiple, comma separated values."
       type: string
       default: "silta/silta.yml"
     skip-deployment:
+      description: "Skip release deployment."
       type: boolean
       default: false
     cluster_domain:
+      description: "Cluster domain value for helm chart. Will be used for default ingress hostnames."
       type: env_var_name
       default: CLUSTER_DOMAIN
     image_build_steps:
+      description: "Image build steps."
       type: steps
       default:
       - build-docker-image:
@@ -32,6 +40,7 @@ frontend-build-deploy:
           identifier: 'node'
           docker-hash-prefix: v6
     release-suffix:
+      description: "Release name suffix."
       type: string
       default: ''
   steps:

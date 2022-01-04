@@ -1,24 +1,28 @@
 
 
 build-docker-image:
+  description: "Build docker image."
   parameters:
     dockerfile:
+      description: "Dockerfile path."
       type: string
     path:
-      description: The path to be used as the context when building the docker image. An empty directory is used by default.
+      description: "The path to be used as the context when building the docker image. An empty directory is used by default."
       type: string
       default: ''
     identifier:
+      description: "Image identifier."
       type: string
     docker-hash-prefix:
+      description: "Image tag prefix. Allows overriding cached images."
       type: string
       default: v1
     tag:
-      description: If provided, the given tag will be used for the docker image. By default a hash of the codebase (content of the path excluding files matched by .dockerignore) will be created.
+      description: "If provided, the given tag will be used for the docker image. By default a hash of the codebase (content of the path excluding files matched by .dockerignore) will be created."
       type: string
       default: ''
     expose_image:
-      description: Whether to export an environment variable with the image name. This can be used by helm charts (currently only the frontend chart) to automatically adding the image reference to the release values.
+      description: "Whether to export an environment variable with the image name. This can be used by helm charts (currently only the frontend chart) to add the image reference to the release values automatically."
       type: boolean
       default: true
   steps:
@@ -86,6 +90,7 @@ build-docker-image:
           fi
 
 docker-login:
+  description: "Login to the docker registry."
   steps:
     - run:
         name: Login to the docker registry
@@ -107,8 +112,10 @@ docker-login:
           fi
 
 silta-setup:
+  description: "Set up silta cluster connection and set release name."
   parameters:
     release-suffix:
+      description: "Release name suffix."
       type: string
       default: ''
   steps:
@@ -124,8 +131,10 @@ silta-setup:
         release-suffix: '<<parameters.release-suffix>>'
 
 set-release-name:
+  description: "Set release name."
   parameters:
     release-suffix:
+      description: "Release name suffix."
       type: string
       default: ''
   steps:
@@ -200,11 +209,12 @@ set-release-name:
 
 # This will be deprecated in favor of cloud-login job
 gcloud-login:
-  description: Replace this with cloud-login job!
+  description: "Deprecated. Replace this with cloud-login job!"
   steps:
     - cloud-login
 
 cloud-login:
+  description: "Cloud login."
   steps:
     - run:
         name: Cloud login
@@ -239,6 +249,7 @@ cloud-login:
           fi
 
 helm-cleanup:
+  description: "Clean up failed Helm releases."
   steps:
     - run:
         name: Clean up failed Helm releases
@@ -273,6 +284,7 @@ helm-cleanup:
           fi
 
 helm-release-information:
+  description: "Post release info to Github."
   steps:
     - run:
         name: Post release info to Github
@@ -295,10 +307,13 @@ helm-release-information:
           helm -n "$NAMESPACE" get notes "$RELEASE_NAME"
 
 decrypt-files:
+  description: "Decrypt encrypted files."
   parameters:
     files:
+      description: "Encrypted file location. Can have multiple, comma separated paths."
       type: string
     secret_key_env:
+      description: "Environment variable holding symmetrical decryption key."
       type: env_var_name
       default: SECRET_KEY
   steps:
@@ -320,6 +335,7 @@ decrypt-files:
           fi
 
 set-up-socks-proxy:
+  description: "Set up socks proxy for outgoing connections."
   steps:
     - run:
         name: Add SSH private-key

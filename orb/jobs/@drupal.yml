@@ -1,11 +1,13 @@
 analyze:
+  description: "Drupal code analyze job."
   executor: <<parameters.executor>>
   parameters:
     executor:
-      description: The name of custom executor to use
+      description: "The name of custom executor to use."
       type: executor
       default: sonar
     sources:
+      description: "Codebase scan paths."
       type: string
       default: "web/modules,web/themes"
   steps:
@@ -17,22 +19,27 @@ analyze:
         -Dsonar.sources='<<parameters.sources>>'
 
 drupal-validate:
+  description: "Drupal code validation job."
   executor: <<parameters.executor>>
   parameters:
     executor:
-      description: The name of custom executor to use
+      description: "The name of custom executor to use."
       type: executor
       default: silta
     drupal-root:
+      description: "Relative path to drupal root"
       type: string
       default: "."
     web-root:
+      description: "Relative path to drupal webroot."
       type: string
       default: "web"
     pre-validation:
+      description: "Preparational build steps run after code checkout."
       type: steps
       default: []
     post-validation:
+      description: "Extra steps to be executed after drupal code validation."
       type: steps
       default: []
   working_directory: ~/project/<<parameters.drupal-root>>
@@ -73,53 +80,65 @@ drupal-validate:
     - steps: <<parameters.post-validation>>
 
 drupal-build-deploy:
+  description: "Build and deploy drupal chart release."
   executor: <<parameters.executor>>
   parameters:
     executor:
-      description: The name of custom executor to use
+      description: "The name of custom executor to use."
       type: executor
       default: silta
     drupal-root:
+      description: "Relative path to drupal root"
       type: string
       default: "."
     codebase-build:
+      description: "Preparational build steps run after code checkout."
       type: steps
       default: []
     pre-release:
-      description: Steps to be executed before the Helm release is created.
+      description: "Steps to be executed before the Helm release is created."
       type: steps
       default: []
     chart_name:
+      description: "Helm chart name."
       type: string
       default: drupal
     chart_version:
+      description: "Deploy specific drupal helm chart version."
       type: string
       default: ""
     chart_repository:
+      description: "Helm chart repository."
       type: string
       default: https://storage.googleapis.com/charts.wdr.io
     decrypt_files:
+      description: "Encrypted value files. Can have multiple, comma separated values."
       type: string
       default: ""
     silta_config:
+      description: "Chart values override file. Can have multiple, comma separated values."
       type: string
       default: "silta/silta.yml"
     skip-deployment:
+      description: "Skip release deployment."
       type: boolean
       default: false
     cluster_domain:
+      description: "Cluster domain value for helm chart. Will be used for default ingress hostnames."
       type: env_var_name
       default: CLUSTER_DOMAIN
     release-suffix:
+      description: "Release name suffix."
       type: string
       default: ''
     deployment_timeout:
+      description: "Helm release deployment timeout."
       type: string
       default: "15m"
     nginx_build_context:
+      description: "Path to be used as build context for Nginx image build."
       type: string
       default: "web"
-      description: "Path to be used as build context for Nginx image."
   working_directory: ~/project/<<parameters.drupal-root>>
   steps:
     - checkout:

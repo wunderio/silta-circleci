@@ -1,13 +1,17 @@
 
 npm-install-build:
+  description: "NPM build command."
   parameters:
     path:
+      description: "package.json path"
       type: string
       default: "."
     build-command:
+      description: "NPM build command."
       type: string
       default: "npm run build"
     cache-version:
+      description: "CircleCI cache key prefix."
       type: string
       default: "v1.1"
   steps:
@@ -34,14 +38,18 @@ npm-install-build:
         key: <<parameters.cache-version>>-npm-{{ checksum "<<parameters.path>>/package-lock.json" }}
 
 yarn-install-build:
+  description: "Yarn build command."
   parameters:
     path:
+      description: "package.json path"
       type: string
       default: "."
     build-command:
+      description: "Yarn build command."
       type: string
       default: "yarn build"
     cache-version:
+      description: "CircleCI cache key prefix."
       type: string
       default: "v1"
   steps:
@@ -69,8 +77,10 @@ yarn-install-build:
 
 # Deprecated in favor of the yarn-install-build command, or even better switch to npm and use npm-install-build.
 yarn-install:
+  description: "Deprecated in favor of the yarn-install-build command, or even better switch to npm and use npm-install-build."
   parameters:
     cache-version:
+      description: "CircleCI cache key prefix."
       type: string
       default: "v1"
   steps:

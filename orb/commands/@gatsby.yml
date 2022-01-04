@@ -1,8 +1,11 @@
 gatsby-move-to-subfolder:
+  description: "Move gatsby files to subfolder."
   parameters:
     subfolder_name:
+      description: "Destination folder."
       type: string
     build_folder:
+      description: "Source folder."
       type: string
       default: public
   steps:
@@ -16,13 +19,17 @@ gatsby-move-to-subfolder:
           echo '<meta http-equiv="refresh" content="0; URL=<<parameters.subfolder_name>>" />' > "<<parameters.build_folder>>/index.html"
 
 gatsby-google-cloud-storage-deploy:
+  description: "Upload gatsby files to Google Cloud Storage."
   parameters:
     bucket_name:
+      description: "Destination GCS bucket name."
       type: string
     build_folder:
+      description: "Source folder."
       type: string
       default: public
     static_files:
+      description: "Destination GCS bucket subpath."
       type: string
       default: static
   steps:

@@ -1,43 +1,54 @@
 simple-build-deploy:
+  description: "Build and deploy simple chart release."
   executor: <<parameters.executor>>
   resource_class: <<parameters.resource_class>>
   parameters:
     executor:
-      description: The name of custom executor to use
+      description: "The name of custom executor to use."
       type: executor
       default: silta
     codebase-build:
+      description: "Preparational build steps run after code checkout."
       type: steps
       default: []
     chart_name:
+      description: "Helm chart name."
       type: string
       default: simple
     chart_repository:
+      description: "Helm chart repository."
       type: string
       default: https://storage.googleapis.com/charts.wdr.io
     silta_config:
+      description: "Chart values override file. Can have multiple, comma separated values."
       type: string
       default: "silta/silta.yml"
     skip-deployment:
+      description: "Skip release deployment."
       type: boolean
       default: false
     cluster_domain:
+      description: "Cluster domain value for helm chart. Will be used for default ingress hostnames."
       type: env_var_name
       default: CLUSTER_DOMAIN
     codebase_root:
+      description: "Relative path for codebase root."
       type: string
       default: .
     build_folder:
+      description: "Relative path for Dockerfile build context."
       type: string
       default: public
     pre-release:
-      description: Steps to be executed before the Helm release is created.
+      description: "Steps to be executed before the Helm release is created."
       type: steps
       default: []
     release-suffix:
+      description: "Release name suffix."
       type: string
       default: ''
     resource_class:
+      description: "Amount of CPU and RAM allocated to each CircleCI executor container in a build job. See [CircleCI reference](https://circleci.com/docs/2.0/configuration-reference/#resourceclass)."
       type: string
       # Medium is the default when not specified.
       default: medium
