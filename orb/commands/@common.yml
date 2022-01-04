@@ -66,7 +66,10 @@ build-docker-image:
           if [ ! -z "$GCLOUD_KEY_JSON" ] && gcloud container images list-tags "$image_url" | grep -q "$image_tag"; then
             echo "Image $image_url:$image_tag has already been built, the existing image from the Docker repository will be used."
           
-          elif [ ! -z "$AWS_SECRET_ACCESS_KEY" ] && aws ecr describe-images --repository-name="$DOCKER_REPO_PROJ/$NAMESPACE"-'<<parameters.identifier>>' --image-ids="imageTag=$image_tag" 2>&1 > /dev/null ; then
+          elif [ ! -z "$AWS_SECRET_ACCESS_KEY" ] && aws ecr describe-images --repository-name="$DOCKER_REPO_PROJ/$NAMESPACE-<<parameters.identifier>>" --image-ids="imageTag=$image_tag" 2>&1 > /dev/null ; then
+            echo "Image $image_url:$image_tag has already been built, the existing image from the Docker repository will be used."
+          
+          elif [ ! -z "$AKS_TENANT_ID" ] && az acr repository show --name "$DOCKER_REPO_HOST" --image "$DOCKER_REPO_PROJ/$NAMESPACE-<<parameters.identifier>>:$image_tag" --only-show-errors 2>&1 > /dev/null ; then
             echo "Image $image_url:$image_tag has already been built, the existing image from the Docker repository will be used."
           
           else
@@ -95,9 +98,10 @@ docker-login:
     - run:
         name: Login to the docker registry
         command: |
-          if [ -z "$GCLOUD_KEY_JSON$AWS_SECRET_ACCESS_KEY" ]
+          if [ -z "$GCLOUD_KEY_JSON$AWS_SECRET_ACCESS_KEY$AKS_SP_PASSWORD" ]
           then
-            echo "Cloud credentials \$GCLOUD_KEY_JSON or \$AWS_SECRET_ACCESS_KEY are empty, have you set a context for this CircleCI job correctly?"
+            echo "Docker registry credentials are empty, have you set a context for this CircleCI job correctly?"
+            exit 1
           else
             # GCR login
             if [ ! -z "$GCLOUD_KEY_JSON" ]
@@ -108,6 +112,11 @@ docker-login:
             if [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
             then
               aws ecr get-login --no-include-email | bash
+            fi
+            # AKS Login
+            if [ ! -z "$AKS_SP_PASSWORD" ]
+            then
+              az acr login --name "$DOCKER_REPO_HOST" --only-show-errors
             fi
           fi
 
@@ -245,7 +254,13 @@ cloud-login:
 
           elif [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
           then
-            aws eks update-kubeconfig --name $GCLOUD_CLUSTER_NAME --region $AWS_REGION
+            aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_REGION
+
+          elif [ ! -z "$AKS_TENANT_ID" ]
+          then
+            az login --service-principal --username $AKS_SP_APP_ID --tenant $AKS_TENANT_ID  --password $AKS_SP_PASSWORD
+            az aks get-credentials --resource-group $AKS_RESOURCE_GROUP --name $CLUSTER_NAME
+          
           fi
 
 helm-cleanup:
