@@ -90,6 +90,12 @@ simple-build-deploy:
                   extra_vpcnative="--set cluster.vpcNative=${VPC_NATIVE}"
                 fi
 
+                # Add cluster type if defined in environment
+                extra_clustertype=""
+                if [[ ! -z "$CLUSTER_TYPE" ]] ; then
+                  extra_clustertype="--set cluster.type=${CLUSTER_TYPE}"
+                fi
+
                 helm upgrade --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
                   --repo '<<parameters.chart_repository>>' \
                   --cleanup-on-fail \
@@ -97,6 +103,7 @@ simple-build-deploy:
                   --set silta-release.branchName="$CIRCLE_BRANCH" \
                   $extra_noauthips \
                   $extra_vpcnative \
+                  $extra_clustertype \
                   --set clusterDomain=${<<parameters.cluster_domain>>} \
                   --set nginx.image=$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$NAMESPACE-nginx:$nginx_HASH \
                   --namespace="$NAMESPACE" \

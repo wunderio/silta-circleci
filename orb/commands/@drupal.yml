@@ -180,6 +180,12 @@ drupal-helm-deploy:
             extra_vpcnative="--set cluster.vpcNative=${VPC_NATIVE}"
           fi
 
+          # Add cluster type if defined in environment
+          extra_clustertype=""
+          if [[ ! -z "$CLUSTER_TYPE" ]] ; then
+            extra_clustertype="--set cluster.type=${CLUSTER_TYPE}"
+          fi
+
           if [[ ! -z "<<parameters.chart_version>>" ]] ; then
             version="--version <<parameters.chart_version>>"
           fi
@@ -195,6 +201,7 @@ drupal-helm-deploy:
             --set shell.image="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$NAMESPACE-shell:$shell_HASH" \
             $extra_noauthips \
             $extra_vpcnative \
+            $extra_clustertype \
             $db_root_pass_override \
             $db_user_pass_override \
             --set shell.gitAuth.repositoryUrl="$CIRCLE_REPOSITORY_URL" \
