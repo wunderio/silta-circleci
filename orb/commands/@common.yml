@@ -92,33 +92,26 @@ build-docker-image:
             echo "export <<parameters.identifier>>_HASH='$image_tag'" >> "$BASH_ENV"
           fi
 
+silta-cli-setup:
+  description: "Download Silta CI tooling."
+  steps:
+    - run:
+        name: "Download CI tooling"
+        command: |
+          # CLI setup
+          mkdir -p ~/.local/bin
+          wget https://storage.googleapis.com/silta-cli-test/silta -O ~/.local/bin/silta
+          chmod +x ~/.local/bin/silta
+
+          silta version
+
 docker-login:
   description: "Login to the docker registry."
   steps:
     - run:
         name: Login to the docker registry
         command: |
-          if [ -z "$GCLOUD_KEY_JSON$AWS_SECRET_ACCESS_KEY$AKS_SP_PASSWORD" ]
-          then
-            echo "Docker registry credentials are empty, have you set a context for this CircleCI job correctly?"
-            exit 1
-          else
-            # GCR login
-            if [ ! -z "$GCLOUD_KEY_JSON" ]
-            then
-              printenv GCLOUD_KEY_JSON | docker login -u _json_key --password-stdin "https://$DOCKER_REPO_HOST"
-            fi
-            # ECR Login 
-            if [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
-            then
-              aws ecr get-login --no-include-email | bash
-            fi
-            # AKS Login
-            if [ ! -z "$AKS_SP_PASSWORD" ]
-            then
-              az acr login --name "$DOCKER_REPO_HOST" --only-show-errors
-            fi
-          fi
+          silta ci image login
 
 silta-setup:
   description: "Set up silta cluster connection and set release name."

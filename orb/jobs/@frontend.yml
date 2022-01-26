@@ -45,6 +45,7 @@ frontend-build-deploy:
       default: ''
   steps:
     - checkout
+    - silta-cli-setup
 
     - steps: <<parameters.codebase-build>>
 

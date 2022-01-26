@@ -57,6 +57,8 @@ simple-build-deploy:
     - checkout:
         path: ~/project
 
+    - silta-cli-setup
+
     - steps: <<parameters.codebase-build>>
 
     - silta-setup:
