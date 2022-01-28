@@ -259,7 +259,7 @@ cloud-login:
           elif [ ! -z "$AKS_TENANT_ID" ]
           then
             az login --service-principal --username $AKS_SP_APP_ID --tenant $AKS_TENANT_ID  --password $AKS_SP_PASSWORD
-            az aks get-credentials --resource-group $AKS_RESOURCE_GROUP --name $CLUSTER_NAME
+            az aks get-credentials --resource-group $AKS_RESOURCE_GROUP --name $CLUSTER_NAME --admin
           
           fi
 
