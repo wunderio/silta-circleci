@@ -1,4 +1,3 @@
-
 npm-install-build:
   description: "NPM build command."
   parameters:
@@ -6,6 +5,9 @@ npm-install-build:
       description: "package.json path"
       type: string
       default: "."
+    install-command:
+      type: string
+      default: "npm install"
     build-command:
       description: "NPM build command."
       type: string
@@ -24,7 +26,7 @@ npm-install-build:
         name: Install frontend dependencies
         command: |
           cd '<<parameters.path>>'
-          npm install
+          <<parameters.install-command>>
 
     - run:
         name: Build frontend
@@ -44,6 +46,9 @@ yarn-install-build:
       description: "package.json path"
       type: string
       default: "."
+    install-command:
+      type: string
+      default: "yarn install"
     build-command:
       description: "Yarn build command."
       type: string
@@ -62,7 +67,7 @@ yarn-install-build:
         name: Install frontend dependencies
         command: |
           cd '<<parameters.path>>'
-          yarn install
+          <<parameters.install-command>>
 
     - run:
         name: Build frontend
