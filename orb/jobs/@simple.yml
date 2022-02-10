@@ -107,7 +107,7 @@ simple-build-deploy:
                   $extra_vpcnative \
                   $extra_clustertype \
                   --set clusterDomain=${<<parameters.cluster_domain>>} \
-                  --set nginx.image=$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$NAMESPACE-nginx:$nginx_HASH \
+                  --set nginx.image="${nginx_IMAGE_URL}" \
                   --namespace="$NAMESPACE" \
                   --values '<<parameters.silta_config>>' \
                   --wait
