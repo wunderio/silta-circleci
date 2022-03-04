@@ -284,44 +284,10 @@ drupal-values-validate:
       description: "Cluster domain value for helm chart. Will be used for default ingress hostnames."
       type: env_var_name
       default: CLUSTER_DOMAIN
-    deployment_timeout:
-      type: string
-      default: "15m"
   steps:
     - run:
         name: Validate values file
         command: |
-          
-          if [[ -z "$reference_volume" ]] ; then
-            reference_data_override='--set referenceData.skipMount=true'
-          fi
-
-          # Override Database credentials if specified
-          if [[ ! -z "$DB_ROOT_PASS" ]] ; then
-            db_root_pass_override="--set mariadb.rootUser.password=$DB_ROOT_PASS"
-          fi
-          if [[ ! -z "$DB_USER_PASS" ]] ; then
-            db_user_pass_override="--set mariadb.db.password=$DB_USER_PASS"
-          fi
-
-          # Add internal VPN if defined in environment
-          extra_noauthips=""
-          if [[ ! -z "$VPN_IP" ]] ; then
-            extra_noauthips="--set nginx.noauthips.vpn=${VPN_IP}/32"
-          fi
-          
-          # Pass VPC native setting if defined in environment
-          extra_vpcnative=""
-          if [[ ! -z "$VPC_NATIVE" ]] ; then
-            extra_vpcnative="--set cluster.vpcNative=${VPC_NATIVE}"
-          fi
-
-          # Add cluster type if defined in environment
-          extra_clustertype=""
-          if [[ ! -z "$CLUSTER_TYPE" ]] ; then
-            extra_clustertype="--set cluster.type=${CLUSTER_TYPE}"
-          fi
-
           if [[ ! -z "<<parameters.chart_version>>" ]] ; then
             version="--version <<parameters.chart_version>>"
           fi
