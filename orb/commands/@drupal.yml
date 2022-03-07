@@ -280,10 +280,6 @@ drupal-values-validate:
     silta_config:
       description: "Chart values override file. Can have multiple, comma separated values."
       type: string
-    cluster_domain:
-      description: "Cluster domain value for helm chart. Will be used for default ingress hostnames."
-      type: env_var_name
-      default: CLUSTER_DOMAIN
   steps:
     - run:
         name: Validate values file
