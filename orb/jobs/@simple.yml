@@ -19,6 +19,10 @@ simple-build-deploy:
       description: "Helm chart repository."
       type: string
       default: https://storage.googleapis.com/charts.wdr.io
+    chart_version:
+      description: "Deploy specific simple helm chart version."
+      type: string
+      default: ""
     silta_config:
       description: "Chart values override file. Can have multiple, comma separated values."
       type: string
@@ -80,36 +84,25 @@ simple-build-deploy:
           - run:
               name: Deploy helm release
               command: |
-                # Add internal VPN if defined in environment
-                extra_noauthips=""
-                if [[ ! -z "$VPN_IP" ]] ; then
-                  extra_noauthips="--set nginx.noauthips.vpn=${VPN_IP}/32"
-                fi
 
-                # Pass VPC native setting if defined in environment
-                extra_vpcnative=""
-                if [[ ! -z "$VPC_NATIVE" ]] ; then
-                  extra_vpcnative="--set cluster.vpcNative=${VPC_NATIVE}"
-                fi
-
-                # Add cluster type if defined in environment
-                extra_clustertype=""
-                if [[ ! -z "$CLUSTER_TYPE" ]] ; then
-                  extra_clustertype="--set cluster.type=${CLUSTER_TYPE}"
-                fi
-
-                helm upgrade --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
-                  --repo '<<parameters.chart_repository>>' \
-                  --cleanup-on-fail \
-                  --set environmentName="$SILTA_ENVIRONMENT_NAME" \
-                  --set silta-release.branchName="$CIRCLE_BRANCH" \
-                  $extra_noauthips \
-                  $extra_vpcnative \
-                  $extra_clustertype \
-                  --set clusterDomain=${<<parameters.cluster_domain>>} \
-                  --set nginx.image="${nginx_IMAGE_URL}" \
-                  --namespace="$NAMESPACE" \
-                  --values '<<parameters.silta_config>>' \
-                  --wait
+                NAMESPACE="${CIRCLE_PROJECT_REPONAME,,}"
+                BRANCHNAME="${CIRCLE_BRANCH,,}"
+                
+                NGINX_IMAGE_URL=${nginx_IMAGE_URL}
+                
+                silta ci release deploy \
+                  --release-name "${RELEASE_NAME}" \
+                  --chart-name "<<parameters.chart_name>>" \
+                  --chart-version "<<parameters.chart_version>>" \
+                  --chart-repository "<<parameters.chart_repository>>" \
+                  --branchname "${BRANCHNAME}" \
+                  --silta-environment-name "${SILTA_ENVIRONMENT_NAME}" \
+                  --nginx-image-url "${NGINX_IMAGE_URL}" \
+                  --cluster-domain "${<<parameters.cluster_domain>>}" \
+                  --vpn-ip "${VPN_IP}" \
+                  --vpc-native "${VPC_NATIVE}" \
+                  --cluster-type "${CLUSTER_TYPE}" \
+                  --namespace "${NAMESPACE}" \
+                  --silta-config "<<parameters.silta_config>>"
 
           - helm-release-information

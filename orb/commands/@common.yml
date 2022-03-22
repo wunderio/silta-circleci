@@ -12,7 +12,7 @@ build-docker-image:
       description: "Image identifier."
       type: string
     docker-hash-prefix:
-      description: "Image tag prefix. Allows overriding cached images."
+      description: "Image tag prefix. Allows overriding cached images. (DEPRECATED)"
       type: string
       default: v1
     tag:
@@ -24,7 +24,7 @@ build-docker-image:
       type: boolean
       default: true
     reuse_image:
-      description: "Do not rebuild image if identical image:tag exists in remote"
+      description: "Use existing image if identical image:tag exists in remote"
       type: boolean
       default: true
   steps:

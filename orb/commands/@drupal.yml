@@ -137,14 +137,10 @@ drupal-helm-deploy:
         name: Deploy helm release
         no_output_timeout: '<<parameters.deployment_timeout>>'
         command: |
-          
           NAMESPACE="${CIRCLE_PROJECT_REPONAME,,}"
           BRANCHNAME="${CIRCLE_BRANCH,,}"
           REPOSITORY_URL="${CIRCLE_REPOSITORY_URL}"
 
-          # RELEASE_NAME and SILTA_ENVIRONMENT_NAME env variables are set in set-release-name command
-
-          # *_IMAGE_URL environment variables are set in build-docker-image command
           PHP_IMAGE_URL=${php_IMAGE_URL}
           NGINX_IMAGE_URL=${nginx_IMAGE_URL}
           SHELL_IMAGE_URL=${shell_IMAGE_URL}
@@ -171,89 +167,6 @@ drupal-helm-deploy:
             --namespace "${NAMESPACE}" \
             --silta-config "<<parameters.silta_config>>" \
             --deployment-timeout "<<parameters.deployment_timeout>>"
-
-          #   --set php.image="${php_IMAGE_URL}" \
-          #   --set nginx.image="${nginx_IMAGE_URL}" \
-          #   --set shell.image="${shell_IMAGE_URL}" \
-
-          # #Detect pods in FAILED state
-          # function show_failing_pods() {
-          #   failed_pods=$(kubectl get pod -l "release=$RELEASE_NAME,cronjob!=true" -n "$NAMESPACE" --no-headers | grep -Ev '([0-9]+)/\1' | grep -Eo '^[^ ]+')
-          #   if [[ ! -z "$failed_pods" ]] ; then
-          #     echo "Failing pods:"
-          #     echo "$failed_pods"
-          #     echo ""
-          #     echo "Please check logs for the pods above"
-          #     true
-          #   fi
-          #   false
-          # }
-
-          # if [[ ! -z "<<parameters.chart_version>>" ]] ; then
-          #   version="--version <<parameters.chart_version>>"
-          # fi
-
-          # helm upgrade --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
-          #   --repo '<<parameters.chart_repository>>' \
-          #   $version \
-          #   --cleanup-on-fail \
-          #   --set environmentName="$SILTA_ENVIRONMENT_NAME" \
-          #   --set silta-release.branchName="$CIRCLE_BRANCH" \
-          #   --set php.image="${php_IMAGE_URL}" \
-          #   --set nginx.image="${nginx_IMAGE_URL}" \
-          #   --set shell.image="${shell_IMAGE_URL}" \
-          #   $extra_noauthips \
-          #   $extra_vpcnative \
-          #   $extra_clustertype \
-          #   $db_root_pass_override \
-          #   $db_user_pass_override \
-          #   --set shell.gitAuth.repositoryUrl="$CIRCLE_REPOSITORY_URL" \
-          #   --set shell.gitAuth.apiToken="$GITAUTH_API_TOKEN" \
-          #   --set shell.gitAuth.keyserver.username="$GITAUTH_USERNAME" \
-          #   --set shell.gitAuth.keyserver.password="$GITAUTH_PASSWORD" \
-          #   --set clusterDomain="${<<parameters.cluster_domain>>}" \
-          #   $reference_data_override \
-          #   --namespace="$NAMESPACE" \
-          #   --values '<<parameters.silta_config>>' \
-          #   --timeout <<parameters.deployment_timeout>> &> helm-output.log &
-          # pid=$!
-
-          # echo -n "Waiting for containers to start"
-
-          # TIME_WAITING=0
-          # LOGS_SHOWN=false
-          # while true; do
-          #   if [ $LOGS_SHOWN == false ] && kubectl get pod -l job-name="$RELEASE_NAME-post-release" -n "$NAMESPACE" --ignore-not-found | grep  -qE "Running|Completed" ; then
-          #     echo ""
-          #     echo "Deployment log:"
-          #     kubectl logs "job/$RELEASE_NAME-post-release" -n "$NAMESPACE" -f --timestamps=true || true
-          #     LOGS_SHOWN=true
-          #   fi
-
-          #   # Helm command is complete.
-          #   if ! ps -p "$pid" > /dev/null; then
-          #     if grep -q BackoffLimitExceeded helm-output.log ; then
-          #       # Don't show BackoffLimitExceeded, it confuses everyone.
-          #       show_failing_pods
-          #       echo "The post-release job failed, see log output above."
-          #     else
-          #       echo "Helm output:"
-          #       cat helm-output.log
-          #     fi
-          #     wait $pid
-          #     break
-          #   fi
-
-          #   if [ $TIME_WAITING -gt 300 ]; then
-          #     echo "Timeout waiting for resources."
-          #     show_failing_pods
-          #     exit 1
-          #   fi
-
-          #   echo -n "."
-          #   sleep 5
-          #   TIME_WAITING=$((TIME_WAITING+5))
-          # done
 
     - run:
         name: Wait for resources to be ready

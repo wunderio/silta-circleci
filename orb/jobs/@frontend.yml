@@ -67,7 +67,7 @@ frontend-build-deploy:
                 for var in `env | grep _IMAGE_IDENTIFIER`; do
                   identifier=`echo $var | cut -f 2 -d "="`
                   image_url="${identifier}_IMAGE_URL"
-                  image_overrides="$image_overrides --set services.${identifier}.image=${image_url}"
+                  image_overrides="$image_overrides --set services.${identifier}.image=${!image_url}"
                 done
 
                 # Override Database credentials if specified
