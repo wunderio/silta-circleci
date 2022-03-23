@@ -84,7 +84,6 @@ simple-build-deploy:
           - run:
               name: Deploy helm release
               command: |
-
                 NAMESPACE="${CIRCLE_PROJECT_REPONAME,,}"
                 BRANCHNAME="${CIRCLE_BRANCH,,}"
                 
