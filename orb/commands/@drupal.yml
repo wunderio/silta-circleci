@@ -265,7 +265,7 @@ drupal-helm-deploy:
     - helm-release-information
 
 drupal-values-validate:
-  description: "Deploy helm release."
+  description: "Validate helm release."
   parameters:
     chart_name:
       description: "Helm chart name."
@@ -274,7 +274,7 @@ drupal-values-validate:
       description: "Helm chart repository."
       type: string
     chart_version:
-      description: "Deploy specific drupal helm chart version."
+      description: "Validate specific drupal helm chart version."
       type: string
       default: ""
     silta_config:
