@@ -263,3 +263,38 @@ drupal-helm-deploy:
           kubectl get deployment -n "$NAMESPACE" -l "release=${RELEASE_NAME}" -o name | xargs -n 1 kubectl rollout status -n "$NAMESPACE"
 
     - helm-release-information
+
+drupal-values-validate:
+  description: "Validate helm release."
+  parameters:
+    chart_name:
+      description: "Helm chart name."
+      type: string
+    chart_repository:
+      description: "Helm chart repository."
+      type: string
+    chart_version:
+      description: "Validate specific drupal helm chart version."
+      type: string
+      default: ""
+    silta_config:
+      description: "Chart values override file. Can have multiple, comma separated values."
+      type: string
+  steps:
+    - run:
+        name: Validate values file
+        command: |
+          if [[ ! -z "<<parameters.chart_version>>" ]] ; then
+            version="--version <<parameters.chart_version>>"
+          fi
+
+          helm upgrade --dry-run --debug --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
+            --repo '<<parameters.chart_repository>>' \
+            $version \
+            --set environmentName="$SILTA_ENVIRONMENT_NAME" \
+            --set silta-release.branchName="$CIRCLE_BRANCH" \
+            --set php.image="test:test" \
+            --set nginx.image="test:test" \
+            --set shell.image="test:test" \
+            --namespace="$NAMESPACE" \
+            --values '<<parameters.silta_config>>' \
