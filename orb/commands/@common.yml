@@ -117,6 +117,8 @@ silta-setup:
     - docker-login
     - set-release-name:
         release-suffix: '<<parameters.release-suffix>>'
+    - prepare-namespace:
+        release-suffix: '<<parameters.release-suffix>>'
 
 set-release-name:
   description: "Set release name."
@@ -142,8 +144,20 @@ set-release-name:
 
           echo "The release name for this branch is \"$RELEASE_NAME\" in the \"$NAMESPACE\" namespace"
 
-          ### TODO: move + abstraction 
-
+prepare-namespace:
+  description: "Prepare namespace."
+  parameters:
+    release-suffix:
+      description: "Release name suffix."
+      type: string
+      default: ''
+  steps:
+    - run:
+        name: Preparing namespace
+        command: |
+          
+          NAMESPACE="${CIRCLE_PROJECT_REPONAME,,}"
+          
           # Create the namespace if it doesn't exist.
           if ! kubectl get namespace "$NAMESPACE" &>/dev/null ; then
             kubectl create namespace "$NAMESPACE"
@@ -153,8 +167,14 @@ set-release-name:
           if ! kubectl get namespace -l name=$NAMESPACE --no-headers | grep $NAMESPACE &>/dev/null ; then
             kubectl label namespace "$NAMESPACE" "name=$NAMESPACE" --overwrite
           fi
-
-          ### TODO: abstraction + move to special updates (?)
+    - run:
+        name: Running prerelease updates
+        command: |
+          
+          NAMESPACE="${CIRCLE_PROJECT_REPONAME,,}"
+          BRANCHNAME="${CIRCLE_BRANCH,,}"
+          
+          RELEASE_NAME=$(silta ci release name --branchname "${BRANCHNAME}" --release-suffix "<<parameters.release-suffix>>")
 
           if helm status -n "$NAMESPACE" "$RELEASE_NAME" > /dev/null  2>&1
           then
