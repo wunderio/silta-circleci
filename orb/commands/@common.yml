@@ -113,8 +113,6 @@ silta-setup:
     - docker-login
     - set-release-name:
         release-suffix: '<<parameters.release-suffix>>'
-    - prepare-namespace:
-        release-suffix: '<<parameters.release-suffix>>'
 
 set-release-name:
   description: "Set release name."
@@ -139,46 +137,6 @@ set-release-name:
           echo "export SILTA_ENVIRONMENT_NAME='$SILTA_ENVIRONMENT_NAME'" >> "$BASH_ENV"
 
           echo "The release name for this branch is \"$RELEASE_NAME\" in the \"$NAMESPACE\" namespace"
-
-prepare-namespace:
-  description: "Prepare namespace."
-  parameters:
-    release-suffix:
-      description: "Release name suffix."
-      type: string
-      default: ''
-  steps:
-    - run:
-        name: Preparing namespace
-        command: |
-          
-          NAMESPACE="${CIRCLE_PROJECT_REPONAME,,}"
-          
-          # Create the namespace if it doesn't exist.
-          if ! kubectl get namespace "$NAMESPACE" &>/dev/null ; then
-            kubectl create namespace "$NAMESPACE"
-          fi
-
-          # Tag the namespace if it isn't already tagged.
-          if ! kubectl get namespace -l name=$NAMESPACE --no-headers | grep $NAMESPACE &>/dev/null ; then
-            kubectl label namespace "$NAMESPACE" "name=$NAMESPACE" --overwrite
-          fi
-    - run:
-        name: Running prerelease updates
-        command: |
-          
-          NAMESPACE="${CIRCLE_PROJECT_REPONAME,,}"
-          BRANCHNAME="${CIRCLE_BRANCH,,}"
-          
-          RELEASE_NAME=$(silta ci release name --branchname "${BRANCHNAME}" --release-suffix "<<parameters.release-suffix>>")
-
-          if helm status -n "$NAMESPACE" "$RELEASE_NAME" > /dev/null  2>&1
-          then
-            current_chart_version=$(helm history -n "$NAMESPACE" "$RELEASE_NAME" --max 1 --output json | jq -r '.[].chart')
-            echo "export CURRENT_CHART_VERSION='$current_chart_version'" >> "$BASH_ENV"
-
-            echo "There is an existing chart with version $current_chart_version"
-          fi
 
 # This will be deprecated in favor of cloud-login job
 gcloud-login:
