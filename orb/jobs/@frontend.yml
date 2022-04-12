@@ -98,10 +98,4 @@ frontend-build-deploy:
                   --silta-config "<<parameters.silta_config>>" \
                   --helm-flags "${image_overrides}"
 
-          # - run:
-          #     name: Wait for resources to be ready
-          #     command: |
-          #       # Get all deployments in the release and check the status of each one.
-          #       kubectl get deployment -n "$NAMESPACE" -l "release=${RELEASE_NAME}" -o name | xargs -n 1 kubectl rollout status -n "$NAMESPACE"
-
           - helm-release-information
