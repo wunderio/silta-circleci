@@ -147,12 +147,12 @@ drupal-build-deploy:
     - unless:
         condition: <<parameters.skip-deployment>>
         steps:
+          - silta-cli-setup
           - when:
               condition: <<parameters.decrypt_files>>
               steps:
                 - decrypt-files:
                     files: <<parameters.decrypt_files>>
-          - silta-cli-setup
           - silta-setup:
               release-suffix: '<<parameters.release-suffix>>'
           - drupal-docker-build:
