@@ -143,11 +143,11 @@ drupal-build-deploy:
   steps:
     - checkout:
         path: ~/project
+    - silta-cli-setup
     - steps: <<parameters.codebase-build>>
     - unless:
         condition: <<parameters.skip-deployment>>
         steps:
-          - silta-cli-setup
           - when:
               condition: <<parameters.decrypt_files>>
               steps:
