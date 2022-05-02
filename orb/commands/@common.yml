@@ -1,5 +1,3 @@
-
-
 build-docker-image:
   description: "Build docker image."
   parameters:
@@ -14,7 +12,7 @@ build-docker-image:
       description: "Image identifier."
       type: string
     docker-hash-prefix:
-      description: "Image tag prefix. Allows overriding cached images."
+      description: "Image tag prefix. Allows overriding cached images. (DEPRECATED)"
       type: string
       default: v1
     tag:
@@ -25,72 +23,69 @@ build-docker-image:
       description: "Whether to export an environment variable with the image name. This can be used by helm charts (currently only the frontend chart) to add the image reference to the release values automatically."
       type: boolean
       default: true
+    reuse_image:
+      description: "Use existing image if identical image:tag exists in remote"
+      type: boolean
+      default: true
   steps:
     - run:
         name: Build <<parameters.identifier>> docker image
         command: |
-          image_url="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$NAMESPACE"-'<<parameters.identifier>>'
 
-          # Only exclude files if they exist
-          exclude_dockerignore=''
-          if [ -f '<<parameters.path>>/.dockerignore' ]
-          then
-            exclude_dockerignore=--exclude-from='<<parameters.path>>'/.dockerignore
-          fi
+          NAMESPACE="${CIRCLE_PROJECT_REPONAME,,}"
+          BRANCHNAME="${CIRCLE_BRANCH,,}"
 
-          if [ -n '<<parameters.path>>' ]; then
-            path='<<parameters.path>>'
-          else
-            # No path is specified, build from an empty directory.
-            mkdir /tmp/empty
-            path='/tmp/empty'
-          fi
+          IMAGE_URL=$(silta ci image url \
+            --image-repo-host "${DOCKER_REPO_HOST}" \
+            --image-repo-project "${DOCKER_REPO_PROJ}" \
+            --namespace "${NAMESPACE}" \
+            --image-identifier "<<parameters.identifier>>" \
+            --build-path "<<parameters.path>>" \
+            --dockerfile "<<parameters.dockerfile>>" \
+            --image-tag "<<parameters.tag>>"
+          )
 
-          if [ -n '<<parameters.tag>>' ]; then
-            # A tag has been specified, use it.
-            image_tag="<<parameters.tag>>"
-          else
-            # Take a hash of all files in the folder except those ignored by docker.
-            # Also make sure modification time or order play no role.
-            image_tag=$(tar \
-              --sort=name \
-              $exclude_dockerignore \
-              --exclude=vendor/composer \
-              --exclude=vendor/autoload.php \
-              --mtime='2000-01-01 00:00Z' \
-              --clamp-mtime \
-              -cf - $path '<<parameters.dockerfile>>' | sha1sum | cut -c 1-40)
-            image_tag="<<parameters.docker-hash-prefix>>-$image_tag"
-          fi
-
-          if [ ! -z "$GCLOUD_KEY_JSON" ] && gcloud container images list-tags "$image_url" | grep -q "$image_tag"; then
-            echo "Image $image_url:$image_tag has already been built, the existing image from the Docker repository will be used."
-          
-          elif [ ! -z "$AWS_SECRET_ACCESS_KEY" ] && aws ecr describe-images --repository-name="$DOCKER_REPO_PROJ/$NAMESPACE-<<parameters.identifier>>" --image-ids="imageTag=$image_tag" 2>&1 > /dev/null ; then
-            echo "Image $image_url:$image_tag has already been built, the existing image from the Docker repository will be used."
-          
-          elif [ ! -z "$AKS_TENANT_ID" ] && az acr repository show --name "$DOCKER_REPO_HOST" --image "$DOCKER_REPO_PROJ/$NAMESPACE-<<parameters.identifier>>:$image_tag" --only-show-errors 2>&1 > /dev/null ; then
-            echo "Image $image_url:$image_tag has already been built, the existing image from the Docker repository will be used."
-          
-          else
-            docker build -t "$image_url:$image_tag" -f '<<parameters.dockerfile>>' $path
-
-            if [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
-            then
-              # Create repository (Because ECR requires a dedicated repository per project)
-              if ! aws ecr describe-repositories --repository-name "$DOCKER_REPO_PROJ/$NAMESPACE"-'<<parameters.identifier>>' &>/dev/null ; then
-                aws ecr create-repository --repository-name "$DOCKER_REPO_PROJ/$NAMESPACE"-'<<parameters.identifier>>'
-              fi
-            fi  
-
-            docker push "$image_url:$image_tag"
-          fi
+          silta ci image build \
+            --image-repo-host "${DOCKER_REPO_HOST}" \
+            --image-repo-project "${DOCKER_REPO_PROJ}" \
+            --namespace "${NAMESPACE}" \
+            --image-identifier "<<parameters.identifier>>" \
+            --build-path "<<parameters.path>>" \
+            --dockerfile "<<parameters.dockerfile>>" \
+            --image-tag "<<parameters.tag>>" \
+            --branchname "${BRANCHNAME}" \
+            --image-reuse <<parameters.reuse_image>>
 
           if [ '<<parameters.expose_image>>' = 'true' ]; then
             # Persist the image identifier and tag so it is available during deployment.
             echo "export <<parameters.identifier>>_IMAGE_IDENTIFIER='<<parameters.identifier>>'" >> "$BASH_ENV"
-            echo "export <<parameters.identifier>>_HASH='$image_tag'" >> "$BASH_ENV"
+            echo "export <<parameters.identifier>>_IMAGE_URL='${IMAGE_URL}'" >> "$BASH_ENV"
           fi
+
+silta-cli-setup:
+  description: "Download Silta CI tooling."
+  steps:
+    - run:
+        name: "Download CI tooling"
+        command: |
+          # CLI setup
+          # Silta cli download
+          mkdir -p ~/.local/bin
+
+          # Latest tagged release
+          latest_release_url=$(curl -sL https://api.github.com/repos/wunderio/silta-cli/releases/latest | grep -o -E "https://(.*)silta-(.*)-linux-amd64.tar.gz" | head -1)
+          curl -sL $latest_release_url | tar xz -C ~/.local/bin
+
+          # Selected release, i.e. 1.0.1
+          # curl -sL https://github.com/wunderio/silta-cli/releases/download/0.1.0/silta-0.1.0-linux-amd64.tar.gz | tar xz -C ~/.local/bin
+
+          # Latest build from master branch
+          # curl -sL https://github.com/wunderio/silta-cli/releases/download/master/silta-master-linux-amd64.tar.gz | tar xz -C ~/.local/bin
+
+          # Latest build from test release
+          # curl -sL https://github.com/wunderio/silta-cli/releases/download/test/silta-test-linux-amd64.tar.gz | tar xz -C ~/.local/bin
+
+          silta version
 
 docker-login:
   description: "Login to the docker registry."
@@ -98,27 +93,7 @@ docker-login:
     - run:
         name: Login to the docker registry
         command: |
-          if [ -z "$GCLOUD_KEY_JSON$AWS_SECRET_ACCESS_KEY$AKS_SP_PASSWORD" ]
-          then
-            echo "Docker registry credentials are empty, have you set a context for this CircleCI job correctly?"
-            exit 1
-          else
-            # GCR login
-            if [ ! -z "$GCLOUD_KEY_JSON" ]
-            then
-              printenv GCLOUD_KEY_JSON | docker login -u _json_key --password-stdin "https://$DOCKER_REPO_HOST"
-            fi
-            # ECR Login 
-            if [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
-            then
-              aws ecr get-login --no-include-email | bash
-            fi
-            # AKS Login
-            if [ ! -z "$AKS_SP_PASSWORD" ]
-            then
-              az acr login --name "$DOCKER_REPO_HOST" --only-show-errors
-            fi
-          fi
+          silta ci image login
 
 silta-setup:
   description: "Set up silta cluster connection and set release name."
@@ -150,71 +125,18 @@ set-release-name:
     - run:
         name: Set release name
         command: |
-          # Make sure namespace is lowercase.
-          namespace="${CIRCLE_PROJECT_REPONAME,,}"
+          
+          NAMESPACE="${CIRCLE_PROJECT_REPONAME,,}"
+          BRANCHNAME="${CIRCLE_BRANCH,,}"
+          
+          RELEASE_NAME=$(silta ci release name --branchname "${BRANCHNAME}" --release-suffix "<<parameters.release-suffix>>")
+          SILTA_ENVIRONMENT_NAME=$(silta ci release environmentname --branchname "${BRANCHNAME}" --release-suffix "<<parameters.release-suffix>>")
 
-          # Create the namespace if it doesn't exist.
-          if ! kubectl get namespace "$namespace" &>/dev/null ; then
-            kubectl create namespace "$namespace"
-          fi
+          echo "export RELEASE_NAME='$RELEASE_NAME'" >> "$BASH_ENV"
+          echo "export NAMESPACE='$NAMESPACE'" >> "$BASH_ENV"
+          echo "export SILTA_ENVIRONMENT_NAME='$SILTA_ENVIRONMENT_NAME'" >> "$BASH_ENV"
 
-          # Tag the namespace if it isn't already tagged.
-          if ! kubectl get namespace -l name=$namespace --no-headers | grep $namespace &>/dev/null ; then
-            kubectl label namespace "$namespace" "name=$namespace" --overwrite
-          fi
-
-          # Make sure release name is lowercase without special characters.
-          branchname_lower="${CIRCLE_BRANCH,,}"
-          release_name="${branchname_lower//[^[:alnum:]]/-}"
-
-          suffix_test='<<parameters.release-suffix>>'
-          declare -i total_length=${#suffix_test}+${#release_name}
-          suffix=''
-          if [[ -n '<<parameters.release-suffix>>' && $total_length -gt 39 ]]; then
-            suffix='<<parameters.release-suffix>>'
-            if [ ${#suffix} -gt 12 ]; then
-              suffix="$(printf "$suffix" | cut -c 1-7)-$(printf "$suffix" | shasum -a 256 | cut -c 1-4 )"
-            fi
-            #Maximum length of a release name + release suffix. -1 is for separating '-' char before suffix
-            declare -i rn_max_length=40-${#suffix}-1
-
-            # Length of a shortened rn_max_length to allow for an appended hash
-            declare -i rn_cut_length=rn_max_length-5
-
-            # If name is too long, truncate it and append a hash
-            if [ ${#release_name} -ge $rn_max_length ]; then
-              release_name="$(printf "$release_name" | cut -c 1-${rn_cut_length})-$(printf "$branchname_lower" | shasum -a 256 | cut -c 1-4 )"
-            fi
-          fi
-
-          silta_environment_name="${CIRCLE_BRANCH,,}"
-
-          if [[ -n '<<parameters.release-suffix>>' ]]; then
-            if [[ -n "$suffix" ]]; then
-              echo "Using suffix variable for release name"
-              release_name="${release_name}-${suffix}"
-              silta_environment_name="${CIRCLE_BRANCH,,}-${suffix}"
-            else
-              echo "Using parameter for release name"
-              release_name="${release_name}-<<parameters.release-suffix>>"
-              silta_environment_name="${CIRCLE_BRANCH,,}-<<parameters.release-suffix>>"
-            fi
-          fi
-
-
-          echo "export RELEASE_NAME='$release_name'" >> "$BASH_ENV"
-          echo "export NAMESPACE='$namespace'" >> "$BASH_ENV"
-          echo "export SILTA_ENVIRONMENT_NAME='$silta_environment_name'" >> "$BASH_ENV"
-
-          echo "The release name for this branch is \"$release_name\" in the \"$namespace\" namespace"
-
-          if helm status -n "$namespace" "$release_name" > /dev/null  2>&1
-          then
-            current_chart_version=$(helm history -n "$namespace" "$release_name" --max 1 --output json | jq -r '.[].chart')
-            echo "export CURRENT_CHART_VERSION='$current_chart_version'" >> "$BASH_ENV"
-
-            echo "There is an existing chart with version $current_chart_version"
-          fi
+          echo "The release name for this branch is \"$RELEASE_NAME\" in the \"$NAMESPACE\" namespace"
 
 # This will be deprecated in favor of cloud-login job
 gcloud-login:
@@ -228,40 +150,7 @@ cloud-login:
     - run:
         name: Cloud login
         command: |
-          if [ ! -z "$KUBECTL_CONFIG" ]
-          then
-            if [ ! -d "~/.kube" ]
-            then
-              mkdir ~/.kube
-            fi
-            # Updates a kubeconfig file with appropriate credentials and endpoint information.
-            echo $KUBECTL_CONFIG | base64 -d - > ~/.kube/config
-
-          elif [ ! -z "$GCLOUD_KEY_JSON" ]
-          then
-            # Save key, authenticate and set compute zone.
-            printenv GCLOUD_KEY_JSON > "$HOME/gcloud-service-key.json"
-            gcloud auth activate-service-account --key-file="$HOME/gcloud-service-key.json" --project "$GCLOUD_PROJECT_NAME"
-
-            if [[ -n "$GCLOUD_COMPUTE_REGION" ]]; then
-              location="--region $GCLOUD_COMPUTE_REGION"
-            else
-              location="--zone $GCLOUD_COMPUTE_ZONE"
-            fi
-
-            # Updates a kubeconfig file with appropriate credentials and endpoint information.
-            gcloud container clusters get-credentials "$GCLOUD_CLUSTER_NAME" $location --project "$GCLOUD_PROJECT_NAME"
-
-          elif [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
-          then
-            aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_REGION
-
-          elif [ ! -z "$AKS_TENANT_ID" ]
-          then
-            az login --service-principal --username $AKS_SP_APP_ID --tenant $AKS_TENANT_ID  --password $AKS_SP_PASSWORD
-            az aks get-credentials --resource-group $AKS_RESOURCE_GROUP --name $CLUSTER_NAME --admin
-          
-          fi
+          silta cloud login --cluster-name "${CLUSTER_NAME}"
 
 helm-cleanup:
   description: "Clean up failed Helm releases."
@@ -269,57 +158,24 @@ helm-cleanup:
     - run:
         name: Clean up failed Helm releases
         command: |
-          failed_revision=$(helm list -n "$NAMESPACE" --failed --pending --filter="(\s|^)($RELEASE_NAME)(\s|$)" | tail -1 | cut -f3)
-
-          if [[ "$failed_revision" -eq 1 ]]; then
-            # Remove any existing post-release hook, since it's technically not part of the release.
-            kubectl delete job -n "$NAMESPACE" "$RELEASE_NAME-post-release" 2> /dev/null || true
-
-            echo "Removing failed first release."
-            helm delete -n "$NAMESPACE" "$RELEASE_NAME"
-
-            echo "Delete persistent volume claims left over from statefulsets."
-            kubectl delete pvc -n "$NAMESPACE" -l release="$RELEASE_NAME"
-            kubectl delete pvc -n "$NAMESPACE" -l app="$RELEASE_NAME-es"
-
-            echo -n "Waiting for volumes to be deleted."
-            until [[ -z `kubectl get pv | grep "$NAMESPACE/$RELEASE_NAME-"` ]]
-            do
-              echo -n "."
-              sleep 5
-            done
-          fi
-
-          # Workaround for previous Helm release stuck in pending state
-          pending_release=$(helm list -n "$NAMESPACE" --pending --filter="(\s|^)($RELEASE_NAME)(\s|$)"| tail -1 | cut -f1)
-
-          if [[ "$pending_release" == "$RELEASE_NAME" ]]; then
-            secret_to_delete=$(kubectl get secret -l owner=helm,status=pending-upgrade,name="$RELEASE_NAME" -n "$NAMESPACE" | awk '{print $1}' | grep -v NAME)
-            kubectl delete secret -n "$NAMESPACE" "$secret_to_delete"
-          fi
+          silta ci release clean-failed \
+            --release-name ${RELEASE_NAME} \
+            --namespace "${NAMESPACE}"
 
 helm-release-information:
-  description: "Post release info to Github."
+  description: "Helm release information"
   steps:
-    - run:
-        name: Post release info to Github
-        command: |
-          if [ -n "$GITHUB_TOKEN" ]
-          then
-            RELEASE_NOTES=`helm -n "$NAMESPACE" get notes "$RELEASE_NAME"`
-            if [ -z "$CIRCLE_PR_NUMBER" ]
-            then
-              CIRCLE_PR_NUMBER="${CIRCLE_PULL_REQUEST//[^0-9]/}"
-            fi
-            GITHUB_API_URL="https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/issues/$CIRCLE_PR_NUMBER/comments"
-            FORMATTED_NOTES=$(echo "$RELEASE_NOTES" | sed 's/\\/\\\\/g' | sed 's/"/\\\"/g' | sed 's/\$/\\n/g' | sed 's/\//\\\//g')
-            curl -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: application/json" -X POST -d '{"body": "<details><summary>Release notes for '$RELEASE_NAME'</summary>'"${FORMATTED_NOTES//$'\n'/'\n'}"'</details>"}' $GITHUB_API_URL
-          fi
     - run:
         name: Release information
         command: |
-          # Display only the part following NOTES from the helm status.
-          helm -n "$NAMESPACE" get notes "$RELEASE_NAME"
+          silta ci release info \
+            --release-name ${RELEASE_NAME} \
+            --namespace "${NAMESPACE}" \
+            --github-token "${GITHUB_TOKEN}" \
+            --pr-number "${CIRCLE_PR_NUMBER}" \
+            --pull-request "${CIRCLE_PULL_REQUEST}" \
+            --project-organization "${CIRCLE_PROJECT_USERNAME}" \
+            --project-reponame "${CIRCLE_PROJECT_REPONAME}"
 
 decrypt-files:
   description: "Decrypt encrypted files."
@@ -335,19 +191,7 @@ decrypt-files:
     - run:
         name: Decrypt secret files
         command: |
-          # Secret management
-          secrets='<<parameters.files>>'
-          if [[ ! -z "$secrets" ]]; then
-            echo "Decrypting secrets"
-            for file in ${secrets//,/}
-            do
-              echo "$file"
-              tmp=$(mktemp)
-              openssl enc -d -aes-256-cbc -pbkdf2 -in "$file" -out "$tmp" -pass env:<<parameters.secret_key_env>>
-              mv -v "$tmp" "$file"
-              chmod a+r "$file"
-            done
-          fi
+          silta secrets decrypt --file '<<parameters.files>>' --secret-key-env '<<parameters.secret_key_env>>'
 
 set-up-socks-proxy:
   description: "Set up socks proxy for outgoing connections."

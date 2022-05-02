@@ -18,6 +18,10 @@ frontend-build-deploy:
       description: "Helm chart repository."
       type: string
       default: https://storage.googleapis.com/charts.wdr.io
+    chart_version:
+      description: "Deploy specific simple helm chart version."
+      type: string
+      default: ""
     silta_config:
       description: "Chart values override file. Can have multiple, comma separated values."
       type: string
@@ -45,6 +49,7 @@ frontend-build-deploy:
       default: ''
   steps:
     - checkout
+    - silta-cli-setup
 
     - steps: <<parameters.codebase-build>>
 
@@ -62,62 +67,35 @@ frontend-build-deploy:
           - run:
               name: Deploy helm release
               command: |
+                NAMESPACE="${CIRCLE_PROJECT_REPONAME,,}"
+                BRANCHNAME="${CIRCLE_BRANCH,,}"
+                REPOSITORY_URL="${CIRCLE_REPOSITORY_URL}"
+                
                 image_overrides=""
                 for var in `env | grep _IMAGE_IDENTIFIER`; do
                   identifier=`echo $var | cut -f 2 -d "="`
-                  image_url="$DOCKER_REPO_HOST/$DOCKER_REPO_PROJ/$NAMESPACE-$identifier"
-                  image_tag="${identifier}_HASH"
-                  image_overrides="$image_overrides --set services.${identifier}.image=${image_url}:${!image_tag}"
+                  image_url="${identifier}_IMAGE_URL"
+                  image_overrides="$image_overrides --set services.${identifier}.image=${!image_url}"
                 done
-
-                # Override Database credentials if specified
-                if [[ ! -z "$DB_ROOT_PASS" ]] ; then
-                  db_root_pass_override="--set mariadb.rootUser.password=$DB_ROOT_PASS"
-                fi
-                if [[ ! -z "$DB_USER_PASS" ]] ; then
-                  db_user_pass_override="--set mariadb.db.password=$DB_USER_PASS"
-                fi
                 
-                # Add internal VPN if defined in environment
-                extra_noauthips=""
-                if [[ ! -z "$VPN_IP" ]] ; then
-                  extra_noauthips="--set nginx.noauthips.vpn=${VPN_IP}/32"
-                fi
-
-                # Pass VPC native setting if defined in environment
-                extra_vpcnative=""
-                if [[ ! -z "$VPC_NATIVE" ]] ; then
-                  extra_vpcnative="--set cluster.vpcNative=${VPC_NATIVE}"
-                fi
-
-                # Add cluster type if defined in environment
-                extra_clustertype=""
-                if [[ ! -z "$CLUSTER_TYPE" ]] ; then
-                  extra_clustertype="--set cluster.type=${CLUSTER_TYPE}"
-                fi
-
-                helm upgrade --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
-                  --repo '<<parameters.chart_repository>>' \
-                  --cleanup-on-fail \
-                  --set environmentName="$SILTA_ENVIRONMENT_NAME" \
-                  --set silta-release.branchName="$CIRCLE_BRANCH" \
-                  $extra_noauthips \
-                  $extra_vpcnative \
-                  $extra_clustertype \
-                  $image_overrides \
-                  $db_root_pass_override \
-                  $db_user_pass_override \
-                  --set shell.gitAuth.repositoryUrl="$CIRCLE_REPOSITORY_URL" \
-                  --set shell.gitAuth.apiToken="$GITAUTH_API_TOKEN" \
-                  --set shell.gitAuth.keyserver.username="$GITAUTH_USERNAME" \
-                  --set shell.gitAuth.keyserver.password="$GITAUTH_PASSWORD" \
-                  --set clusterDomain=${<<parameters.cluster_domain>>} \
-                  --namespace="$NAMESPACE" \
-                  --values '<<parameters.silta_config>>'
-          - run:
-              name: Wait for resources to be ready
-              command: |
-                # Get all deployments in the release and check the status of each one.
-                kubectl get deployment -n "$NAMESPACE" -l "release=${RELEASE_NAME}" -o name | xargs -n 1 kubectl rollout status -n "$NAMESPACE"
+                silta ci release deploy \
+                  --release-name "${RELEASE_NAME}" \
+                  --chart-name "<<parameters.chart_name>>" \
+                  --chart-repository "<<parameters.chart_repository>>" \
+                  --chart-version "<<parameters.chart_version>>" \
+                  --silta-environment-name "${SILTA_ENVIRONMENT_NAME}" \
+                  --branchname "${BRANCHNAME}" \
+                  --repository-url "${REPOSITORY_URL}" \
+                  --gitauth-username "${GITAUTH_USERNAME}" \
+                  --gitauth-password "${GITAUTH_PASSWORD}" \
+                  --cluster-domain "${<<parameters.cluster_domain>>}" \
+                  --namespace "${NAMESPACE}" \
+                  --db-root-pass "${DB_ROOT_PASS}" \
+                  --db-user-pass "${DB_USER_PASS}" \
+                  --vpn-ip "${VPN_IP}" \
+                  --vpc-native "${VPC_NATIVE}" \
+                  --cluster-type "${CLUSTER_TYPE}" \
+                  --silta-config "<<parameters.silta_config>>" \
+                  --helm-flags "${image_overrides}"
 
           - helm-release-information

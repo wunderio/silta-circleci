@@ -6,7 +6,7 @@ orbs:
 jobs:
   validate:
     docker:
-      - image: circleci/node:lts
+      - image: cimg/node:lts
     steps:
       - test-project:
           project: drupal-project-k8s

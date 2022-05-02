@@ -24,6 +24,8 @@ npm-install-build:
 
     - run:
         name: Install frontend dependencies
+        environment:
+          npm_config_platform: linuxmusl
         command: |
           cd '<<parameters.path>>'
           <<parameters.install-command>>
