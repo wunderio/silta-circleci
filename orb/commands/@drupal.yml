@@ -204,19 +204,8 @@ drupal-values-validate:
             version="--version <<parameters.chart_version>>"
           fi
 
-          helm upgrade --dry-run --debug --install "$RELEASE_NAME" '<<parameters.chart_name>>' \
-            --repo '<<parameters.chart_repository>>' \
-            $version \
-            --set environmentName="$SILTA_ENVIRONMENT_NAME" \
-            --set silta-release.branchName="$CIRCLE_BRANCH" \
-            --set php.image="test:test" \
-            --set nginx.image="test:test" \
-            --set shell.image="test:test" \
-            --namespace="$NAMESPACE" \
-            --values '<<parameters.silta_config>>' \
-
           silta ci release validate --chart-name '<<parameters.chart_name>>' \
-          --repo '<<parameters.chart_repository>> \
+          --repo '<<parameters.chart_repository>>' \
           $version \
           --namespace "$NAMESPACE" \
           --release-name "$RELEASE_NAME" \
