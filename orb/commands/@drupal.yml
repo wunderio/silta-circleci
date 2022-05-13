@@ -214,3 +214,11 @@ drupal-values-validate:
             --set shell.image="test:test" \
             --namespace="$NAMESPACE" \
             --values '<<parameters.silta_config>>' \
+
+          silta ci release validate --chart-name '<<parameters.chart_name>>' \
+          --repo '<<parameters.chart_repository>> \
+          $version \
+          --namespace "$NAMESPACE" \
+          --release-name "$RELEASE_NAME" \
+          --silta-config '<<parameters.silta_config>>' \
+          --silta-environment-name "$SILTA_ENVIRONMENT_NAME"
