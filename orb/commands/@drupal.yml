@@ -203,9 +203,12 @@ drupal-values-validate:
           if [[ ! -z "<<parameters.chart_version>>" ]] ; then
             version="--version <<parameters.chart_version>>"
           fi
+          if [[ ! -z "<<parameters.chart_repository>>" ]] ; then
+            repo="--chart-repository <<parameters.chart_repository>>"
+          fi
 
           silta ci release validate --chart-name '<<parameters.chart_name>>' \
-          --repo '<<parameters.chart_repository>>' \
+          $repo \
           $version \
           --namespace "$NAMESPACE" \
           --release-name "$RELEASE_NAME" \
