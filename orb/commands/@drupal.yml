@@ -217,4 +217,3 @@ drupal-values-validate:
           --vpn-ip "${VPN_IP}" \
           --vpc-native "${VPC_NATIVE}" \
           --cluster-type "${CLUSTER_TYPE}"
-
