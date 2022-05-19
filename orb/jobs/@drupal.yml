@@ -155,7 +155,6 @@ drupal-build-deploy:
                     files: <<parameters.decrypt_files>>
           - silta-setup:
               release-suffix: '<<parameters.release-suffix>>'
-          - steps: <<parameters.pre-release>>
           - drupal-values-validate:
               chart_name: <<parameters.chart_name>>
               chart_version: <<parameters.chart_version>>
@@ -163,6 +162,7 @@ drupal-build-deploy:
               silta_config: <<parameters.silta_config>>
           - drupal-docker-build:
               nginx_build_context: <<parameters.nginx_build_context>>
+          - steps: <<parameters.pre-release>>
           - drupal-helm-deploy:
               chart_name: <<parameters.chart_name>>
               chart_version: <<parameters.chart_version>>
