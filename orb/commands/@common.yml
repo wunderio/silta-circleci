@@ -150,6 +150,22 @@ cloud-login:
     - run:
         name: Cloud login
         command: |
+          # Special case for dev cluster migration
+          if [ "${GCLOUD_PROJECT_NAME}" = "silta-dev" ]; then
+            if [ "${GCLOUD_CLUSTER_NAME}" = "silta" ]; then
+
+              # Query new dev cluster if the namespace data has been migrated already.
+              silta cloud login --gcp-project-name "silta-dev" --cluster-name "silta-dev"
+              MIGRATION_STATUS=$(kubectl get namespace ${NAMESPACE} -o jsonpath='{.metadata.labels.devmigration}')
+              
+              # If namespace is migrated, switch cluster name to the new cluster. 
+              if [ "${MIGRATION_STATUS}" = "done" ]; then
+                echo "Deploying to the new cluster"
+                CLUSTER_NAME=silta-dev
+              fi
+            fi
+          fi
+
           silta cloud login --cluster-name "${CLUSTER_NAME}"
 
 helm-cleanup:
