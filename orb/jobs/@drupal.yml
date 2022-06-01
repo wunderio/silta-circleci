@@ -139,6 +139,13 @@ drupal-build-deploy:
       description: "Path to be used as build context for Nginx image build."
       type: string
       default: "web"
+    source_chart:
+      description: "Chart to extend"
+      type: string
+      default: ''
+    extension_file:
+      description: "Extension config for the source chart"
+      type: string
   working_directory: ~/project/<<parameters.drupal-root>>
   steps:
     - checkout:
@@ -155,6 +162,9 @@ drupal-build-deploy:
                     files: <<parameters.decrypt_files>>
           - silta-setup:
               release-suffix: '<<parameters.release-suffix>>'
+          - drupal-helm-extend:
+              source_chart: '<<parameters.source_chart>>'
+              extension_file: '<<parameters.extension_file>>'
           - drupal-values-validate:
               chart_name: <<parameters.chart_name>>
               chart_version: <<parameters.chart_version>>
