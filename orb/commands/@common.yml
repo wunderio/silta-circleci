@@ -214,3 +214,24 @@ set-up-socks-proxy:
             echo "Proxy is ready for outgoing connections"
           fi
 
+extend-helm-chart:
+  description: "Add additional Helm charts"
+  parameters:
+    source_chart:
+      description: "Helm chart to extend."
+      type: string
+    chart_version:
+      description: "Validate specific drupal helm chart version."
+      type: string
+      default: ''
+    extension_file:
+      description: "Custom chart file"
+      type: string
+      default: ''
+  steps:
+    - run:
+        name: Extend Helm chart
+        command: |
+            if [[ ! -z "<<parameters.extension_file>>" ]] ; then
+              silta chart extend --chart-name <<parameters.source_chart>> --subchart-list-file <<parameters.extension_file>>
+            fi
