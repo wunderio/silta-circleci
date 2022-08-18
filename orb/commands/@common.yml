@@ -233,5 +233,5 @@ extend-helm-chart:
         name: Extend Helm chart
         command: |
             if [[ ! -z "<<parameters.extension_file>>" ]] ; then
-              silta chart extend --chart-name <<parameters.source_chart>> --subchart-list-file <<parameters.extension_file>>
+              silta chart extend --chart-name <<parameters.source_chart>> --chart-version "<<parameters.chart_version>>" --subchart-list-file <<parameters.extension_file>>
             fi
