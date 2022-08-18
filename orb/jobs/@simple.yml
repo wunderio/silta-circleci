@@ -56,6 +56,14 @@ simple-build-deploy:
       type: string
       # Medium is the default when not specified.
       default: medium
+    source_chart:
+      description: "Chart to extend"
+      type: string
+      default: ''
+    extension_file:
+      description: "Extension config for the source chart"
+      type: string
+      default: ''
   working_directory: ~/project/<<parameters.codebase_root>>
   steps:
     - checkout:
@@ -67,6 +75,11 @@ simple-build-deploy:
 
     - silta-setup:
         release-suffix: '<<parameters.release-suffix>>'
+
+    - extend-helm-chart:
+        source_chart: '<<parameters.source_chart>>'
+        extension_file: '<<parameters.extension_file>>'
+        chart_version: '<<parameters.chart_version>>'
 
     - build-docker-image:
         dockerfile: 'silta/nginx.Dockerfile'
