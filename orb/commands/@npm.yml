@@ -16,6 +16,10 @@ npm-install-build:
       description: "CircleCI cache key prefix."
       type: string
       default: "v1.1"
+    npm-config-platform:
+      description: "Platform flag for npm install"
+      type: string
+      default: "linuxmusl"
   steps:
     - restore_cache:
         keys:
@@ -25,7 +29,7 @@ npm-install-build:
     - run:
         name: Install frontend dependencies
         environment:
-          npm_config_platform: linuxmusl
+          npm_config_platform: <<parameters.npm-config-platform>>
         command: |
           cd '<<parameters.path>>'
           <<parameters.install-command>>
