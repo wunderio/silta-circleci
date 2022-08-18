@@ -56,6 +56,14 @@ simple-build-deploy:
       type: string
       # Medium is the default when not specified.
       default: medium
+    source_chart:
+      description: "Chart to extend"
+      type: string
+      default: ''
+    extension_file:
+      description: "Extension config for the source chart"
+      type: string
+      default: ''
   working_directory: ~/project/<<parameters.codebase_root>>
   steps:
     - checkout:

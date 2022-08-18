@@ -47,6 +47,14 @@ frontend-build-deploy:
       description: "Release name suffix."
       type: string
       default: ''
+    source_chart:
+      description: "Chart to extend"
+      type: string
+      default: ''
+    extension_file:
+      description: "Extension config for the source chart"
+      type: string
+      default: ''
   steps:
     - checkout
     - silta-cli-setup
