@@ -59,7 +59,6 @@ drupal-validate:
             silta/silta-prod.yml
             silta/nginx.Dockerfile
             silta/php.Dockerfile
-            silta/shell.Dockerfile
             .dockerignore
             <<parameters.web-root>>/.dockerignore
           )
@@ -72,6 +71,11 @@ drupal-validate:
               exit 1
             fi
           done
+
+          if [ -f "silta/shell.Dockerfile" ]; then
+            echo "❌ silta/shell.Dockerfile instructions should be added to silta/php.Dockerfile and silta/shell.Dockerfile should be removed"
+            exit 1
+          fi
 
           if grep "drush.*8" composer.json; then
             echo "❌ Silta is not compatible with drush 8."

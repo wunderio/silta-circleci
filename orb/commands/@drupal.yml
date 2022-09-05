@@ -86,12 +86,6 @@ drupal-docker-build:
         dockerfile: silta/php.Dockerfile
         path: "."
         identifier: php
-        docker-hash-prefix: v5
-
-    - build-docker-image:
-        dockerfile: silta/shell.Dockerfile
-        path: "."
-        identifier: shell
         docker-hash-prefix: v6
 
 drupal-helm-deploy:
@@ -143,7 +137,7 @@ drupal-helm-deploy:
 
           PHP_IMAGE_URL=${php_IMAGE_URL}
           NGINX_IMAGE_URL=${nginx_IMAGE_URL}
-          SHELL_IMAGE_URL=${shell_IMAGE_URL}
+          SHELL_IMAGE_URL=${php_IMAGE_URL}
 
           silta ci release deploy \
             --release-name "${RELEASE_NAME}" \
