@@ -138,7 +138,7 @@ drupal-helm-deploy:
         no_output_timeout: '<<parameters.deployment_timeout>>'
         command: |
           NAMESPACE="${CIRCLE_PROJECT_REPONAME,,}"
-          BRANCHNAME="${CIRCLE_BRANCH,,}"
+          BRANCHNAME="${CIRCLE_BRANCH}"
           REPOSITORY_URL="${CIRCLE_REPOSITORY_URL}"
 
           PHP_IMAGE_URL=${php_IMAGE_URL}

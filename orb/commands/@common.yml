@@ -33,7 +33,7 @@ build-docker-image:
         command: |
 
           NAMESPACE="${CIRCLE_PROJECT_REPONAME,,}"
-          BRANCHNAME="${CIRCLE_BRANCH,,}"
+          BRANCHNAME="${CIRCLE_BRANCH}"
 
           IMAGE_URL=$(silta ci image url \
             --image-repo-host "${DOCKER_REPO_HOST}" \
@@ -127,7 +127,7 @@ set-release-name:
         command: |
           
           NAMESPACE="${CIRCLE_PROJECT_REPONAME,,}"
-          BRANCHNAME="${CIRCLE_BRANCH,,}"
+          BRANCHNAME="${CIRCLE_BRANCH}"
           
           RELEASE_NAME=$(silta ci release name --branchname "${BRANCHNAME}" --release-suffix "<<parameters.release-suffix>>")
           SILTA_ENVIRONMENT_NAME=$(silta ci release environmentname --branchname "${BRANCHNAME}" --release-suffix "<<parameters.release-suffix>>")

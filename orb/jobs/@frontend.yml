@@ -81,7 +81,7 @@ frontend-build-deploy:
               name: Deploy helm release
               command: |
                 NAMESPACE="${CIRCLE_PROJECT_REPONAME,,}"
-                BRANCHNAME="${CIRCLE_BRANCH,,}"
+                BRANCHNAME="${CIRCLE_BRANCH}"
                 REPOSITORY_URL="${CIRCLE_REPOSITORY_URL}"
                 
                 image_overrides=""
