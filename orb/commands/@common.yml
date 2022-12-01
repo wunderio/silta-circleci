@@ -208,9 +208,11 @@ set-up-socks-proxy:
           if [[ -n "$TUNNEL_USER_HOST" ]]; then
             ssh -o StrictHostKeyChecking=accept-new -D 1337 -C -N -q -f "$TUNNEL_USER_HOST"
             echo 'export HTTPS_PROXY=socks5://localhost:1337' >> $BASH_ENV
-            gcloud config set proxy/type socks5
-            gcloud config set proxy/address 127.0.0.1
-            gcloud config set proxy/port 1337
+            if command -v gcloud &> /dev/null; then
+              gcloud config set proxy/type socks5
+              gcloud config set proxy/address 127.0.0.1
+              gcloud config set proxy/port 1337
+            fi
             echo "Proxy is ready for outgoing connections"
           fi
 
