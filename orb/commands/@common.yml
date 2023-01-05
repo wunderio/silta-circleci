@@ -213,6 +213,10 @@ set-up-socks-proxy:
               gcloud config set proxy/address 127.0.0.1
               gcloud config set proxy/port 1337
             fi
+            if command -v yarn &> /dev/null; then
+              yarn config set proxy socks5://127.0.0.1:1337
+              yarn config set https-proxy socks5://127.0.0.1:1337
+            fi
             echo "Proxy is ready for outgoing connections"
           fi
 
