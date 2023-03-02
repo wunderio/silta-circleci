@@ -154,38 +154,37 @@ cloud-login:
     - run:
         name: Cloud login
         command: |
-          # # Try to find the shared service account key first
-          # # if KUBECTL_CONFIG environment variable is set then connect
-          # # to the cluster using that kubeconfig
-          # if [ ! -z "${KUBECTL_CONFIG}" ]; then
-          #   silta cloud login --cluster-name "${CLUSTER_NAME}"
-          # fi
-
-          # # Alternatively, check if ${SILTA_CLUSTER_ID}_KUBECTL_CONFIG is set.
-          # KUBECTL_CONFIG_VAR="${SILTA_CLUSTER_ID}_KUBECTL_CONFIG"
-          # if [ ! -z "${!KUBECTL_CONFIG_VAR}" ]; then
-          #   export KUBECTL_CONFIG="${!KUBECTL_CONFIG_VAR}"
-          #   echo "export KUBECTL_CONFIG=${!KUBECTL_CONFIG_VAR}" >> $BASH_ENV
-          #   silta cloud login --cluster-name "${CLUSTER_NAME}"
-            
-          # else
-          #   echo "Cluster connection credentials (${SILTA_CLUSTER_ID}_KUBECTL_CONFIG) are not set."
-
-          #   if [ ! -z "${SILTA_DASHBOARD_URL}" ]; then
-          #     echo "Attempting to request cluster connection credentials from the Silta Dashboard API."
-          #     NAMESPACE="${CIRCLE_PROJECT_REPONAME,,}"
-          #     # Request kubeconfig injection from the Silta Dashboard API via curl request.
-          #     curl -X POST ${SILTA_DASHBOARD_URL}/api/circleci/reload-ns-rbac \
-          #       -H "Content-type: application/x-www-form-urlencoded" \
-          #       -d "rbac_reload_key=${SILTA_DASHBOARD_KEY}" \
-          #       -d "cluster=${SILTA_CLUSTER_ID}" \
-          #       -d "namespace=${NAMESPACE}" \
-          #     echo "Credentials requested, please rerun the build."
-          #   fi
-          #   exit 1
-          # fi
           
-          silta cloud login --cluster-name "${CLUSTER_NAME}"
+          KUBECTL_CONFIG_VAR="${SILTA_CLUSTER_ID}_KUBECTL_CONFIG"
+            
+          # If project kubectl is set, use it to connect to the cluster.
+          if [ ! -z "${!KUBECTL_CONFIG_VAR}" ]; then
+            export KUBECTL_CONFIG="${!KUBECTL_CONFIG_VAR}"
+            echo "export KUBECTL_CONFIG=${!KUBECTL_CONFIG_VAR}" >> $BASH_ENV
+            silta cloud login --cluster-name "${CLUSTER_NAME}"
+        
+          # Otherwise, try to use global credentials and check exit code.
+          else
+            silta cloud login --cluster-name "${CLUSTER_NAME}"
+            
+            # if exit code is not 0, request kubectl injection via silta dashboard api
+            if [ $? -ne 0 ]; then
+              echo "Cluster connection credentials are missing."
+
+              if [ ! -z "${SILTA_DASHBOARD_URL}" ]; then
+                echo "Attempting to request cluster connection credentials from the Silta Dashboard API."
+                NAMESPACE="${CIRCLE_PROJECT_REPONAME,,}"
+                # Request kubeconfig injection from the Silta Dashboard API via curl request.
+                curl -X POST ${SILTA_DASHBOARD_URL}/api/circleci/reload-ns-rbac \
+                  -H "Content-type: application/x-www-form-urlencoded" \
+                  -d "rbac_reload_key=${SILTA_DASHBOARD_KEY}" \
+                  -d "cluster=${SILTA_CLUSTER_ID}" \
+                  -d "namespace=${NAMESPACE}" \
+                echo "Credentials requested, please rerun the build."
+              fi
+              exit 1
+            fi
+          fi
 
 helm-cleanup:
   description: "Clean up failed Helm releases."
