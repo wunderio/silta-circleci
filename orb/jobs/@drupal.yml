@@ -82,7 +82,7 @@ drupal-validate:
 drupal-build-deploy: &drupal-build-deploy
   description: "Build and deploy drupal chart release."
   executor: <<parameters.executor>>
-  parameters:
+  parameters: &drupal-build-deploy-params
     executor:
       description: "The name of custom executor to use."
       type: executor
@@ -187,14 +187,7 @@ drupal-build-deploy-dev-charts:
   <<: *drupal-build-deploy
   description: "Build and deploy using development charts."
   parameters:
-    executor:
-      description: "The name of custom executor to use."
-      type: executor
-      default: silta
-    drupal-root:
-      description: "Relative path to drupal root"
-      type: string
-      default: "."
+    <<: *drupal-build-deploy-params
     codebase-build:
       description: "Preparational build steps run after code checkout."
       type: steps
@@ -211,55 +204,11 @@ drupal-build-deploy-dev-charts:
               helm repo add codecentric https://codecentric.github.io/helm-charts
               helm repo add percona https://percona.github.io/percona-helm-charts/
               helm dependency build ./charts/drupal
-    pre-release:
-      description: "Steps to be executed before the Helm release is created."
-      type: steps
-      default: [ ]
     chart_name:
       description: "Helm chart name."
       type: string
       default: "./charts/drupal"
-    chart_version:
-      description: "Deploy specific drupal helm chart version."
-      type: string
-      default: ""
     chart_repository:
       description: "Helm chart repository."
       type: string
       default: ""
-    decrypt_files:
-      description: "Encrypted value files. Can have multiple, comma separated values."
-      type: string
-      default: ""
-    silta_config:
-      description: "Chart values override file. Can have multiple, comma separated values."
-      type: string
-      default: "silta/silta.yml"
-    skip-deployment:
-      description: "Skip release deployment."
-      type: boolean
-      default: false
-    cluster_domain:
-      description: "Cluster domain value for helm chart. Will be used for default ingress hostnames."
-      type: env_var_name
-      default: CLUSTER_DOMAIN
-    release-suffix:
-      description: "Release name suffix."
-      type: string
-      default: ''
-    deployment_timeout:
-      description: "Helm release deployment timeout."
-      type: string
-      default: "15m"
-    nginx_build_context:
-      description: "Path to be used as build context for Nginx image build."
-      type: string
-      default: "web"
-    source_chart:
-      description: "Chart to extend"
-      type: string
-      default: ''
-    extension_file:
-      description: "Extension config for the source chart"
-      type: string
-      default: ''
