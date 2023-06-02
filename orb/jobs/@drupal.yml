@@ -185,3 +185,4 @@ drupal-build-deploy: &drupal-build-deploy
 
 drupal-build-deploy-dev-charts:
   <<: *drupal-build-deploy
+  description: "Build and deploy using development charts."
