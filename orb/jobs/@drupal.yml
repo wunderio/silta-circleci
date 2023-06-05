@@ -112,7 +112,7 @@ drupal-build-deploy: &drupal-build-deploy
       type: string
       default: https://storage.googleapis.com/charts.wdr.io
     use_dev_chart:
-      descripition: "Use development version of the Drupal chart."
+      description: "Use development version of the Drupal chart."
       type: boolean
       default: false
     decrypt_files:
@@ -199,6 +199,7 @@ drupal-build-deploy-dev-charts:
   description: "Build and deploy using development charts."
   parameters:
     <<: *drupal-build-deploy-params
+    # TODO: What if project job already overrides codebase-build step? Maybe create a completely new step instead, or a boolean value for "use dev charts".
     codebase-build:
       description: "Preparational build steps run after code checkout."
       type: steps
