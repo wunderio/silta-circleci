@@ -111,6 +111,10 @@ drupal-build-deploy: &drupal-build-deploy
       description: "Helm chart repository."
       type: string
       default: https://storage.googleapis.com/charts.wdr.io
+    use_dev_chart:
+      descripition: "Use development version of the Drupal chart."
+      type: boolean
+      default: false
     decrypt_files:
       description: "Encrypted value files. Can have multiple, comma separated values."
       type: string
@@ -156,6 +160,13 @@ drupal-build-deploy: &drupal-build-deploy
     - unless:
         condition: <<parameters.skip-deployment>>
         steps:
+          - when:
+                condition: <<parameters.use_dev_chart>>
+                steps:
+                  - drupal-download-dev-chart
+                parameters:
+                  chart_name: "./charts/drupal"
+                  chart_repository: ""
           - when:
               condition: <<parameters.decrypt_files>>
               steps:
