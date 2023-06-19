@@ -112,7 +112,7 @@ drupal-build-deploy: &drupal-build-deploy
       type: string
       default: https://storage.googleapis.com/charts.wdr.io
     use_dev_chart:
-      description: "Use development version of the Drupal chart."
+      description: "Internal use only. Used by drupal-build-deploy-dev-charts."
       type: boolean
       default: false
     decrypt_files:
@@ -164,8 +164,6 @@ drupal-build-deploy: &drupal-build-deploy
                 condition: <<parameters.use_dev_chart>>
                 steps:
                   - drupal-download-dev-chart
-                  - chart_name: "./charts/drupal"
-                  - chart_repository: ""
           - when:
               condition: <<parameters.decrypt_files>>
               steps:
@@ -193,6 +191,8 @@ drupal-build-deploy: &drupal-build-deploy
               cluster_domain: <<parameters.cluster_domain>>
               deployment_timeout: <<parameters.deployment_timeout>>
 
+# Job to build and deploy using development charts. This extends the
+# drupal-build-deploy job and overrides some of the parameters.
 drupal-build-deploy-dev-charts:
   <<: *drupal-build-deploy
   description: "Build and deploy using development charts."
