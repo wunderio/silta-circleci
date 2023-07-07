@@ -79,3 +79,32 @@ workflows:
           filters:
             branches:
               only: master
+
+  weekly-dev-publish:
+    triggers:
+      - schedule:
+          cron: "0 8 * * 1"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - orb-tools/publish:  &publish
+          pre-steps:
+            - checkout
+            - run:
+                name: Pack the orb
+                command: circleci config pack orb/ > orb.yml
+
+          name: "Publish development orb"
+          orb-path: orb.yml
+          orb-ref: silta/silta@dev:${CIRCLE_BRANCH}
+          publish-token-variable: "$CIRCLECI_DEV_API_TOKEN"
+          validate: true
+
+      - validate:
+          requires:
+            - "Publish development orb"
+          filters:
+            branches:
+              only: master
