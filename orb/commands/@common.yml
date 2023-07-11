@@ -108,6 +108,7 @@ silta-setup:
         # Using BuildKit requires version 18.09 and dockerignore per dockerfile from 19.03
         # Alpine 3.14+ builds require 20.10.0+
         version: 20.10.7
+        docker_layer_caching: true
     - set-up-socks-proxy
     - cloud-login
     - docker-login
