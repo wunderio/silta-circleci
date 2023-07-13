@@ -54,7 +54,8 @@ build-docker-image:
             --dockerfile "<<parameters.dockerfile>>" \
             --image-tag "<<parameters.tag>>" \
             --branchname "${BRANCHNAME}" \
-            --image-reuse <<parameters.reuse_image>>
+            --image-reuse <<parameters.reuse_image>> \
+            &
 
           if [ '<<parameters.expose_image>>' = 'true' ]; then
             # Persist the image identifier and tag so it is available during deployment.
