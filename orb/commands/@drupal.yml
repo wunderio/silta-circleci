@@ -94,12 +94,6 @@ drupal-docker-build:
         identifier: shell
         docker-hash-prefix: v6
 
-    - run:
-        name: Image build
-        command: |
-          echo "Waiting for docker images to be built."
-          wait < <(jobs -p)
-
 drupal-helm-deploy:
   description: "Deploy helm release."
   parameters:
