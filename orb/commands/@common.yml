@@ -29,7 +29,7 @@ build-docker-image:
       default: true
   steps:
     - run:
-        name: Build <<parameters.identifier>> docker image
+        name: Create <<parameters.identifier>> docker image url
         command: |
 
           NAMESPACE="${CIRCLE_PROJECT_REPONAME,,}"
@@ -45,6 +45,20 @@ build-docker-image:
             --image-tag "<<parameters.tag>>"
           )
 
+          if [ '<<parameters.expose_image>>' = 'true' ]; then
+            # Persist the image identifier and tag so it is available during deployment.
+            echo "export <<parameters.identifier>>_IMAGE_IDENTIFIER='<<parameters.identifier>>'" >> "$BASH_ENV"
+            echo "export <<parameters.identifier>>_IMAGE_URL='${IMAGE_URL}'" >> "$BASH_ENV"
+          fi
+
+    - run:
+        name: Build <<parameters.identifier>> docker image
+        background: true
+        command: |
+
+          NAMESPACE="${CIRCLE_PROJECT_REPONAME,,}"
+          BRANCHNAME="${CIRCLE_BRANCH}"
+
           silta ci image build \
             --image-repo-host "${DOCKER_REPO_HOST}" \
             --image-repo-project "${DOCKER_REPO_PROJ}" \
@@ -54,14 +68,7 @@ build-docker-image:
             --dockerfile "<<parameters.dockerfile>>" \
             --image-tag "<<parameters.tag>>" \
             --branchname "${BRANCHNAME}" \
-            --image-reuse <<parameters.reuse_image>> \
-            &
-
-          if [ '<<parameters.expose_image>>' = 'true' ]; then
-            # Persist the image identifier and tag so it is available during deployment.
-            echo "export <<parameters.identifier>>_IMAGE_IDENTIFIER='<<parameters.identifier>>'" >> "$BASH_ENV"
-            echo "export <<parameters.identifier>>_IMAGE_URL='${IMAGE_URL}'" >> "$BASH_ENV"
-          fi
+            --image-reuse <<parameters.reuse_image>>
 
 silta-cli-setup:
   description: "Download Silta CI tooling."
