@@ -27,6 +27,10 @@ build-docker-image:
       description: "Use existing image if identical image:tag exists in remote"
       type: boolean
       default: true
+    background: 
+      description: "Run the image build process in the background."
+      type: boolean
+      default: false
   steps:
     - run:
         name: Create <<parameters.identifier>> docker image url
@@ -53,7 +57,7 @@ build-docker-image:
 
     - run:
         name: Build <<parameters.identifier>> docker image
-        background: true
+        background: <<parameters.background>>
         command: |
 
           NAMESPACE="${CIRCLE_PROJECT_REPONAME,,}"

@@ -75,31 +75,47 @@ drupal-docker-build:
       type: string
       default: "web"
       description: "Path to be used as build context for Nginx image."
+    background:
+      type: boolean
+      default: true
+      description: "Run docker build in background."
+    wait:
+      type: boolean
+      default: true
+      description: "Wait for docker build to finish."
   steps:
     - build-docker-image:
         dockerfile: silta/nginx.Dockerfile
         path: <<parameters.nginx_build_context>>
         identifier: nginx
         docker-hash-prefix: v5
+        background: <<parameters.background>>
 
     - build-docker-image:
         dockerfile: silta/php.Dockerfile
         path: "."
         identifier: php
         docker-hash-prefix: v5
+        background: <<parameters.background>>
 
     - build-docker-image:
         dockerfile: silta/shell.Dockerfile
         path: "."
         identifier: shell
         docker-hash-prefix: v6
+        background: <<parameters.background>>
 
     - run:
-        name: Image build
+        name: Wait for docker images to be built
         command: |
-          echo "Waiting for docker images to be built."
-          ps -Alf
-          wait
+          if [ << parameters.wait >> = true ]; then
+              while true; do
+              if [ $(ps -ef | grep -v grep | grep "silta ci image build" | wc -l) -lt 1 ]; then
+                break
+              fi
+              sleep 1
+            done
+          fi
 
 drupal-helm-deploy:
   description: "Deploy helm release."
