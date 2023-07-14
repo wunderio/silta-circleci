@@ -139,6 +139,14 @@ drupal-build-deploy:
       description: "Path to be used as build context for Nginx image build."
       type: string
       default: "web"
+    image_build_background:
+      type: boolean
+      default: true
+      description: "Run docker build in background."
+    image_build_wait:
+      type: boolean
+      default: true
+      description: "Wait for docker build to finish."
     source_chart:
       description: "Chart to extend"
       type: string
@@ -174,6 +182,8 @@ drupal-build-deploy:
               silta_config: <<parameters.silta_config>>
           - drupal-docker-build:
               nginx_build_context: <<parameters.nginx_build_context>>
+              background: <<parameters.image_build_background>>
+              wait: <<parameters.image_build_wait>>
           - steps: <<parameters.pre-release>>
           - drupal-helm-deploy:
               chart_name: <<parameters.chart_name>>
