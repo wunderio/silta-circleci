@@ -109,7 +109,7 @@ drupal-docker-build:
         name: Wait for docker images to be built
         command: |
           if [ << parameters.wait >> = true ]; then
-              while true; do
+            while true; do
               if [ $(ps -ef | grep -v grep | grep "silta ci image build" | wc -l) -lt 1 ]; then
                 break
               fi
