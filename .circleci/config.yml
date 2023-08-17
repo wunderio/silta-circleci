@@ -73,9 +73,21 @@ workflows:
             branches:
               ignore: /.*/
 
-      - validate:
+      - validate: &validate
           requires:
             - "Publish development orb"
           filters:
             branches:
               only: master
+
+  weekly-dev-publish:
+    triggers:
+      - schedule:
+          cron: "0 8 * * 1"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - orb-tools/publish: *publish
+      - validate: *validate
