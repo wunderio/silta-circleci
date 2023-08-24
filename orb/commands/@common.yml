@@ -191,7 +191,7 @@ cloud-login:
                   -H "Content-type: application/x-www-form-urlencoded" \
                   -d "rbac_reload_key=${SILTA_DASHBOARD_KEY}" \
                   -d "cluster=${SILTA_CLUSTER_ID}" \
-                  -d "namespace=${NAMESPACE}" \
+                  -d "namespace=${NAMESPACE}"
                 echo "Credentials requested, please rerun the build."
               fi
               exit 1
