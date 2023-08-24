@@ -177,10 +177,12 @@ cloud-login:
         
           # Otherwise, try to use global credentials and check exit code.
           else
+            set +e
             silta cloud login --cluster-name "${CLUSTER_NAME}"
             
             # if exit code is not 0, request kubectl injection via silta dashboard api
             if [ $? -ne 0 ]; then
+              set -e
               echo "Cluster connection credentials are missing."
 
               if [ ! -z "${SILTA_DASHBOARD_URL}" ]; then
