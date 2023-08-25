@@ -79,10 +79,10 @@ drupal-validate:
 
     - steps: <<parameters.post-validation>>
 
-drupal-build-deploy:
+drupal-build-deploy: &drupal-build-deploy
   description: "Build and deploy drupal chart release."
   executor: <<parameters.executor>>
-  parameters:
+  parameters: &drupal-build-deploy-params
     executor:
       description: "The name of custom executor to use."
       type: executor
@@ -111,6 +111,10 @@ drupal-build-deploy:
       description: "Helm chart repository."
       type: string
       default: https://storage.googleapis.com/charts.wdr.io
+    use_dev_chart:
+      description: "Internal use only. Used by drupal-build-deploy-dev-charts."
+      type: boolean
+      default: false
     decrypt_files:
       description: "Encrypted value files. Can have multiple, comma separated values."
       type: string
@@ -139,6 +143,14 @@ drupal-build-deploy:
       description: "Path to be used as build context for Nginx image build."
       type: string
       default: "web"
+    image_build_background:
+      type: boolean
+      default: true
+      description: "Run docker build in background."
+    image_build_wait:
+      type: boolean
+      default: true
+      description: "Wait for docker build to finish."
     source_chart:
       description: "Chart to extend"
       type: string
@@ -157,6 +169,10 @@ drupal-build-deploy:
         condition: <<parameters.skip-deployment>>
         steps:
           - when:
+                condition: <<parameters.use_dev_chart>>
+                steps:
+                  - drupal-download-dev-chart
+          - when:
               condition: <<parameters.decrypt_files>>
               steps:
                 - decrypt-files:
@@ -174,6 +190,8 @@ drupal-build-deploy:
               silta_config: <<parameters.silta_config>>
           - drupal-docker-build:
               nginx_build_context: <<parameters.nginx_build_context>>
+              background: <<parameters.image_build_background>>
+              wait: <<parameters.image_build_wait>>
           - steps: <<parameters.pre-release>>
           - drupal-helm-deploy:
               chart_name: <<parameters.chart_name>>
@@ -182,3 +200,23 @@ drupal-build-deploy:
               silta_config: <<parameters.silta_config>>
               cluster_domain: <<parameters.cluster_domain>>
               deployment_timeout: <<parameters.deployment_timeout>>
+
+# Job to build and deploy using development charts. This extends the
+# drupal-build-deploy job and overrides some of the parameters.
+drupal-build-deploy-dev-charts:
+  <<: *drupal-build-deploy
+  description: "Build and deploy using development charts."
+  parameters:
+    <<: *drupal-build-deploy-params
+    use_dev_chart:
+      description: "Use development version of the Drupal chart."
+      type: boolean
+      default: true
+    chart_name:
+      description: "Helm chart name."
+      type: string
+      default: "./charts/drupal"
+    chart_repository:
+      description: "Helm chart repository."
+      type: string
+      default: ""

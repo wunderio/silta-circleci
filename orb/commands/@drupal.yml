@@ -75,24 +75,47 @@ drupal-docker-build:
       type: string
       default: "web"
       description: "Path to be used as build context for Nginx image."
+    background:
+      type: boolean
+      default: true
+      description: "Run docker build in background."
+    wait:
+      type: boolean
+      default: true
+      description: "Wait for docker build to finish."
   steps:
     - build-docker-image:
         dockerfile: silta/nginx.Dockerfile
         path: <<parameters.nginx_build_context>>
         identifier: nginx
         docker-hash-prefix: v5
+        background: <<parameters.background>>
 
     - build-docker-image:
         dockerfile: silta/php.Dockerfile
         path: "."
         identifier: php
         docker-hash-prefix: v5
+        background: <<parameters.background>>
 
     - build-docker-image:
         dockerfile: silta/shell.Dockerfile
         path: "."
         identifier: shell
         docker-hash-prefix: v6
+        background: <<parameters.background>>
+
+    - run:
+        name: Wait for docker images to be built
+        command: |
+          if [ << parameters.wait >> = true ]; then
+            while true; do
+              if [ $(ps -ef | grep -v grep | grep "silta ci image build" | wc -l) -lt 1 ]; then
+                break
+              fi
+              sleep 1
+            done
+          fi
 
 drupal-helm-deploy:
   description: "Deploy helm release."
@@ -217,3 +240,18 @@ drupal-values-validate:
           --vpn-ip "${VPN_IP}" \
           --vpc-native "${VPC_NATIVE}" \
           --cluster-type "${CLUSTER_TYPE}"
+
+drupal-download-dev-chart:
+  steps:
+    - run:
+        name: Download charts from github repository
+        command: |
+          rm -rf ./charts
+          git clone --branch develop git@github.com:wunderio/charts.git
+    - run:
+        name: Add helm repositories and build local chart
+        command: |
+          helm repo add elastic https://helm.elastic.co
+          helm repo add codecentric https://codecentric.github.io/helm-charts
+          helm repo add percona https://percona.github.io/percona-helm-charts/
+          helm dependency build ./charts/drupal
