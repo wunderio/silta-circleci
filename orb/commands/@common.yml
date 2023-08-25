@@ -95,6 +95,15 @@ docker-login:
         command: |
           silta ci image login
 
+docker-setup:
+  description: "Set up Docker."
+  steps:
+    - setup_remote_docker:
+        # Note: default Docker version is 17.09.
+        # Using BuildKit requires version 18.09 and dockerignore per dockerfile from 19.03
+        # Alpine 3.14+ builds require 20.10.0+
+        version: 20.10.7
+
 silta-setup:
   description: "Set up silta cluster connection and set release name."
   parameters:
@@ -103,11 +112,6 @@ silta-setup:
       type: string
       default: ''
   steps:
-    - setup_remote_docker:
-        # Note: default Docker version is 17.09.
-        # Using BuildKit requires version 18.09 and dockerignore per dockerfile from 19.03
-        # Alpine 3.14+ builds require 20.10.0+
-        version: 20.10.7
     - set-up-socks-proxy
     - cloud-login
     - docker-login
