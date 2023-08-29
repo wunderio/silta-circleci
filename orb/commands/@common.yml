@@ -12,7 +12,7 @@ build-docker-image:
       description: "Image identifier."
       type: string
     docker-hash-prefix:
-      description: "Image tag prefix. Allows overriding cached images. (DEPRECATED)"
+      description: "Image tag prefix. Allows overriding cached images."
       type: string
       default: v1
     tag:
@@ -46,7 +46,7 @@ build-docker-image:
             --image-identifier "<<parameters.identifier>>" \
             --build-path "<<parameters.path>>" \
             --dockerfile "<<parameters.dockerfile>>" \
-            --image-tag "<<parameters.tag>>"
+            --image-tag "<<parameters.docker-hash-prefix>>-<<parameters.tag>>"
           )
 
           if [ '<<parameters.expose_image>>' = 'true' ]; then
@@ -70,7 +70,7 @@ build-docker-image:
             --image-identifier "<<parameters.identifier>>" \
             --build-path "<<parameters.path>>" \
             --dockerfile "<<parameters.dockerfile>>" \
-            --image-tag "<<parameters.tag>>" \
+            --image-tag "<<parameters.docker-hash-prefix>>-<<parameters.tag>>" \
             --branchname "${BRANCHNAME}" \
             --image-reuse <<parameters.reuse_image>>
 
