@@ -46,7 +46,8 @@ build-docker-image:
             --image-identifier "<<parameters.identifier>>" \
             --build-path "<<parameters.path>>" \
             --dockerfile "<<parameters.dockerfile>>" \
-            --image-tag "<<parameters.docker-hash-prefix>>-<<parameters.tag>>"
+            --image-tag "<<parameters.tag>>" \
+            --image-tag-prefix "<<parameters.docker-hash-prefix>>" \
           )
 
           if [ '<<parameters.expose_image>>' = 'true' ]; then
@@ -70,7 +71,8 @@ build-docker-image:
             --image-identifier "<<parameters.identifier>>" \
             --build-path "<<parameters.path>>" \
             --dockerfile "<<parameters.dockerfile>>" \
-            --image-tag "<<parameters.docker-hash-prefix>>-<<parameters.tag>>" \
+            --image-tag-prefix "<<parameters.docker-hash-prefix>>" \
+            --image-tag "<<parameters.tag>>" \
             --branchname "${BRANCHNAME}" \
             --image-reuse <<parameters.reuse_image>>
 
