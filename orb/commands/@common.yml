@@ -191,7 +191,7 @@ cloud-login:
                 echo "Attempting to request cluster connection credentials from the Silta Dashboard API."
                 NAMESPACE="${CIRCLE_PROJECT_REPONAME,,}"
                 # Request kubeconfig injection from the Silta Dashboard API via curl request.
-                curl -X POST ${SILTA_DASHBOARD_URL}/api/circleci/reload-ns-rbac \
+                curl -X POST "${SILTA_DASHBOARD_URL}/api/circleci/reload-ns-rbac" \
                   -H "Content-type: application/x-www-form-urlencoded" \
                   -d "rbac_reload_key=${SILTA_DASHBOARD_KEY}" \
                   -d "cluster=${SILTA_CLUSTER_ID}" \
