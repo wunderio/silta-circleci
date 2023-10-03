@@ -224,7 +224,7 @@ drupal-values-validate:
         name: Validate values file
         command: |
           if [[ ! -z "<<parameters.chart_version>>" ]] ; then
-            version="--version <<parameters.chart_version>>"
+            version="--chart-version <<parameters.chart_version>>"
           fi
           if [[ ! -z "<<parameters.chart_repository>>" ]] ; then
             repo="--chart-repository <<parameters.chart_repository>>"
