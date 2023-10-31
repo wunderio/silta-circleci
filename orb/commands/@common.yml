@@ -64,6 +64,14 @@ build-docker-image:
           NAMESPACE="${CIRCLE_PROJECT_REPONAME,,}"
           BRANCHNAME="${CIRCLE_BRANCH}"
 
+          # Create temporary file for storing build process exit code with "build_process" prefix.
+          exit_code_file=$(mktemp /tmp/build-docker-image.XXXXXX)          
+          touch $exit_code_file
+
+          # Trap and store exit code of the build process.
+          trap 'echo $? > $exit_code_file' EXIT
+
+          # Build the docker image.
           silta ci image build \
             --image-repo-host "${DOCKER_REPO_HOST}" \
             --image-repo-project "${DOCKER_REPO_PROJ}" \
