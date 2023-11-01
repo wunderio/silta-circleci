@@ -255,3 +255,228 @@ drupal-download-dev-chart:
           helm repo add codecentric https://codecentric.github.io/helm-charts
           helm repo add percona https://percona.github.io/percona-helm-charts/
           helm dependency build ./charts/drupal
+
+drupal-build: &drupal-build
+  description: "Build drupal site and container images for deployment."
+  parameters: &drupal-build-params
+    drupal-root:
+      description: "Relative path to drupal root"
+      type: string
+      default: "."
+    codebase-build:
+      description: "Preparational build steps run after code checkout."
+      type: steps
+      default: []
+    # pre-release:
+    #   description: "Steps to be executed before the Helm release is created."
+    #   type: steps
+    #   default: []
+    # chart_name:
+    #   description: "Helm chart name."
+    #   type: string
+    #   default: drupal
+    # chart_version:
+    #   description: "Deploy specific drupal helm chart version."
+    #   type: string
+    #   default: "^1.x"
+    # chart_repository:
+    #   description: "Helm chart repository."
+    #   type: string
+    #   default: https://storage.googleapis.com/charts.wdr.io
+    # use_dev_chart:
+    #   description: "Internal use only. Used by drupal-build-deploy-dev-charts."
+    #   type: boolean
+    #   default: false
+    decrypt_files:
+      description: "Encrypted value files. Can have multiple, comma separated values."
+      type: string
+      default: ""
+    # silta_config:
+    #   description: "Chart values override file. Can have multiple, comma separated values."
+    #   type: string
+    #   default: "silta/silta.yml"
+    # skip-deployment:
+    #   description: "Skip release deployment."
+    #   type: boolean
+    #   default: false
+    # cluster_domain:
+    #   description: "Cluster domain value for helm chart. Will be used for default ingress hostnames."
+    #   type: env_var_name
+    #   default: CLUSTER_DOMAIN
+    # release-suffix:
+    #   description: "Release name suffix."
+    #   type: string
+    #   default: ''
+    # deployment_timeout:
+    #   description: "Helm release deployment timeout."
+    #   type: string
+    #   default: "15m"
+    nginx_build_context:
+      description: "Path to be used as build context for Nginx image build."
+      type: string
+      default: "web"
+    image_build_background:
+      type: boolean
+      default: true
+      description: "Run docker build in background."
+    image_build_wait:
+      type: boolean
+      default: true
+      description: "Wait for docker build to finish."
+    # source_chart:
+    #   description: "Chart to extend"
+    #   type: string
+    #   default: ''
+    # extension_file:
+    #   description: "Extension config for the source chart"
+    #   type: string
+    #   default: ''
+  steps:
+    - steps: <<parameters.codebase-build>>
+    # - unless:
+    #     condition: <<parameters.skip-deployment>>
+    #     steps:
+    # - when:
+    #       condition: <<parameters.use_dev_chart>>
+    #       steps:
+    #         - drupal-download-dev-chart
+    - when:
+        condition: <<parameters.decrypt_files>>
+        steps:
+          - decrypt-files:
+              files: <<parameters.decrypt_files>>
+    # - silta-setup:
+    #     release-suffix: '<<parameters.release-suffix>>'
+    # - extend-helm-chart:
+    #     source_chart: '<<parameters.source_chart>>'
+    #     extension_file: '<<parameters.extension_file>>'
+    #     chart_version: '<<parameters.chart_version>>'
+    # - drupal-values-validate:
+    #     chart_name: <<parameters.chart_name>>
+    #     chart_version: <<parameters.chart_version>>
+    #     chart_repository: <<parameters.chart_repository>>
+    #     silta_config: <<parameters.silta_config>>
+    - drupal-docker-build:
+        nginx_build_context: <<parameters.nginx_build_context>>
+        background: <<parameters.image_build_background>>
+        wait: <<parameters.image_build_wait>>
+    # - steps: <<parameters.pre-release>>
+    # - drupal-helm-deploy:
+    #     chart_name: <<parameters.chart_name>>
+    #     chart_version: <<parameters.chart_version>>
+    #     chart_repository: <<parameters.chart_repository>>
+    #     silta_config: <<parameters.silta_config>>
+    #     cluster_domain: <<parameters.cluster_domain>>
+    #     deployment_timeout: <<parameters.deployment_timeout>>
+
+drupal-deploy: &drupal-deploy
+  description: "Deploy drupal site to kubernetes cluster."
+  parameters: &drupal-deploy-params
+    # drupal-root:
+    #   description: "Relative path to drupal root"
+    #   type: string
+    #   default: "."
+    # codebase-build:
+    #   description: "Preparational build steps run after code checkout."
+    #   type: steps
+    #   default: []
+    pre-release:
+      description: "Steps to be executed before the Helm release is created."
+      type: steps
+      default: []
+    chart_name:
+      description: "Helm chart name."
+      type: string
+      default: drupal
+    chart_version:
+      description: "Deploy specific drupal helm chart version."
+      type: string
+      default: "^1.x"
+    chart_repository:
+      description: "Helm chart repository."
+      type: string
+      default: https://storage.googleapis.com/charts.wdr.io
+    use_dev_chart:
+      description: "Internal use only. Used by drupal-build-deploy-dev-charts."
+      type: boolean
+      default: false
+    # decrypt_files:
+    #   description: "Encrypted value files. Can have multiple, comma separated values."
+    #   type: string
+    #   default: ""
+    silta_config:
+      description: "Chart values override file. Can have multiple, comma separated values."
+      type: string
+      default: "silta/silta.yml"
+    # skip-deployment:
+    #   description: "Skip release deployment."
+    #   type: boolean
+    #   default: false
+    cluster_domain:
+      description: "Cluster domain value for helm chart. Will be used for default ingress hostnames."
+      type: env_var_name
+      default: CLUSTER_DOMAIN
+    # release-suffix:
+    #   description: "Release name suffix."
+    #   type: string
+    #   default: ''
+    deployment_timeout:
+      description: "Helm release deployment timeout."
+      type: string
+      default: "15m"
+    # nginx_build_context:
+    #   description: "Path to be used as build context for Nginx image build."
+    #   type: string
+    #   default: "web"
+    # image_build_background:
+    #   type: boolean
+    #   default: true
+    #   description: "Run docker build in background."
+    # image_build_wait:
+    #   type: boolean
+    #   default: true
+    #   description: "Wait for docker build to finish."
+    source_chart:
+      description: "Chart to extend"
+      type: string
+      default: ''
+    extension_file:
+      description: "Extension config for the source chart"
+      type: string
+      default: ''
+  steps:
+    # - unless:
+    #     condition: <<parameters.skip-deployment>>
+    #     steps:
+    # - when:
+    #       condition: <<parameters.use_dev_chart>>
+    #       steps:
+    #         - drupal-download-dev-chart
+    # - when:
+    #     condition: <<parameters.decrypt_files>>
+    #     steps:
+    #       - decrypt-files:
+    #           files: <<parameters.decrypt_files>>
+    # - silta-setup:
+    #     release-suffix: '<<parameters.release-suffix>>'
+    - extend-helm-chart:
+        source_chart: '<<parameters.source_chart>>'
+        extension_file: '<<parameters.extension_file>>'
+        chart_version: '<<parameters.chart_version>>'
+    - drupal-values-validate:
+        chart_name: <<parameters.chart_name>>
+        chart_version: <<parameters.chart_version>>
+        chart_repository: <<parameters.chart_repository>>
+        silta_config: <<parameters.silta_config>>
+    # - drupal-docker-build:
+    #     nginx_build_context: <<parameters.nginx_build_context>>
+    #     background: <<parameters.image_build_background>>
+    #     wait: <<parameters.image_build_wait>>
+    - steps: <<parameters.pre-release>>
+    - drupal-helm-deploy:
+        chart_name: <<parameters.chart_name>>
+        chart_version: <<parameters.chart_version>>
+        chart_repository: <<parameters.chart_repository>>
+        silta_config: <<parameters.silta_config>>
+        cluster_domain: <<parameters.cluster_domain>>
+        deployment_timeout: <<parameters.deployment_timeout>>

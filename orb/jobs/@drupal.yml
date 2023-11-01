@@ -164,42 +164,32 @@ drupal-build-deploy: &drupal-build-deploy
     - checkout:
         path: ~/project
     - silta-cli-setup
-    - steps: <<parameters.codebase-build>>
+    - silta-setup:
+        release-suffix: '<<parameters.release-suffix>>'
+    - drupal-build:
+        drupal-root: <<parameters.drupal-root>>
+        codebase-build: <<parameters.codebase-build>>
+        decrypt_files: <<parameters.decrypt_files>>
+        # release-suffix: <<parameters.release-suffix>>
+        nginx_build_context: <<parameters.nginx_build_context>>
+        image_build_background: <<parameters.image_build_background>>
+        image_build_wait: <<parameters.image_build_wait>>
     - unless:
         condition: <<parameters.skip-deployment>>
         steps:
-          - when:
-                condition: <<parameters.use_dev_chart>>
-                steps:
-                  - drupal-download-dev-chart
-          - when:
-              condition: <<parameters.decrypt_files>>
-              steps:
-                - decrypt-files:
-                    files: <<parameters.decrypt_files>>
-          - silta-setup:
-              release-suffix: '<<parameters.release-suffix>>'
-          - extend-helm-chart:
-              source_chart: '<<parameters.source_chart>>'
-              extension_file: '<<parameters.extension_file>>'
-              chart_version: '<<parameters.chart_version>>'
-          - drupal-values-validate:
+          - drupal-deploy:
+              pre-release: <<parameters.pre-release>>
               chart_name: <<parameters.chart_name>>
               chart_version: <<parameters.chart_version>>
               chart_repository: <<parameters.chart_repository>>
+              use_dev_chart: <<parameters.use_dev_chart>>
               silta_config: <<parameters.silta_config>>
-          - drupal-docker-build:
-              nginx_build_context: <<parameters.nginx_build_context>>
-              background: <<parameters.image_build_background>>
-              wait: <<parameters.image_build_wait>>
-          - steps: <<parameters.pre-release>>
-          - drupal-helm-deploy:
-              chart_name: <<parameters.chart_name>>
-              chart_version: <<parameters.chart_version>>
-              chart_repository: <<parameters.chart_repository>>
-              silta_config: <<parameters.silta_config>>
+              # skip-deployment: <<parameters.skip-deployment>>
               cluster_domain: <<parameters.cluster_domain>>
+              # release-suffix: <<parameters.release-suffix>>
               deployment_timeout: <<parameters.deployment_timeout>>
+              source_chart: <<parameters.source_chart>>
+              extension_file: <<parameters.extension_file>>
 
 # Job to build and deploy using development charts. This extends the
 # drupal-build-deploy job and overrides some of the parameters.
