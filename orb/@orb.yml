@@ -9,3 +9,6 @@ executors:
   sonar:
     docker:
       - image: wunderio/circleci-sonar-scanner:latest
+  robot:
+    docker:
+      - image:  wunderio/silta-robot-framework:6-v1

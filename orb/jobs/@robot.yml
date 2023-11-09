@@ -1,0 +1,25 @@
+robot-tests:
+  description: "Run robot framework tests."
+  executor: <<parameters.executor>>
+  parameters:
+    executor:
+      description: "The name of custom executor to use."
+      type: executor
+      default: robot
+    tests_path:
+      description: "Tests path."
+      type: string
+    extra_args:
+      description: "Additional robot cli arguments."
+      type: string
+      default: ""
+    output_path:
+      description: "Output path."
+      type: string
+      default: "/tmp/robot-output"
+  steps:
+    - checkout
+    - run: >-
+        robot --outputdir <<parameters.output_path>> <<parameters.extra_args>> <<parameters.tests_path>>
+    - store_artifacts:
+        path: <<parameters.output_path>>
