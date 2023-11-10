@@ -16,28 +16,20 @@ npm-install-build:
       description: "CircleCI cache key prefix."
       type: string
       default: "v1.1"
-    save-cache-steps:
-      description: "CircleCI save cache steps"
-      type: steps
-      default:
-        - save_cache:
-            paths:
-              - <<parameters.path>>/node_modules
-            key: <<parameters.cache-version>>-npm-{{ checksum "<<parameters.path>>/package-lock.json" }}
-    restore-cache-steps:
-      description: "CircleCI restore cache steps"
-      type: steps
-      default:
-        - restore_cache:
-            keys:
-              - <<parameters.cache-version>>-npm-{{ checksum "<<parameters.path>>/package-lock.json" }}
-              - <<parameters.cache-version>>-npm-
+    additional-cache-path:
+      description: "Additional CircleCI cache path"
+      type: string
+      default: ""
     npm-config-platform:
       description: "Platform flag for npm install"
       type: string
       default: "linuxmusl"
   steps:
-    - <<parameters.restore-cache-steps>>
+    - restore_cache:
+        keys:
+          - <<parameters.cache-version>>-npm-{{ checksum "<<parameters.path>>/package-lock.json" }}
+          - <<parameters.cache-version>>-npm-
+
     - run:
         name: Install frontend dependencies
         environment:
@@ -52,7 +44,11 @@ npm-install-build:
           cd '<<parameters.path>>'
           <<parameters.build-command>>
 
-    - <<parameters.save-cache-steps>>
+    - save_cache:
+        paths:
+          - <<parameters.path>>/node_modules
+          - <<parameters.additional-cache-path>>
+        key: <<parameters.cache-version>>-npm-{{ checksum "<<parameters.path>>/package-lock.json" }}
 
 yarn-install-build:
   description: "Yarn build command."
@@ -72,6 +68,10 @@ yarn-install-build:
       description: "CircleCI cache key prefix."
       type: string
       default: "v1"
+    additional-cache-path:
+      description: "Additional CircleCI cache path"
+      type: string
+      default: ""
   steps:
     - restore_cache:
         keys:
@@ -93,6 +93,7 @@ yarn-install-build:
     - save_cache:
         paths:
           - <<parameters.path>>/node_modules
+          - <<parameters.additional-cache-path>>
         key: <<parameters.cache-version>>-yarn-{{ checksum "<<parameters.path>>/yarn.lock" }}
 
 # Deprecated in favor of the yarn-install-build command, or even better switch to npm and use npm-install-build.
@@ -103,6 +104,10 @@ yarn-install:
       description: "CircleCI cache key prefix."
       type: string
       default: "v1"
+    additional-cache-path:
+      description: "Additional CircleCI cache path"
+      type: string
+      default: ""
   steps:
     - restore_cache:
         keys:
@@ -114,4 +119,5 @@ yarn-install:
     - save_cache:
         paths:
           - node_modules
+          - <<parameters.additional-cache-path>>
         key: <<parameters.cache-version>>-yarn-{{ checksum "yarn.lock" }}
