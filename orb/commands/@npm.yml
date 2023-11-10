@@ -16,6 +16,12 @@ npm-install-build:
       description: "CircleCI cache key prefix."
       type: string
       default: "v1.1"
+    cache-paths:
+      description: "CircleCI cache paths"
+      # really, steps? there's no "list" type available?
+      type: steps
+      default:
+        - <<parameters.path>>/node_modules
     npm-config-platform:
       description: "Platform flag for npm install"
       type: string
@@ -41,8 +47,7 @@ npm-install-build:
           <<parameters.build-command>>
 
     - save_cache:
-        paths:
-          - <<parameters.path>>/node_modules
+        paths: <<parameters.cache-paths>>
         key: <<parameters.cache-version>>-npm-{{ checksum "<<parameters.path>>/package-lock.json" }}
 
 yarn-install-build:
@@ -63,6 +68,11 @@ yarn-install-build:
       description: "CircleCI cache key prefix."
       type: string
       default: "v1"
+    cache-paths:
+      description: "CircleCI cache paths"
+      type: steps
+      default:
+        - <<parameters.path>>/node_modules
   steps:
     - restore_cache:
         keys:
@@ -82,8 +92,7 @@ yarn-install-build:
           <<parameters.build-command>>
 
     - save_cache:
-        paths:
-          - <<parameters.path>>/node_modules
+        paths: <<parameters.cache-paths>>
         key: <<parameters.cache-version>>-yarn-{{ checksum "<<parameters.path>>/yarn.lock" }}
 
 # Deprecated in favor of the yarn-install-build command, or even better switch to npm and use npm-install-build.
@@ -94,6 +103,12 @@ yarn-install:
       description: "CircleCI cache key prefix."
       type: string
       default: "v1"
+    cache-paths:
+      description: "CircleCI cache paths"
+      # really, steps? there's no "list" type available?
+      type: steps
+      default:
+        - node_modules
   steps:
     - restore_cache:
         keys:
@@ -103,6 +118,5 @@ yarn-install:
     - run: yarn install
 
     - save_cache:
-        paths:
-          - node_modules
+        paths: <<parameters.cache-paths>>
         key: <<parameters.cache-version>>-yarn-{{ checksum "yarn.lock" }}
