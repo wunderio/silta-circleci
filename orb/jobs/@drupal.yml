@@ -1,6 +1,7 @@
 analyze:
   description: "Drupal code analyze job."
   executor: <<parameters.executor>>
+  resource_class: small
   parameters:
     executor:
       description: "The name of custom executor to use."
@@ -21,6 +22,7 @@ analyze:
 drupal-validate:
   description: "Drupal code validation job."
   executor: <<parameters.executor>>
+  resource_class: small
   parameters:
     executor:
       description: "The name of custom executor to use."
