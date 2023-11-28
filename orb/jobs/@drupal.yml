@@ -22,12 +22,16 @@ analyze:
 drupal-validate:
   description: "Drupal code validation job."
   executor: <<parameters.executor>>
-  resource_class: small
+  resource_class: <<parameters.resource_class>>
   parameters:
     executor:
       description: "The name of custom executor to use."
       type: executor
       default: silta
+    resource_class:
+      description: "The name of resource class to use."
+      type: resource_class
+      default: small
     drupal-root:
       description: "Relative path to drupal root"
       type: string
