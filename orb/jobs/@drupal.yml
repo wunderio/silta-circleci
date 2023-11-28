@@ -31,7 +31,7 @@ drupal-validate:
     resource_class:
       description: "The name of resource class to use."
       type: resource_class
-      default: small
+      default: string
     drupal-root:
       description: "Relative path to drupal root"
       type: string
