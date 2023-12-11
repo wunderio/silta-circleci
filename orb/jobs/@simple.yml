@@ -22,7 +22,7 @@ simple-build-deploy:
     chart_version:
       description: "Deploy specific simple helm chart version."
       type: string
-      default: ""
+      default: "^1.x"
     silta_config:
       description: "Chart values override file. Can have multiple, comma separated values."
       type: string
@@ -85,7 +85,7 @@ simple-build-deploy:
         dockerfile: 'silta/nginx.Dockerfile'
         path: <<parameters.build_folder>>
         identifier: 'nginx'
-        docker-hash-prefix: v7
+        docker-hash-prefix: v1
 
     - steps: <<parameters.pre-release>>
 

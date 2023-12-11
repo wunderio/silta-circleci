@@ -88,33 +88,40 @@ drupal-docker-build:
         dockerfile: silta/nginx.Dockerfile
         path: <<parameters.nginx_build_context>>
         identifier: nginx
-        docker-hash-prefix: v5
+        docker-hash-prefix: v1
         background: <<parameters.background>>
 
     - build-docker-image:
         dockerfile: silta/php.Dockerfile
         path: "."
         identifier: php
-        docker-hash-prefix: v5
+        docker-hash-prefix: v4
         background: <<parameters.background>>
 
     - build-docker-image:
         dockerfile: silta/shell.Dockerfile
         path: "."
         identifier: shell
-        docker-hash-prefix: v6
+        docker-hash-prefix: v4
         background: <<parameters.background>>
 
     - run:
         name: Wait for docker images to be built
         command: |
           if [ << parameters.wait >> = true ]; then
-            while true; do
-              if [ $(ps -ef | grep -v grep | grep "silta ci image build" | wc -l) -lt 1 ]; then
-                break
+
+            # List all files with /tmp/build-docker-image.XXXX prefix.
+            # Wait until files have content and then print the content (exit code).
+            # If file content is not empty, then docker build has not finished yet.
+            while read -r file; do
+              while [ ! -s "$file" ]; do
+                sleep 1
+              done
+              exit_code=$(cat "$file")
+              if [ $exit_code -ne 0 ]; then
+                exit $exit_code
               fi
-              sleep 1
-            done
+            done < <(find /tmp -maxdepth 1 -type f -name 'build-docker-image.*')
           fi
 
 drupal-helm-deploy:
@@ -224,7 +231,7 @@ drupal-values-validate:
         name: Validate values file
         command: |
           if [[ ! -z "<<parameters.chart_version>>" ]] ; then
-            version="--version <<parameters.chart_version>>"
+            version="--chart-version <<parameters.chart_version>>"
           fi
           if [[ ! -z "<<parameters.chart_repository>>" ]] ; then
             repo="--chart-repository <<parameters.chart_repository>>"
