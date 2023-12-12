@@ -329,7 +329,7 @@ drupal-deploy:
     chart_version:
       description: "Deploy specific drupal helm chart version."
       type: string
-      default: ""
+      default: "^1.x"
     chart_repository:
       description: "Helm chart repository."
       type: string
