@@ -261,6 +261,14 @@ drupal-build:
       description: "Path to be used as build context for Nginx image build."
       type: string
       default: "web"
+    image_build_background:
+      type: boolean
+      default: true
+      description: "Run docker build in background."
+    image_build_wait:
+      type: boolean
+      default: true
+      description: "Wait for docker build to finish."
   working_directory: ~/project/<<parameters.drupal-root>>
   steps:
     - checkout:
@@ -280,6 +288,8 @@ drupal-build:
               release-suffix: '<<parameters.release-suffix>>'
           - drupal-docker-build:
               nginx_build_context: <<parameters.nginx_build_context>>
+              background: <<parameters.image_build_background>>
+              wait: <<parameters.image_build_wait>>
           - run:
               name: Store container image URLs to workspace
               command: |
