@@ -226,11 +226,17 @@ drupal-build-deploy-dev-charts:
 drupal-build:
   description: "Build Drupal chart release."
   executor: <<parameters.executor>>
+  resource_class: <<parameters.resource_class>>
   parameters:
     executor:
       description: "The name of custom executor to use."
       type: executor
       default: silta
+    resource_class:
+      description: "The name of resource class to use."
+      type: string
+      # This job uses Remote Docker Executor, for which medium is the smallest available resource class.
+      default: medium
     drupal-root:
       description: "Relative path to drupal root"
       type: string
@@ -288,12 +294,16 @@ drupal-build:
 drupal-deploy:
   description: "Deploy drupal chart release."
   executor: <<parameters.executor>>
-  resource_class: small
+  resource_class: <<parameters.resource_class>>
   parameters:
     executor:
       description: "The name of custom executor to use."
       type: executor
       default: silta
+    resource_class:
+      description: "The name of resource class to use."
+      type: string
+      default: small
     drupal-root:
       description: "Relative path to drupal root"
       type: string
