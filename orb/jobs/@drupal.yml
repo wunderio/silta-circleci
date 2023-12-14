@@ -224,7 +224,7 @@ drupal-build-deploy-dev-charts:
       default: ""
 
 drupal-build:
-  description: "Build Drupal chart release."
+  description: "Build codebase and Docker images for a Drupal release."
   executor: <<parameters.executor>>
   resource_class: <<parameters.resource_class>>
   parameters:
@@ -302,7 +302,7 @@ drupal-build:
                 - tags
 
 drupal-deploy: &drupal-deploy
-  description: "Deploy drupal chart release."
+  description: "Deploy Drupal chart release."
   executor: <<parameters.executor>>
   resource_class: <<parameters.resource_class>>
   parameters: &drupal-deploy-params
