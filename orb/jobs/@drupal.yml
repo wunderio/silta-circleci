@@ -301,11 +301,11 @@ drupal-build:
               paths:
                 - tags
 
-drupal-deploy:
+drupal-deploy: &drupal-deploy
   description: "Deploy drupal chart release."
   executor: <<parameters.executor>>
   resource_class: <<parameters.resource_class>>
-  parameters:
+  parameters: &drupal-deploy-params
     executor:
       description: "The name of custom executor to use."
       type: executor
@@ -366,6 +366,10 @@ drupal-deploy:
       description: "Extension config for the source chart"
       type: string
       default: ''
+    use_dev_chart:
+      description: "Internal use only. Used by drupal-build-deploy-dev-charts."
+      type: boolean
+      default: false
   working_directory: ~/project/<<parameters.drupal-root>>
   steps:
     - checkout:
@@ -374,6 +378,10 @@ drupal-deploy:
     - unless:
         condition: <<parameters.skip-deployment>>
         steps:
+          - when:
+              condition: <<parameters.use_dev_chart>>
+              steps:
+                - drupal-download-dev-chart
           - when:
               condition: <<parameters.decrypt_files>>
               steps:
@@ -407,3 +415,23 @@ drupal-deploy:
               silta_config: <<parameters.silta_config>>
               cluster_domain: <<parameters.cluster_domain>>
               deployment_timeout: <<parameters.deployment_timeout>>
+
+# Job to deploy using development charts. This extends the
+# drupal-deploy job and overrides some of the parameters.
+drupal-deploy-dev-charts:
+  <<: *drupal-deploy
+  description: "Deploy using development charts."
+  parameters:
+    <<: *drupal-deploy-params
+    use_dev_chart:
+      description: "Use development version of the Drupal chart."
+      type: boolean
+      default: true
+    chart_name:
+      description: "Helm chart name."
+      type: string
+      default: "./charts/drupal"
+    chart_repository:
+      description: "Helm chart repository."
+      type: string
+      default: ""
