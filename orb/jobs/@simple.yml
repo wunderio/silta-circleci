@@ -7,6 +7,11 @@ simple-build-deploy:
       description: "The name of custom executor to use."
       type: executor
       default: silta
+    resource_class:
+      description: "The name of resource class to use."
+      type: string
+      # This job uses Remote Docker Executor, for which medium is the smallest available resource class.
+      default: medium
     codebase-build:
       description: "Preparational build steps run after code checkout."
       type: steps
@@ -51,11 +56,6 @@ simple-build-deploy:
       description: "Release name suffix."
       type: string
       default: ''
-    resource_class:
-      description: "Amount of CPU and RAM allocated to each CircleCI executor container in a build job. See [CircleCI reference](https://circleci.com/docs/2.0/configuration-reference/#resourceclass)."
-      type: string
-      # Medium is the default when not specified.
-      default: medium
     source_chart:
       description: "Chart to extend"
       type: string

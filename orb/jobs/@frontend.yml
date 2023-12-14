@@ -1,11 +1,17 @@
 frontend-build-deploy:
   description: "Build and deploy frontend chart release."
   executor: <<parameters.executor>>
+  resource_class: <<parameters.resource_class>>
   parameters:
     executor:
       description: "The name of custom executor to use."
       type: executor
       default: silta
+    resource_class:
+      description: "The name of resource class to use."
+      type: string
+      # This job uses Remote Docker Executor, for which medium is the smallest available resource class.
+      default: medium
     codebase-build:
       description: "Preparational build steps run after code checkout."
       type: steps
@@ -68,7 +74,7 @@ frontend-build-deploy:
         source_chart: '<<parameters.source_chart>>'
         extension_file: '<<parameters.extension_file>>'
         chart_version: '<<parameters.chart_version>>'
-        
+
     - steps: <<parameters.image_build_steps>>
 
     - unless:
