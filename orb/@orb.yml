@@ -6,7 +6,6 @@ executors:
   silta:
     docker:
       - image: wunderio/silta-cicd:circleci-php7.3-node12-composer1-v1
-    resource_class: small
   sonar:
     docker:
       - image: wunderio/circleci-sonar-scanner:latest
