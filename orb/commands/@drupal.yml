@@ -251,7 +251,7 @@ drupal-values-validate:
 drupal-download-dev-chart:
   steps:
     - run:
-        name: Download charts from github repository
+        name: Download development charts from github repository
         command: |
           rm -rf ./charts
           git clone --branch develop git@github.com:wunderio/charts.git
