@@ -220,7 +220,7 @@ drupal-build-deploy: &drupal-build-deploy
               silta_config: <<parameters.silta_config>>
               cluster_domain: <<parameters.cluster_domain>>
               deployment_timeout: <<parameters.deployment_timeout>>
-          - post-release: <<parameters.post-release>>
+          - steps: <<parameters.post-release>>
 
 # Job to build and deploy using development charts. This extends the
 # drupal-build-deploy job and overrides some of the parameters.

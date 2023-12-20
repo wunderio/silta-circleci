@@ -122,4 +122,4 @@ simple-build-deploy:
                   --silta-config "<<parameters.silta_config>>"
 
           - helm-release-information
-          - post-release: <<parameters.post-release>>
+          - steps: <<parameters.post-release>>
