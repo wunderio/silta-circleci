@@ -27,7 +27,7 @@ build-docker-image:
       description: "Use existing image if identical image:tag exists in remote"
       type: boolean
       default: true
-    background: 
+    background:
       description: "Run the image build process in the background."
       type: boolean
       default: false
@@ -120,11 +120,7 @@ docker-login:
 docker-setup:
   description: "Set up Docker."
   steps:
-    - setup_remote_docker:
-        # Note: default Docker version is 17.09.
-        # Using BuildKit requires version 18.09 and dockerignore per dockerfile from 19.03
-        # Alpine 3.14+ builds require 20.10.0+
-        version: 20.10.7
+    - setup_remote_docker
 
 silta-setup:
   description: "Set up silta cluster connection and set release name."
