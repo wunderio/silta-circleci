@@ -193,6 +193,7 @@ drupal-build-deploy: &drupal-build-deploy
               steps:
                 - decrypt-files:
                     files: <<parameters.decrypt_files>>
+          - docker-setup
           - silta-setup:
               release-suffix: '<<parameters.release-suffix>>'
           - extend-helm-chart:

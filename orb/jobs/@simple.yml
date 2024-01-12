@@ -73,6 +73,7 @@ simple-build-deploy:
 
     - steps: <<parameters.codebase-build>>
 
+    - docker-setup
     - silta-setup:
         release-suffix: '<<parameters.release-suffix>>'
 
