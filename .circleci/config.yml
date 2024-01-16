@@ -5,6 +5,7 @@ orbs:
 
 jobs:
   validate:
+    resource_class: small
     docker:
       - image: cimg/node:lts
     steps:
