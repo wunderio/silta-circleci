@@ -88,21 +88,21 @@ drupal-docker-build:
         dockerfile: silta/nginx.Dockerfile
         path: <<parameters.nginx_build_context>>
         identifier: nginx
-        docker-hash-prefix: v1
+        docker-hash-prefix: v2
         background: <<parameters.background>>
 
     - build-docker-image:
         dockerfile: silta/php.Dockerfile
         path: "."
         identifier: php
-        docker-hash-prefix: v4
+        docker-hash-prefix: v5
         background: <<parameters.background>>
 
     - build-docker-image:
         dockerfile: silta/shell.Dockerfile
         path: "."
         identifier: shell
-        docker-hash-prefix: v4
+        docker-hash-prefix: v5
         background: <<parameters.background>>
 
     - run:
