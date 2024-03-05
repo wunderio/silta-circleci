@@ -101,9 +101,9 @@ workflows:
       - validate: &validate
           requires:
             - "Publish development orb"
-          # filters:
-          #   branches:
-          #     only: master
+          filters:
+            branches:
+              only: master
 
   weekly-dev-publish:
     triggers:
