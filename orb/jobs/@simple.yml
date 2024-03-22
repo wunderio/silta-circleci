@@ -19,11 +19,11 @@ simple-build-deploy:
     chart_name:
       description: "Helm chart name."
       type: string
-      default: simple
+      default: wunderio/simple
     chart_repository:
       description: "Helm chart repository."
       type: string
-      default: https://storage.googleapis.com/charts.wdr.io
+      default: ""
     chart_version:
       description: "Deploy specific simple helm chart version."
       type: string
