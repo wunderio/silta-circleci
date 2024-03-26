@@ -98,7 +98,8 @@ frontend-build-deploy:
                   image_overrides="$image_overrides --set services.${identifier}.image=${!image_url}"
                 done
                 
-                silta ci release deploy \
+                http_proxy=$SILTA_PROXY HTTPS_PROXY=$SILTA_PROXY \
+                  silta ci release deploy \
                   --release-name "${RELEASE_NAME}" \
                   --chart-name "<<parameters.chart_name>>" \
                   --chart-repository "<<parameters.chart_repository>>" \

@@ -159,7 +159,8 @@ drupal-helm-deploy:
             if version_lt "$CURRENT_CHART_VERSION" "drupal-0.3.43"
             then
               echo "Recreating statefulset for Mariadb subchart update to 7.x."
-              kubectl delete statefulset --cascade=false "$RELEASE_NAME-mariadb" -n "$NAMESPACE"
+              http_proxy=$SILTA_PROXY HTTPS_PROXY=$SILTA_PROXY \
+                kubectl delete statefulset --cascade=false "$RELEASE_NAME-mariadb" -n "$NAMESPACE"
             fi
           fi
 
@@ -175,7 +176,8 @@ drupal-helm-deploy:
           NGINX_IMAGE_URL=${nginx_IMAGE_URL}
           SHELL_IMAGE_URL=${shell_IMAGE_URL}
 
-          silta ci release deploy \
+          http_proxy=$SILTA_PROXY HTTPS_PROXY=$SILTA_PROXY \
+            silta ci release deploy \
             --release-name "${RELEASE_NAME}" \
             --chart-name "<<parameters.chart_name>>" \
             --chart-version "<<parameters.chart_version>>" \
@@ -201,6 +203,10 @@ drupal-helm-deploy:
     - run:
         name: Wait for resources to be ready
         command: |
+          if [ -n "$SILTA_PROXY" ]; then
+              export http_proxy=$SILTA_PROXY
+              export HTTPS_PROXY=$SILTA_PROXY
+          fi
           # Get all deployments and statefulsets in the release and check the status of each one.
           statefulsets=$(kubectl get statefulset -n "$NAMESPACE" -l "release=${RELEASE_NAME}" -o name)
           if [ ! -z "$statefulsets" ]; then
@@ -237,16 +243,17 @@ drupal-values-validate:
             repo="--chart-repository <<parameters.chart_repository>>"
           fi
 
-          silta ci release validate --chart-name '<<parameters.chart_name>>' \
-          $repo \
-          $version \
-          --namespace "$NAMESPACE" \
-          --release-name "$RELEASE_NAME" \
-          --silta-config '<<parameters.silta_config>>' \
-          --silta-environment-name "$SILTA_ENVIRONMENT_NAME" \
-          --vpn-ip "${VPN_IP}" \
-          --vpc-native "${VPC_NATIVE}" \
-          --cluster-type "${CLUSTER_TYPE}"
+          http_proxy=$SILTA_PROXY HTTPS_PROXY=$SILTA_PROXY \
+            silta ci release validate --chart-name '<<parameters.chart_name>>' \
+            $repo \
+            $version \
+            --namespace "$NAMESPACE" \
+            --release-name "$RELEASE_NAME" \
+            --silta-config '<<parameters.silta_config>>' \
+            --silta-environment-name "$SILTA_ENVIRONMENT_NAME" \
+            --vpn-ip "${VPN_IP}" \
+            --vpc-native "${VPC_NATIVE}" \
+            --cluster-type "${CLUSTER_TYPE}"
 
 drupal-download-dev-chart:
   steps:
