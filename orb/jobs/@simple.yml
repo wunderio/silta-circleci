@@ -52,6 +52,10 @@ simple-build-deploy:
       description: "Steps to be executed before the Helm release is created."
       type: steps
       default: []
+    post-release:
+      description: "Steps to be executed after the Helm release is created."
+      type: steps
+      default: []
     release-suffix:
       description: "Release name suffix."
       type: string
@@ -119,3 +123,4 @@ simple-build-deploy:
                   --silta-config "<<parameters.silta_config>>"
 
           - helm-release-information
+          - steps: <<parameters.post-release>>
