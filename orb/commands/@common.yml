@@ -107,7 +107,7 @@ silta-cli-setup:
           else
             # Selected release. Currently only "test" is supported, in addition to "latest". 
             selected_release_url="https://github.com/wunderio/silta-cli/releases/download/<<parameters.version>>/silta-<<parameters.version>>-linux-amd64.tar.gz"
-            curl -sL $selected_release_url | tar xz -C ~/.local.bin
+            curl -sL $selected_release_url | tar xz -C ~/.local/bin
           fi
 
           silta version
