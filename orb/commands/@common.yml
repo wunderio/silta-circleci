@@ -87,7 +87,7 @@ build-docker-image:
 silta-cli-setup:
   description: "Download Silta CI tooling."
   parameters:
-    silta_cli_version:
+    version:
       description: "Version of silta-cli to use."
       type: enum
       enum: ["latest", "test"]
@@ -101,12 +101,12 @@ silta-cli-setup:
           mkdir -p ~/.local/bin
 
           # Latest tagged release
-          if [ '<<parameters.silta_cli_version>>' = 'latest' ]; then
+          if [ '<<parameters.version>>' = 'latest' ]; then
             latest_release_url=$(curl -s https://api.github.com/repos/wunderio/silta-cli/releases/latest | jq -r '.assets[] | .browser_download_url | select(endswith("linux-amd64.tar.gz"))')
             curl -sL $latest_release_url | tar xz -C ~/.local/bin
           else
             # Selected release. Currently only "test" is supported, in addition to "latest". 
-            selected_release_url="https://github.com/wunderio/silta-cli/releases/download/<<parameters.silta_cli_version>>/silta-<<parameters.silta_cli_version>>-linux-amd64.tar.gz"
+            selected_release_url="https://github.com/wunderio/silta-cli/releases/download/<<parameters.version>>/silta-<<parameters.version>>-linux-amd64.tar.gz"
             curl -sL $selected_release_url | tar xz -C ~/.local.bin
           fi
 
