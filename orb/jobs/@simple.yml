@@ -64,12 +64,18 @@ simple-build-deploy:
       description: "Extension config for the source chart"
       type: string
       default: ''
+    silta_cli_version:
+      description: "Version of silta-cli to use."
+      type: enum
+      enum: [ "latest", "test" ]
+      default: "latest"
   working_directory: ~/project/<<parameters.codebase_root>>
   steps:
     - checkout:
         path: ~/project
 
-    - silta-cli-setup
+    - silta-cli-setup:
+        version: <<parameters.silta_cli_version>>
 
     - steps: <<parameters.codebase-build>>
 

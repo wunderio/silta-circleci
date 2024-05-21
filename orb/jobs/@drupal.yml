@@ -284,11 +284,17 @@ drupal-build:
       type: boolean
       default: true
       description: "Wait for docker build to finish."
+    silta_cli_version:
+      description: "Version of silta-cli to use."
+      type: enum
+      enum: [ "latest", "test" ]
+      default: "latest"
   working_directory: ~/project/<<parameters.drupal-root>>
   steps:
     - checkout:
         path: ~/project
-    - silta-cli-setup
+    - silta-cli-setup:
+        version: <<parameters.silta_cli_version>>
     - steps: <<parameters.codebase-build>>
     - unless:
         condition: <<parameters.skip-deployment>>
@@ -385,11 +391,17 @@ drupal-deploy: &drupal-deploy
       description: "Internal use only. Used by drupal-build-deploy-dev-charts."
       type: boolean
       default: false
+    silta_cli_version:
+      description: "Version of silta-cli to use."
+      type: enum
+      enum: ["latest", "test"]
+      default: "latest"
   working_directory: ~/project/<<parameters.drupal-root>>
   steps:
     - checkout:
         path: ~/project
-    - silta-cli-setup
+    - silta-cli-setup:
+        version: <<parameters.silta_cli_version>>
     - unless:
         condition: <<parameters.skip-deployment>>
         steps:

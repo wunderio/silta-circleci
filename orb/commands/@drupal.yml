@@ -150,20 +150,6 @@ drupal-helm-deploy:
   steps:
     - helm-cleanup
     - run:
-        name: Special updates
-        command: |
-          function version_lt() { test "$(printf '%s\n' "$@" | sort -rV | head -n 1)" != "$1"; }
-
-          if [[ -n "$CURRENT_CHART_VERSION" ]] && [[ "$CURRENT_CHART_VERSION" = drupal-* ]]
-          then
-            if version_lt "$CURRENT_CHART_VERSION" "drupal-0.3.43"
-            then
-              echo "Recreating statefulset for Mariadb subchart update to 7.x."
-              kubectl delete statefulset --cascade=false "$RELEASE_NAME-mariadb" -n "$NAMESPACE"
-            fi
-          fi
-
-    - run:
         name: Deploy helm release
         no_output_timeout: '<<parameters.deployment_timeout>>'
         command: |
@@ -197,16 +183,6 @@ drupal-helm-deploy:
             --namespace "${NAMESPACE}" \
             --silta-config "<<parameters.silta_config>>" \
             --deployment-timeout "<<parameters.deployment_timeout>>"
-
-    - run:
-        name: Wait for resources to be ready
-        command: |
-          # Get all deployments and statefulsets in the release and check the status of each one.
-          statefulsets=$(kubectl get statefulset -n "$NAMESPACE" -l "release=${RELEASE_NAME}" -o name)
-          if [ ! -z "$statefulsets" ]; then
-            echo "$statefulsets" | xargs -n 1 kubectl rollout status -n "$NAMESPACE"
-          fi
-          kubectl get deployment -n "$NAMESPACE" -l "release=${RELEASE_NAME}" -o name | xargs -n 1 kubectl rollout status -n "$NAMESPACE"
 
     - helm-release-information
 

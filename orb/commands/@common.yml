@@ -86,6 +86,12 @@ build-docker-image:
 
 silta-cli-setup:
   description: "Download Silta CI tooling."
+  parameters:
+    version:
+      description: "Version of silta-cli to use."
+      type: enum
+      enum: ["latest", "test"]
+      default: "latest"
   steps:
     - run:
         name: "Download CI tooling"
@@ -95,17 +101,14 @@ silta-cli-setup:
           mkdir -p ~/.local/bin
 
           # Latest tagged release
-          latest_release_url=$(curl -s https://api.github.com/repos/wunderio/silta-cli/releases/latest | jq -r '.assets[] | .browser_download_url | select(endswith("linux-amd64.tar.gz"))')
-          curl -sL $latest_release_url | tar xz -C ~/.local/bin
-
-          # Selected release, i.e. 1.0.1
-          # curl -sL https://github.com/wunderio/silta-cli/releases/download/0.1.0/silta-0.1.0-linux-amd64.tar.gz | tar xz -C ~/.local/bin
-
-          # Latest build from master branch
-          # curl -sL https://github.com/wunderio/silta-cli/releases/download/master/silta-master-linux-amd64.tar.gz | tar xz -C ~/.local/bin
-
-          # Latest build from test release
-          # curl -sL https://github.com/wunderio/silta-cli/releases/download/test/silta-test-linux-amd64.tar.gz | tar xz -C ~/.local/bin
+          if [ '<<parameters.version>>' = 'latest' ]; then
+            latest_release_url=$(curl -s https://api.github.com/repos/wunderio/silta-cli/releases/latest | jq -r '.assets[] | .browser_download_url | select(endswith("linux-amd64.tar.gz"))')
+            curl -sL $latest_release_url | tar xz -C ~/.local/bin
+          else
+            # Selected release. Currently only "test" is supported, in addition to "latest". 
+            selected_release_url="https://github.com/wunderio/silta-cli/releases/download/<<parameters.version>>/silta-<<parameters.version>>-linux-amd64.tar.gz"
+            curl -sL $selected_release_url | tar xz -C ~/.local/bin
+          fi
 
           silta version
 
@@ -261,19 +264,18 @@ set-up-socks-proxy:
             echo -e "$TUNNEL_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
           fi
     - run:
-        name: Open up a tunnel
+        name: Proxy setup for cluster connections
         command: |
           if [[ -n "$TUNNEL_USER_HOST" ]]; then
             ssh -o StrictHostKeyChecking=accept-new -D 1337 -C -N -q -f "$TUNNEL_USER_HOST"
-            echo 'export HTTPS_PROXY=socks5://localhost:1337' >> $BASH_ENV
+            echo 'export SILTA_PROXY=socks5://localhost:1337' >> $BASH_ENV
             if command -v gcloud &> /dev/null; then
               gcloud config set proxy/type socks5
               gcloud config set proxy/address 127.0.0.1
               gcloud config set proxy/port 1337
             fi
-            if command -v yarn &> /dev/null; then
-              yarn config set proxy socks5://127.0.0.1:1337
-              yarn config set https-proxy socks5://127.0.0.1:1337
+            if command -v silta &> /dev/null; then
+              silta config set proxy socks5://localhost:1337
             fi
             echo "Proxy is ready for outgoing connections"
           fi
