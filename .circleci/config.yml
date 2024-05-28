@@ -15,6 +15,17 @@ jobs:
           project: frontend-project-k8s
       - test-project:
           project: simple-project-k8s
+      - run:
+          name: "Wait for all validations to finish"
+          command: |
+            while true; do
+              if [ -f /tmp/drupal-project-k8s-success ] && [ -f /tmp/frontend-project-k8s-success ] && [ -f /tmp/simple-project-k8s-success ]; then
+                echo "All validations finished successfully"
+                break
+              fi
+              echo "Waiting for validations to finish..."
+              sleep 10
+            done
 
 commands:
   test-project:
@@ -30,6 +41,7 @@ commands:
     steps:
       - run:
           name: Validate orb with <<parameters.project>>
+          background: true
           command: |
 
             REPO_NAME="<<parameters.project>>"
@@ -71,6 +83,9 @@ commands:
               echo "current status: ${PIPELINE_STATUS}"
               sleep 10
             done
+            
+            echo "Pipeline completed successfully"
+            touch /tmp/${REPO_NAME}-success
 
 workflows:
   btd:
