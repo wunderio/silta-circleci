@@ -213,7 +213,7 @@ drupal-values-validate:
           silta ci release validate --chart-name '<<parameters.chart_name>>' \
           $repo \
           $version \
-          --chart-repository '<<parameters.chart_repository>>'
+          --chart-repository '<<parameters.chart_repository>>' \
           --namespace "$NAMESPACE" \
           --release-name "$RELEASE_NAME" \
           --silta-config '<<parameters.silta_config>>' \
