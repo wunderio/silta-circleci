@@ -211,7 +211,6 @@ drupal-values-validate:
           fi
 
           silta ci release validate --chart-name '<<parameters.chart_name>>' \
-          $repo \
           $version \
           --chart-repository '<<parameters.chart_repository>>' \
           --namespace "$NAMESPACE" \
