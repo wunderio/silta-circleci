@@ -88,7 +88,7 @@ drupal-docker-build:
         dockerfile: silta/nginx.Dockerfile
         path: <<parameters.nginx_build_context>>
         identifier: nginx
-        docker-hash-prefix: v2
+        docker-hash-prefix: v3
         background: <<parameters.background>>
 
     - build-docker-image:
