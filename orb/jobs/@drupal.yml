@@ -118,7 +118,7 @@ drupal-build-deploy: &drupal-build-deploy
     chart_name:
       description: "Helm chart name."
       type: string
-      default: drupal
+      default: wunderio/drupal
     chart_version:
       description: "Deploy specific drupal helm chart version."
       type: string
@@ -126,7 +126,7 @@ drupal-build-deploy: &drupal-build-deploy
     chart_repository:
       description: "Helm chart repository."
       type: string
-      default: https://storage.googleapis.com/charts.wdr.io
+      default: ""
     use_dev_chart:
       description: "Internal use only. Used by drupal-build-deploy-dev-charts."
       type: boolean
@@ -346,7 +346,7 @@ drupal-deploy: &drupal-deploy
     chart_name:
       description: "Helm chart name."
       type: string
-      default: drupal
+      default: wunderio/drupal
     chart_version:
       description: "Deploy specific drupal helm chart version."
       type: string
@@ -354,7 +354,7 @@ drupal-deploy: &drupal-deploy
     chart_repository:
       description: "Helm chart repository."
       type: string
-      default: https://storage.googleapis.com/charts.wdr.io
+      default: ""
     decrypt_files:
       description: "Encrypted value files. Can have multiple, comma separated values."
       type: string
