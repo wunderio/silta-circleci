@@ -19,7 +19,7 @@ analyze:
     - checkout
     - run: >-
         sonar-scanner -Dsonar.host.url="${SONAR_HOST}"
-        -Dsonar.login="${SONAR_TOKEN}"
+        -Dsonar.token="${SONAR_TOKEN}"
         -Dsonar.projectKey="${CIRCLE_PROJECT_REPONAME,,}"
         -Dsonar.sources='<<parameters.sources>>'
 
