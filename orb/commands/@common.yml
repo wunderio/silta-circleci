@@ -276,6 +276,7 @@ set-up-socks-proxy:
             fi
             if command -v silta &> /dev/null; then
               if [[ "$CLUSTER_TYPE" == "aws" ]] ; then 
+                sudo apt-get update
                 sudo apt install python3-pip
                 sudo pip3 install pproxy
                 sudo pip3 install python-daemon
