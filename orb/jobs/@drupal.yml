@@ -326,6 +326,7 @@ drupal-deploy: &drupal-deploy
   description: "Deploy Drupal chart release."
   executor: <<parameters.executor>>
   resource_class: <<parameters.resource_class>>
+  circleci_ip_ranges: <<parameters.circleci_ip_ranges>>
   parameters: &drupal-deploy-params
     executor:
       description: "The name of custom executor to use."
@@ -355,6 +356,10 @@ drupal-deploy: &drupal-deploy
       description: "Helm chart repository."
       type: string
       default: ""
+    circleci_ip_ranges:
+      description: "Enable deployment from a fixed set of CircleCI IP ranges."
+      type: boolean
+      default: false
     decrypt_files:
       description: "Encrypted value files. Can have multiple, comma separated values."
       type: string
