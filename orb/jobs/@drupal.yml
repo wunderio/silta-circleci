@@ -327,7 +327,7 @@ drupal-deploy: &drupal-deploy
   executor: <<parameters.executor>>
   resource_class: <<parameters.resource_class>>
   # circleci_ip_ranges: <<parameters.circleci_ip_ranges>>
-  # type: job
+  type: job
   parameters: &drupal-deploy-params
     executor:
       description: "The name of custom executor to use."
