@@ -304,7 +304,12 @@ drupal-build:
               steps:
                 - decrypt-files:
                     files: <<parameters.decrypt_files>>
-          - docker-setup
+          - when:
+              condition:
+                not:
+                  - matches: [ pattern:"^silta/.*$", <<parameters.resource_class>> ]
+              steps:
+                - docker-setup
           - silta-setup:
               release-suffix: '<<parameters.release-suffix>>'
           - drupal-docker-build:
