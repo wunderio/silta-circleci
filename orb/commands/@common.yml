@@ -275,7 +275,7 @@ set-up-socks-proxy:
               gcloud config set proxy/port 1337
             fi
             if command -v silta &> /dev/null; then
-              if [[ "$CLUSTER_TYPE" == "aws" ]] ; then 
+              if [ "$CLUSTER_TYPE" == "aws" ] && command -v pproxy &> /dev/null; then
                 pproxy -r socks5://127.0.0.1:1337 --daemon
                 silta config set proxy http://localhost:8080
               else
