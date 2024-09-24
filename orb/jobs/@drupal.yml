@@ -306,9 +306,10 @@ drupal-build:
                     files: <<parameters.decrypt_files>>
           - when:
               condition:
-                matches:
-                  pattern: "^silta/.*$"
-                  value: <<parameters.resource_class>>
+                not:
+                  matches:
+                    pattern: "^silta/.*$"
+                    value: <<parameters.resource_class>>
               steps:
                 - docker-setup
           - silta-setup:
