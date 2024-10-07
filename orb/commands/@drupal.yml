@@ -29,6 +29,10 @@ drupal-composer-install:
       description: "CircleCI cache key prefix."
       type: string
       default: "v2"
+    web-root:
+      description: "Relative path to drupal webroot."
+      type: string
+      default: "web"
   steps:
     - when:
         # Install dev dependencies.
@@ -60,12 +64,12 @@ drupal-composer-install:
     - save_cache:
         paths:
           - ./vendor
-          - ./web/core
-          - ./web/modules/contrib
-          - ./web/themes/contrib
-          - ./web/profiles/contrib
-          - ./web/libraries
-          - ./web/_ping.php
+          - ./<<parameters.web-root>>/core
+          - ./<<parameters.web-root>>/modules/contrib
+          - ./<<parameters.web-root>>/themes/contrib
+          - ./<<parameters.web-root>>/profiles/contrib
+          - ./<<parameters.web-root>>/libraries
+          - ./<<parameters.web-root>>/_ping.php
         key: <<parameters.cache-version>>-dependencies-{{ checksum "composer.lock" }}-<<parameters.install-dev-dependencies>>
 
 drupal-docker-build:
