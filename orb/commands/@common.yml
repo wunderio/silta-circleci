@@ -138,14 +138,8 @@ environment-variable-override:
               if [ ! -z "${!var}" ] && [ "${!var}" != "${var/${SILTA_CLUSTER_ID}_/}" ]; then
                 export ${var/${SILTA_CLUSTER_ID}_/}="${!var}"
                 echo "export ${var/${SILTA_CLUSTER_ID}_/}='${!var}'" >> "$BASH_ENV"
-
-                # set IMAGE_PULL_SECRET when GCLOUD_KEY_JSON present (and base64 encode it)
-                if [ "${var/${SILTA_CLUSTER_ID}_/}" == "GCLOUD_KEY_JSON" ]; then
-                  export IMAGE_PULL_SECRET=$(echo -n "${!var}" | base64 -w 0)
-                  echo "export IMAGE_PULL_SECRET='${IMAGE_PULL_SECRET}'" >> "$BASH_ENV"
-                fi
               fi
-            done  
+            done
           fi
 
 silta-setup:
