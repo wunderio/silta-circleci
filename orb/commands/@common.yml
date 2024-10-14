@@ -225,6 +225,7 @@ cloud-login:
                   -d "rbac_reload_key=${SILTA_DASHBOARD_KEY}" \
                   -d "cluster=${SILTA_CLUSTER_ID}" \
                   -d "namespace=${NAMESPACE}"
+                echo ""
                 echo "Credentials requested, please rerun the build."
               fi
               exit 1
