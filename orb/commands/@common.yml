@@ -125,6 +125,23 @@ docker-setup:
   steps:
     - setup_remote_docker
 
+environment-variable-override:
+  description: "Override environment variables based on cluster id."
+  steps:
+    - run:
+        name: Environment variable override
+        command: |
+          if [ ! -z "${SILTA_CLUSTER_ID}" ]; then
+            # iterate variables starting with "${SILTA_CLUSTER_ID}_"
+            for  var in $(compgen -A variable | grep "^${SILTA_CLUSTER_ID}_"); do
+              # if value is not empty and target value differs from the source value, set it as environment variable
+              if [ ! -z "${!var}" ] && [ "${!var}" != "${var/${SILTA_CLUSTER_ID}_/}" ]; then
+                export ${var/${SILTA_CLUSTER_ID}_/}="${!var}"
+                echo "export ${var/${SILTA_CLUSTER_ID}_/}='${!var}'" >> "$BASH_ENV"
+              fi
+            done
+          fi
+
 silta-setup:
   description: "Set up silta cluster connection and set release name."
   parameters:
@@ -133,6 +150,7 @@ silta-setup:
       type: string
       default: ''
   steps:
+    - environment-variable-override
     - set-up-socks-proxy
     - cloud-login
     - docker-login
@@ -207,6 +225,7 @@ cloud-login:
                   -d "rbac_reload_key=${SILTA_DASHBOARD_KEY}" \
                   -d "cluster=${SILTA_CLUSTER_ID}" \
                   -d "namespace=${NAMESPACE}"
+                echo ""
                 echo "Credentials requested, please rerun the build."
               fi
               exit 1
