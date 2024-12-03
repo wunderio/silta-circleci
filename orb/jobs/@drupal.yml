@@ -70,8 +70,6 @@ drupal-validate:
             silta/nginx.Dockerfile
             silta/php.Dockerfile
             silta/shell.Dockerfile
-            .dockerignore
-            <<parameters.web-root>>/.dockerignore
           )
 
           for file in "${files[@]}"; do
