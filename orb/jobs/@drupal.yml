@@ -176,7 +176,6 @@ drupal-build-deploy: &drupal-build-deploy
     custom-command:
       description: "Custom command to execute for setting up a proxy."
       type: string
-      default: ''
   working_directory: ~/project/<<parameters.drupal-root>>
   steps:
     - checkout:
@@ -295,7 +294,6 @@ drupal-build:
     custom-command:
       description: "Custom command to execute for setting up a proxy."
       type: string
-      default: ''
   working_directory: ~/project/<<parameters.drupal-root>>
   steps:
     - checkout:
@@ -407,7 +405,6 @@ drupal-deploy: &drupal-deploy
     custom-command:
       description: "Custom command to execute for setting up a proxy."
       type: string
-      default: ''
   working_directory: ~/project/<<parameters.drupal-root>>
   steps:
     - checkout:

@@ -152,7 +152,6 @@ silta-setup:
     custom-command:
       description: "Custom command to execute for setting up a proxy."
       type: string
-      default: ''
   steps:
     - environment-variable-override
     - set-up-socks-proxy:

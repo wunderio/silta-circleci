@@ -69,7 +69,6 @@ frontend-build-deploy:
     custom-command:
       description: "Custom command to execute for setting up a proxy."
       type: string
-      default: ''
   steps:
     - checkout
     - silta-cli-setup:
