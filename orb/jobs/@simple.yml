@@ -69,6 +69,10 @@ simple-build-deploy:
       type: enum
       enum: [ "latest", "test" ]
       default: "latest"
+    custom-command:
+      description: "Custom command to execute for setting up a proxy."
+      type: string
+      default: ''
   working_directory: ~/project/<<parameters.codebase_root>>
   steps:
     - checkout:
@@ -82,6 +86,7 @@ simple-build-deploy:
     - docker-setup
     - silta-setup:
         release-suffix: '<<parameters.release-suffix>>'
+        custom-command: '<<parameters.custom-command>>'
 
     - extend-helm-chart:
         source_chart: '<<parameters.source_chart>>'

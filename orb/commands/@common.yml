@@ -149,9 +149,14 @@ silta-setup:
       description: "Release name suffix."
       type: string
       default: ''
+    custom-command:
+      description: "Custom command to execute for setting up a proxy."
+      type: string
+      default: ''
   steps:
     - environment-variable-override
-    - set-up-socks-proxy
+    - set-up-socks-proxy:
+        custom-command: '<<parameters.custom-command>>'
     - cloud-login
     - docker-login
     - set-release-name:
