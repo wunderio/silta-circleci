@@ -276,16 +276,11 @@ decrypt-files:
 
 set-up-socks-proxy:
   description: "Set up socks proxy for outgoing connections."
-  steps:
-    - run:
-        name: Add SSH private-key
-        command: |
-          if [[ -n "$TUNNEL_PRIVATE_KEY" ]]; then
-            echo -e "$TUNNEL_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
-          fi
-    - run:
-        name: Proxy setup for cluster connections
-        command: |
+  parameters:
+    custom-command:
+      description: "Custom command to execute for setting up a proxy."
+      type: string
+      default: |
           if [[ -n "$TUNNEL_USER_HOST" ]]; then
             ssh -o StrictHostKeyChecking=accept-new -D 1337 -C -N -q -f "$TUNNEL_USER_HOST"
             echo 'export SILTA_PROXY=socks5://localhost:1337' >> $BASH_ENV
@@ -304,6 +299,18 @@ set-up-socks-proxy:
             fi
             echo "Proxy is ready for outgoing connections"
           fi
+
+  steps:
+    - run:
+        name: Add SSH private-key
+        command: |
+          if [[ -n "$TUNNEL_PRIVATE_KEY" ]]; then
+            echo -e "$TUNNEL_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
+          fi
+    - run:
+        name: Proxy setup for cluster connections
+        command: |
+          <<parameters.custom-command>>
 
 extend-helm-chart:
   description: "Add additional Helm charts"
