@@ -286,33 +286,33 @@ set-up-socks-proxy:
     - when:
       condition: << pipeline.parameters.custom-command >>
       steps:
-      - run:
-          name: Proxy setup for cluster connections
-          # command: |
-            # <<parameters.custom-command>>
-          command: |
-            if [[ -n "<<pipeline.parameters.custom-command>>" ]]; then
-              echo "pipeline test"
-            else
-              if [[ -n "$TUNNEL_USER_HOST" ]]; then
-                ssh -o StrictHostKeyChecking=accept-new -D 1337 -C -N -q -f "$TUNNEL_USER_HOST"
-                echo 'export SILTA_PROXY=socks5://localhost:1337' >> $BASH_ENV
-                if command -v gcloud &> /dev/null; then
-                  gcloud config set proxy/type socks5
-                  gcloud config set proxy/address 127.0.0.1
-                  gcloud config set proxy/port 1337
-                fi
-                if command -v silta &> /dev/null; then
-                  if [ "$CLUSTER_TYPE" == "aws" ] && command -v pproxy &> /dev/null; then
-                    pproxy -r socks5://127.0.0.1:1337 --daemon
-                    silta config set proxy http://localhost:8080
-                  else
-                    silta config set proxy socks5://localhost:1337
+        - run:
+            name: Proxy setup for cluster connections
+            # command: |
+              # <<parameters.custom-command>>
+            command: |
+              if [[ -n "<<pipeline.parameters.custom-command>>" ]]; then
+                echo "pipeline test"
+              else
+                if [[ -n "$TUNNEL_USER_HOST" ]]; then
+                  ssh -o StrictHostKeyChecking=accept-new -D 1337 -C -N -q -f "$TUNNEL_USER_HOST"
+                  echo 'export SILTA_PROXY=socks5://localhost:1337' >> $BASH_ENV
+                  if command -v gcloud &> /dev/null; then
+                    gcloud config set proxy/type socks5
+                    gcloud config set proxy/address 127.0.0.1
+                    gcloud config set proxy/port 1337
                   fi
+                  if command -v silta &> /dev/null; then
+                    if [ "$CLUSTER_TYPE" == "aws" ] && command -v pproxy &> /dev/null; then
+                      pproxy -r socks5://127.0.0.1:1337 --daemon
+                      silta config set proxy http://localhost:8080
+                    else
+                      silta config set proxy socks5://localhost:1337
+                    fi
+                  fi
+                  echo "Proxy is ready for outgoing connections"
                 fi
-                echo "Proxy is ready for outgoing connections"
               fi
-            fi
 
 extend-helm-chart:
   description: "Add additional Helm charts"
