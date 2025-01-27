@@ -173,6 +173,10 @@ drupal-build-deploy: &drupal-build-deploy
       description: "Extension config for the source chart"
       type: string
       default: ''
+    custom-command:
+      description: "Custom command to run instead of the default proxy setup."
+      type: string
+      default: ''
   working_directory: ~/project/<<parameters.drupal-root>>
   steps:
     - checkout:
@@ -194,6 +198,7 @@ drupal-build-deploy: &drupal-build-deploy
           - docker-setup
           - silta-setup:
               release-suffix: '<<parameters.release-suffix>>'
+              custom-command: '<<parameters.custom-command>>'
           - extend-helm-chart:
               source_chart: '<<parameters.source_chart>>'
               extension_file: '<<parameters.extension_file>>'
@@ -287,6 +292,10 @@ drupal-build:
       type: enum
       enum: [ "latest", "test" ]
       default: "latest"
+    custom-command:
+      description: "Custom command to run instead of the default proxy setup."
+      type: string
+      default: ''
   working_directory: ~/project/<<parameters.drupal-root>>
   steps:
     - checkout:
@@ -305,6 +314,7 @@ drupal-build:
           - docker-setup
           - silta-setup:
               release-suffix: '<<parameters.release-suffix>>'
+              custom-command: '<<parameters.custom-command>>'
           - drupal-docker-build:
               nginx_build_context: <<parameters.nginx_build_context>>
               background: <<parameters.image_build_background>>
@@ -394,6 +404,10 @@ drupal-deploy: &drupal-deploy
       type: enum
       enum: ["latest", "test"]
       default: "latest"
+    custom-command:
+      description: "Custom command to run instead of the default proxy setup."
+      type: string
+      default: ''
   working_directory: ~/project/<<parameters.drupal-root>>
   steps:
     - checkout:
@@ -414,6 +428,7 @@ drupal-deploy: &drupal-deploy
                     files: <<parameters.decrypt_files>>
           - silta-setup:
               release-suffix: '<<parameters.release-suffix>>'
+              custom-command: '<<parameters.custom-command>>'
           - steps: <<parameters.pre-release>>
           - attach_workspace:
               at: /tmp/workspace

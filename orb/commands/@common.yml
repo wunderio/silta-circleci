@@ -149,9 +149,14 @@ silta-setup:
       description: "Release name suffix."
       type: string
       default: ''
+    custom-command:
+      description: "Custom command to run instead of the default proxy setup."
+      type: string
+      default: ''
   steps:
     - environment-variable-override
-    - set-up-socks-proxy
+    - set-up-socks-proxy:
+        custom-command: '<<parameters.custom-command>>'
     - cloud-login
     - docker-login
     - set-release-name:
@@ -276,6 +281,11 @@ decrypt-files:
 
 set-up-socks-proxy:
   description: "Set up socks proxy for outgoing connections."
+  parameters:
+    custom-command:
+      description: "Custom command to run instead of the default proxy setup."
+      type: string
+      default: ''
   steps:
     - run:
         name: Add SSH private-key
@@ -284,14 +294,14 @@ set-up-socks-proxy:
             echo -e "$TUNNEL_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
           fi
     - when:
-        condition: << pipeline.parameters.custom-command >>
+        condition: <<parameters.custom-command>>
         steps:
           - run:
               name: Proxy setup for cluster connections
               command: |
-                echo "pipeline test"
+                <<parameters.custom-command>>
     - unless:
-        condition: << pipeline.parameters.custom-command >>
+        condition: <<parameters.custom-command>>
         steps:
           - run:
               name: Proxy setup for cluster connections
