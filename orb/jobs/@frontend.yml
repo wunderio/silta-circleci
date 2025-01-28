@@ -66,6 +66,10 @@ frontend-build-deploy:
       type: enum
       enum: [ "latest", "test" ]
       default: "latest"
+    custom-proxy-command:
+      description: "Custom command to run instead of the default proxy setup."
+      type: string
+      default: ''
   steps:
     - checkout
     - silta-cli-setup:
@@ -76,6 +80,7 @@ frontend-build-deploy:
     - docker-setup
     - silta-setup:
         release-suffix: '<<parameters.release-suffix>>'
+        custom-proxy-command: '<<parameters.custom-proxy-command>>'
 
     - extend-helm-chart:
         source_chart: '<<parameters.source_chart>>'
