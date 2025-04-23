@@ -68,4 +68,5 @@ lagoon-login:
             --token $(ssh lagoon@${LAGOON_SSH_HOST} token) \
             --force
           lagoon config default --lagoon silta
+          # lagoon login
           lagoon whoami

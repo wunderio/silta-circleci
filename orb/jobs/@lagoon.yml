@@ -19,14 +19,67 @@ lagoon-trigger-deployment:
       description: "Steps to be executed before deployment is triggered."
       type: steps
       default: []
+    timeout:
+      description: "Timeout for the deployment (minutes)."
+      type: integer
+      default: 25
   steps:
     - lagoon-setup:
         cli_version: <<parameters.lagoon_cli_version>>
     - checkout
     - steps: <<parameters.pre-deploy>>
-    - run: >-
-        lagoon deploy branch \
-          --project ${CIRCLE_PROJECT_REPONAME,,} \
-          --branch ${CIRCLE_BRANCH} \
-          --environment ${CIRCLE_BRANCH} \
-          --force
+    - run:
+        name: Lagoon deployment
+        command: |
+          # Trigger a deployment in Lagoon
+          BUILD_ID=$(lagoon deploy branch \
+            --project ${CIRCLE_PROJECT_REPONAME,,} \
+            --branch ${CIRCLE_BRANCH} \
+            --branch-ref ${CIRCLE_SHA1} \
+            --environment ${CIRCLE_BRANCH} \
+            --returndata \
+            --output-json \
+            --force | jq -r '.result')
+          echo "BUILD_ID: $BUILD_ID"
+          
+          if [ "$BUILD_ID" = "null" ]; then
+            echo "Build failed"
+            exit 1
+          fi
+          
+          # Loop until the build is finished or timeout after <<parameters.timeout>> minutes
+          TIMEOUT=$((<<parameters.timeout>> * 60))
+          START_TIME=$(date +%s)
+          
+          while true; do
+            STATUS=$(lagoon get deployment \
+              --name $BUILD_ID \
+              --project ${CIRCLE_PROJECT_REPONAME,,} \
+              --environment ${CIRCLE_BRANCH} \
+              --output-json | jq -r '.data[].status')
+            echo "STATUS: $STATUS"
+            
+            if [ "$STATUS" = "complete" ]; then
+              echo "Build completed"
+              break
+            elif [ "$STATUS" = "failed" ]; then
+              echo "Build failed"
+              lagoon get deployment --name $BUILD_ID --project ${CIRCLE_PROJECT_REPONAME,,} --environment ${CIRCLE_BRANCH} --logs
+              exit 1
+            fi
+            
+            CURRENT_TIME=$(date +%s)
+            ELAPSED_TIME=$((CURRENT_TIME - START_TIME))
+            
+            if [ "$ELAPSED_TIME" -ge "$TIMEOUT" ]; then
+              echo "Build timed out after <<parameters.timeout>> minutes"
+              lagoon get deployment --name $BUILD_ID --project ${CIRCLE_PROJECT_REPONAME,,} --environment ${CIRCLE_BRANCH} --logs
+              exit 1
+            fi
+            
+            # sleep for 5 seconds before checking again
+            sleep 5
+          done
+
+          # get the deployment logs
+          lagoon get deployment --name $BUILD_ID --project ${CIRCLE_PROJECT_REPONAME,,} --environment ${CIRCLE_BRANCH} --logs
