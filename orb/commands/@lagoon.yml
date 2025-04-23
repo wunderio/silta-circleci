@@ -64,6 +64,7 @@ lagoon-login:
             --graphql ${LAGOON_GRAPHQL_ENDPOINT} \
             --hostname ${LAGOON_SSH_HOST} \
             --lagoon silta \
+            --ui ${LAGOON_UI} \
             --port 22 \
             --token $(ssh lagoon@${LAGOON_SSH_HOST} token) \
             --force

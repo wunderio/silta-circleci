@@ -42,6 +42,11 @@ lagoon-trigger-deployment:
             --force | jq -r '.result')
           echo "BUILD_ID: $BUILD_ID"
           
+          # Create the deployment link
+          PROJECT_ID=$(lagoon raw --raw "query { projectByName(name: \"${CIRCLE_PROJECT_REPONAME,,}\") { id } }" | jq -r '.projectByName.id')
+          ENVIRONMENT_NAMESPACE=$(lagoon raw --raw "query { environmentByName(project: ${PROJECT_ID}, name: \"${CIRCLE_BRANCH}\") { kubernetesNamespaceName } }" | jq -r '.environmentByName.kubernetesNamespaceName')
+          echo "Deployment url: ${LAGOON_UI}/projects/${CIRCLE_PROJECT_REPONAME,,}/${ENVIRONMENT_NAMESPACE}/deployments/$BUILD_ID"
+
           if [ "$BUILD_ID" = "null" ]; then
             echo "Build failed"
             exit 1
@@ -83,3 +88,4 @@ lagoon-trigger-deployment:
 
           # get the deployment logs
           lagoon get deployment --name $BUILD_ID --project ${CIRCLE_PROJECT_REPONAME,,} --environment ${CIRCLE_BRANCH} --logs
+
