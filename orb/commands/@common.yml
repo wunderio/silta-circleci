@@ -322,6 +322,12 @@ set-up-socks-proxy:
                       silta config set proxy socks5://localhost:1337
                     fi
                   fi
+                  if command -v lagoon &> /dev/null; then
+                    if [[ -n "${LAGOON_SSH_HOST}" && -n "${TUNNEL_USER_HOST}" ]]; then
+                      mkdir -p ~/.ssh
+                      echo -e "Host ${LAGOON_SSH_HOST}\n\tProxyJump ${TUNNEL_USER_HOST}\n\tStrictHostKeyChecking accept-new" >> ~/.ssh/config
+                    fi
+                  fi
                   echo "Proxy is ready for outgoing connections"
                 fi
 

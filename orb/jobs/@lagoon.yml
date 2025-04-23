@@ -1,0 +1,32 @@
+lagoon-trigger-deployment:
+  description: "Trigger lagoon deployment. Note: Lagoon does not use local code, it pulls code from repository when deployment is triggered."
+  executor: <<parameters.executor>>
+  resource_class: <<parameters.resource_class>>
+  parameters:
+    executor:
+      description: "The name of custom executor to use."
+      type: executor
+      default: silta
+    resource_class:
+      description: "The name of resource class to use."
+      type: string
+      default: medium
+    lagoon_cli_version:
+      description: "Version of lagoon-cli to use."
+      type: string
+      default: "latest"
+    pre-deploy:
+      description: "Steps to be executed before deployment is triggered."
+      type: steps
+      default: []
+  steps:
+    - lagoon-setup:
+        cli_version: <<parameters.lagoon_cli_version>>
+    - checkout
+    - steps: <<parameters.pre-deploy>>
+    - run: >-
+        lagoon deploy branch \
+          --project ${CIRCLE_PROJECT_REPONAME,,} \
+          --branch ${CIRCLE_BRANCH} \
+          --environment ${CIRCLE_BRANCH} \
+          --force
