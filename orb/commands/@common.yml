@@ -306,8 +306,13 @@ set-up-socks-proxy:
           - run:
               name: Proxy setup for cluster connections
               command: |
-                if [[ -n "$TUNNEL_USER_HOST" ]]; then
-                  ssh -o StrictHostKeyChecking=accept-new -D 1337 -C -N -q -f "$TUNNEL_USER_HOST"
+                if [[ -n "${TUNNEL_USER_HOST}" ]]; then
+                  if [[ -n "${LAGOON_SSH_HOST}" ]]; then
+                    # Create intermediate connection (lagoon cli does not support ssh config jumphosts)
+                    ssh -o StrictHostKeyChecking=accept-new -D 1337 -C -N -q -f "${TUNNEL_USER_HOST}" -L 1338:"${LAGOON_SSH_HOST}":${LAGOON_SSH_PORT:-22}
+                  else
+                    ssh -o StrictHostKeyChecking=accept-new -D 1337 -C -N -q -f "${TUNNEL_USER_HOST}"
+                  fi
                   echo 'export SILTA_PROXY=socks5://localhost:1337' >> $BASH_ENV
                   if command -v gcloud &> /dev/null; then
                     gcloud config set proxy/type socks5
@@ -325,7 +330,8 @@ set-up-socks-proxy:
                   if command -v lagoon &> /dev/null; then
                     if [[ -n "${LAGOON_SSH_HOST}" && -n "${TUNNEL_USER_HOST}" ]]; then
                       mkdir -p ~/.ssh
-                      echo -e "Host ${LAGOON_SSH_HOST}\n\tProxyJump ${TUNNEL_USER_HOST}\n\tStrictHostKeyChecking accept-new" >> ~/.ssh/config
+                      echo -e "Host ${LAGOON_SSH_HOST}\n\tProxyJump ${TUNNEL_USER_HOST}\n\tStrictHostKeyChecking accept-new" >> ~/.ssh/config  
+                      echo -e "Host localhost:1338\n\tStrictHostKeyChecking accept-new" >> ~/.ssh/config  
                     fi
                   fi
                   echo "Proxy is ready for outgoing connections"
