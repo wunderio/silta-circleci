@@ -1,0 +1,103 @@
+lagoon-trigger-deployment:
+  description: "Trigger lagoon deployment. Note: Lagoon does not use local code, it pulls code from repository when deployment is triggered."
+  executor: <<parameters.executor>>
+  resource_class: <<parameters.resource_class>>
+  parameters:
+    executor:
+      description: "The name of custom executor to use."
+      type: executor
+      default: silta
+    resource_class:
+      description: "The name of resource class to use."
+      type: string
+      default: medium
+    lagoon_cli_version:
+      description: "Version of lagoon-cli to use."
+      type: string
+      default: "latest"
+    pre-deploy:
+      description: "Steps to be executed before deployment is triggered."
+      type: steps
+      default: []
+    timeout:
+      description: "Timeout for the deployment (minutes)."
+      type: integer
+      default: 25
+  steps:
+    - lagoon-setup:
+        cli_version: <<parameters.lagoon_cli_version>>
+    - checkout
+    - steps: <<parameters.pre-deploy>>
+    - run:
+        name: Lagoon deployment
+        command: |
+          # Resolve project name by git url
+          LAGOON_PROJECT_NAME=$(lagoon raw --raw "query { projectByGitUrl(gitUrl: \"${CIRCLE_REPOSITORY_URL}\") { name }}" | jq -r '.projectByGitUrl.name')
+
+          # Trigger a deployment in Lagoon
+          LAGOON_BUILD_ID=$(lagoon deploy branch \
+            --project ${LAGOON_PROJECT_NAME} \
+            --branch ${CIRCLE_BRANCH} \
+            --branch-ref ${CIRCLE_SHA1} \
+            --environment ${CIRCLE_BRANCH} \
+            --returndata \
+            --output-json \
+            --force | jq -r '.result')
+          echo "BUILD_ID: ${LAGOON_BUILD_ID}"
+          
+          # Create the deployment link
+          LAGOON_PROJECT_ID=$(lagoon raw --raw "query { projectByName(name: \"${LAGOON_PROJECT_NAME}\") { id } }" | jq -r '.projectByName.id')
+          LAGOON_ENVIRONMENT_NAMESPACE=$(lagoon raw --raw "query { environmentByName(project: ${LAGOON_PROJECT_ID}, name: \"${CIRCLE_BRANCH}\") { kubernetesNamespaceName } }" | jq -r '.environmentByName.kubernetesNamespaceName')
+          echo "Deployment url: ${LAGOON_UI}/projects/${LAGOON_PROJECT_NAME}/${LAGOON_ENVIRONMENT_NAMESPACE}/deployments/${LAGOON_BUILD_ID}"
+
+          if [ "${LAGOON_BUILD_ID}" = "null" ]; then
+            echo "Build failed"
+            exit 1
+          fi
+          
+          # Loop until the build is finished or timeout after <<parameters.timeout>> minutes
+          TIMEOUT=$((<<parameters.timeout>> * 60))
+          START_TIME=$(date +%s)
+          
+          while true; do
+            STATUS_RAW=$(lagoon get deployment \
+              --name ${LAGOON_BUILD_ID} \
+              --project ${LAGOON_PROJECT_NAME} \
+              --environment ${CIRCLE_BRANCH} \
+              --output-json)
+            
+            # Authentication token can expire and lagoon-cli will return error instead of JSON.
+            # Check if the response is valid JSON. 
+            if ! echo "$STATUS_RAW" | jq -e . > /dev/null 2>&1; then
+              echo "Error: Failed to parse lagoon response, see lagoon ui for more details"
+              exit 1
+            fi
+
+            STATUS=$(echo "$STATUS_RAW" | jq -r '.data[].status')
+            echo "STATUS: $STATUS"
+            
+            if [ "$STATUS" = "complete" ]; then
+              echo "Build completed"
+              break
+            elif [ "$STATUS" = "failed" ]; then
+              echo "Build failed"
+              lagoon get deployment --name ${LAGOON_BUILD_ID} --project ${LAGOON_PROJECT_NAME} --environment ${CIRCLE_BRANCH} --logs
+              exit 1
+            fi
+            
+            CURRENT_TIME=$(date +%s)
+            ELAPSED_TIME=$((CURRENT_TIME - START_TIME))
+            
+            if [ "$ELAPSED_TIME" -ge "$TIMEOUT" ]; then
+              echo "Build timed out after <<parameters.timeout>> minutes"
+              lagoon get deployment --name ${LAGOON_BUILD_ID} --project ${LAGOON_PROJECT_NAME} --environment ${CIRCLE_BRANCH} --logs
+              exit 1
+            fi
+            
+            # sleep for 5 seconds before checking again
+            sleep 5
+          done
+
+          # get the deployment logs
+          lagoon get deployment --name ${LAGOON_BUILD_ID} --project ${LAGOON_PROJECT_NAME} --environment ${CIRCLE_BRANCH} --logs
+
