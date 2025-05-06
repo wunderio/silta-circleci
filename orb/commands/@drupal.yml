@@ -99,14 +99,14 @@ drupal-docker-build:
         dockerfile: silta/php.Dockerfile
         path: "."
         identifier: php
-        docker-hash-prefix: v12
+        docker-hash-prefix: v13
         background: <<parameters.background>>
 
     - build-docker-image:
         dockerfile: silta/shell.Dockerfile
         path: "."
         identifier: shell
-        docker-hash-prefix: v12
+        docker-hash-prefix: v13
         background: <<parameters.background>>
 
     - run:
