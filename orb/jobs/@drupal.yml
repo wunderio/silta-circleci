@@ -408,6 +408,10 @@ drupal-deploy: &drupal-deploy
       description: "Custom command to run instead of the default proxy setup."
       type: string
       default: ''
+    helm_flags:
+      description: "Custom helm flags to add to the helm deploy command."
+      type: string
+      default: ""
   working_directory: ~/project/<<parameters.drupal-root>>
   steps:
     - checkout:
@@ -455,6 +459,7 @@ drupal-deploy: &drupal-deploy
               silta_config: <<parameters.silta_config>>
               cluster_domain: <<parameters.cluster_domain>>
               deployment_timeout: <<parameters.deployment_timeout>>
+              helm_flags: <<parameters.helm_flags>>
 
 # Job to deploy using development charts. This extends the
 # drupal-deploy job and overrides some of the parameters.
