@@ -70,6 +70,10 @@ frontend-build-deploy:
       description: "Custom command to run instead of the default proxy setup."
       type: string
       default: ''
+    helm_flags:
+      description: "Custom helm flags to add to the helm deploy command."
+      type: string
+      default: ""
   steps:
     - checkout
     - silta-cli-setup:
@@ -127,6 +131,6 @@ frontend-build-deploy:
                   --vpc-native "${VPC_NATIVE}" \
                   --cluster-type "${CLUSTER_TYPE}" \
                   --silta-config "<<parameters.silta_config>>" \
-                  --helm-flags "${image_overrides}"
+                  --helm-flags "<<parameters.helm_flags>> ${image_overrides}"
 
           - helm-release-information
