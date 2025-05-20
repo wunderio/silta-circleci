@@ -151,6 +151,10 @@ drupal-helm-deploy:
     deployment_timeout:
       type: string
       default: "15m"
+    helm_flags:
+      description: "Custom helm flags to add to the helm deploy command."
+      type: string
+      default: ""
   steps:
     - helm-cleanup
     - run:
@@ -185,6 +189,7 @@ drupal-helm-deploy:
             --db-root-pass "${DB_ROOT_PASS}" \
             --db-user-pass "${DB_USER_PASS}" \
             --namespace "${NAMESPACE}" \
+            --helm-flags "<<parameters.helm_flags>>" \
             --silta-config "<<parameters.silta_config>>" \
             --deployment-timeout "<<parameters.deployment_timeout>>"
 
