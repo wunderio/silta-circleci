@@ -411,7 +411,7 @@ drupal-deploy: &drupal-deploy
     helm_flags:
       description: "Custom helm flags to add to the helm deploy command."
       type: string
-      default: ""
+      default: "--history-max=4"
   working_directory: ~/project/<<parameters.drupal-root>>
   steps:
     - checkout:

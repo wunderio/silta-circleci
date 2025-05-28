@@ -73,7 +73,7 @@ frontend-build-deploy:
     helm_flags:
       description: "Custom helm flags to add to the helm deploy command."
       type: string
-      default: ""
+      default: "--history-max=4"
   steps:
     - checkout
     - silta-cli-setup:
