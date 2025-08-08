@@ -83,6 +83,14 @@ build-docker-image:
             --image-tag "<<parameters.tag>>" \
             --branchname "${BRANCHNAME}" \
             --image-reuse <<parameters.reuse_image>>
+          
+          # Get nginx version if this was an nginx image.
+          if [ '<<parameters.identifier>>' = 'nginx' ]; then
+            echo "IMAGE_URL: ${IMAGE_URL}"
+            echo "nginx_IMAGE_URL: ${nginx_IMAGE_URL}"
+            echo "Running docker image $nginx_IMAGE_URL and printing nginx version"
+            docker run -it --rm $nginx_IMAGE_URL nginx -v 2>&1 | grep "nginx version:" | grep -Eo '[0-9]+\.[0-9]+'
+          fi
 
 silta-cli-setup:
   description: "Download Silta CI tooling."
