@@ -114,8 +114,9 @@ simple-build-deploy:
                 
                 NGINX_IMAGE_URL=${nginx_IMAGE_URL}
                 
+                HELM_FLAGS=""
                 if [ -n "${NGINX_VERSION}" ]; then
-                  HELM_FLAGS="--helm-flags --set-string nginx.version=${NGINX_VERSION}"
+                  HELM_FLAGS=--helm-flags "--set-string nginx.version=${NGINX_VERSION}"
                 fi
                 
                 silta ci release deploy \
@@ -131,7 +132,7 @@ simple-build-deploy:
                   --vpc-native "${VPC_NATIVE}" \
                   --cluster-type "${CLUSTER_TYPE}" \
                   --namespace "${NAMESPACE}" \
-                  ${HELM_FLAGS} \
-                  --silta-config "<<parameters.silta_config>>"
+                  --silta-config "<<parameters.silta_config>>" \
+                  ${HELM_FLAGS}
 
           - helm-release-information
