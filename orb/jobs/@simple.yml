@@ -114,6 +114,9 @@ simple-build-deploy:
                 
                 NGINX_IMAGE_URL=${nginx_IMAGE_URL}
                 
+                NGINX_VERSION=${NGINX_VERSION}
+                echo "NGINX_VERSION: ${NGINX_VERSION}"
+                
                 silta ci release deploy \
                   --release-name "${RELEASE_NAME}" \
                   --chart-name "<<parameters.chart_name>>" \
@@ -127,6 +130,7 @@ simple-build-deploy:
                   --vpc-native "${VPC_NATIVE}" \
                   --cluster-type "${CLUSTER_TYPE}" \
                   --namespace "${NAMESPACE}" \
+                  --helm-flags "--set-string nginx.version=${NGINX_VERSION}" \
                   --silta-config "<<parameters.silta_config>>"
 
           - helm-release-information
