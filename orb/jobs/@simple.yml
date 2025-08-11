@@ -114,6 +114,9 @@ simple-build-deploy:
                 
                 NGINX_IMAGE_URL=${nginx_IMAGE_URL}
                 
+                # Testing.
+                NGINX_VERSION=""
+                
                 HELM_FLAGS=""
                 if [ -n "${NGINX_VERSION}" ]; then
                   HELM_FLAGS="--set-string nginx.version=${NGINX_VERSION}"
