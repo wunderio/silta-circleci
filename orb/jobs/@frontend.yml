@@ -48,7 +48,7 @@ frontend-build-deploy:
           dockerfile: 'silta/node.Dockerfile'
           path: '.'
           identifier: 'node'
-          docker-hash-prefix: v11
+          docker-hash-prefix: v12
     release-suffix:
       description: "Release name suffix."
       type: string
