@@ -169,9 +169,6 @@ drupal-helm-deploy:
           NGINX_IMAGE_URL=${nginx_IMAGE_URL}
           SHELL_IMAGE_URL=${shell_IMAGE_URL}
           
-          # Testing.
-          NGINX_VERSION=""
-          
           EXTRA_HELM_FLAGS=""
           if [ -n "${NGINX_VERSION}" ]; then
             EXTRA_HELM_FLAGS="--set-string nginx.version=${NGINX_VERSION}"
