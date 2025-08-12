@@ -168,6 +168,11 @@ drupal-helm-deploy:
           PHP_IMAGE_URL=${php_IMAGE_URL}
           NGINX_IMAGE_URL=${nginx_IMAGE_URL}
           SHELL_IMAGE_URL=${shell_IMAGE_URL}
+          
+          EXTRA_HELM_FLAGS=""
+          if [ -n "${NGINX_VERSION}" ]; then
+            EXTRA_HELM_FLAGS="--set-string nginx.version=${NGINX_VERSION}"
+          fi
 
           silta ci release deploy \
             --release-name "${RELEASE_NAME}" \
@@ -189,7 +194,7 @@ drupal-helm-deploy:
             --db-root-pass "${DB_ROOT_PASS}" \
             --db-user-pass "${DB_USER_PASS}" \
             --namespace "${NAMESPACE}" \
-            --helm-flags "<<parameters.helm_flags>>" \
+            --helm-flags "<<parameters.helm_flags>> ${EXTRA_HELM_FLAGS}" \
             --silta-config "<<parameters.silta_config>>" \
             --deployment-timeout "<<parameters.deployment_timeout>>"
 
