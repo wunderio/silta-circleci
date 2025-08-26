@@ -18,6 +18,33 @@ grumphp:
             vendor/bin/grumphp run
           fi
 
+drupal-silta-verify:
+  description: "Verify Silta configuration files"
+  steps:
+    - run:
+        name: Silta basic checks
+        command: |
+          files=(
+            silta/silta.yml
+            silta/silta-prod.yml
+            silta/nginx.Dockerfile
+            silta/php.Dockerfile
+            silta/shell.Dockerfile
+          )
+
+          for file in "${files[@]}"; do
+            if [ -f "$file" ]; then
+              echo "✅ $file is present"
+            else
+              echo "❌ $file is missing from the repository."
+              exit 1
+            fi
+          done
+
+          if grep "drush.*8" composer.json; then
+            echo "❌ Silta is not compatible with drush 8."
+          fi
+
 drupal-composer-install:
   description: "PHP composer install command."
   parameters:
