@@ -16,7 +16,8 @@ analyze:
       type: string
       default: "web/modules,web/themes"
   steps:
-    - checkout
+    - checkout:
+        method: full
     - run: >-
         sonar-scanner -Dsonar.host.url="${SONAR_HOST}"
         -Dsonar.token="${SONAR_TOKEN}"
