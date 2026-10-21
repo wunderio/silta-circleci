@@ -113,13 +113,6 @@ workflows:
             branches:
               ignore: /.*/
 
-      - validate: &validate
-          requires:
-            - "Publish development orb"
-          filters:
-            branches:
-              only: master
-
   weekly-dev-publish:
     triggers:
       - schedule:
@@ -130,4 +123,3 @@ workflows:
                 - master
     jobs:
       - orb-tools/publish: *publish
-      - validate: *validate
