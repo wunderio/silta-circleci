@@ -14,7 +14,7 @@ build-docker-image:
     docker-hash-prefix:
       description: "Image tag prefix. Allows overriding cached images."
       type: string
-      default: v1
+      default: v2
     tag:
       description: "If provided, the given tag will be used for the docker image. By default a hash of the codebase (content of the path excluding files matched by .dockerignore) will be created."
       type: string

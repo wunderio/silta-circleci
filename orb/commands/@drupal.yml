@@ -133,7 +133,7 @@ drupal-docker-build:
         dockerfile: silta/shell.Dockerfile
         path: "."
         identifier: shell
-        docker-hash-prefix: v17
+        docker-hash-prefix: v18
         background: <<parameters.background>>
 
     - run:
